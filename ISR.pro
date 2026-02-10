@@ -1,19 +1,32 @@
-QT       += core gui
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += core gui widgets network
 
 CONFIG += c++17
 
-# You can make your code fail to compile if it uses deprecated APIs.
-# In order to do so, uncomment the following line.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-
 SOURCES += \
-    main.cpp
+    main.cpp \
+    src/core/appconfig.cpp \
+    src/core/configloader.cpp \
+    src/core/isrcontroller.cpp \
+    src/core/sporepository.cpp \
+    src/net/pormessage.cpp \
+    src/net/pristransport.cpp \
+    src/services/directivehandler.cpp \
+    src/services/protocollogger.cpp \
+    src/ui/headerdialog.cpp \
+    src/ui/mainwindow.cpp \
+    src/ui/sectionlistdialog.cpp \
+    src/ui/stencildialog.cpp
 
-HEADERS +=
-
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+HEADERS += \
+    src/core/appconfig.h \
+    src/core/configloader.h \
+    src/core/isrcontroller.h \
+    src/core/sporepository.h \
+    src/net/pormessage.h \
+    src/net/pristransport.h \
+    src/services/directivehandler.h \
+    src/services/protocollogger.h \
+    src/ui/headerdialog.h \
+    src/ui/mainwindow.h \
+    src/ui/sectionlistdialog.h \
+    src/ui/stencildialog.h
