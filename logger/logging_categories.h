@@ -1,0 +1,6 @@
+#pragma once
+#include <QLoggingCategory>
+
+Q_DECLARE_LOGGING_CATEGORY(logCore)
+Q_DECLARE_LOGGING_CATEGORY(logNet)
+Q_DECLARE_LOGGING_CATEGORY(logDb)

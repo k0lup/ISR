@@ -9,9 +9,25 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    config/config_loader.cpp \
+    config/config_service.cpp \
+    config/startup.cpp \
+    gui/isrmainwindow.cpp \
+    logger/logger.cpp \
+    logger/logging_categories.cpp \
+    logger/logworker.cpp \
     main.cpp
 
-HEADERS +=
+HEADERS += \
+    config/app_config.h \
+    config/config_loader.h \
+    config/config_service.h \
+    config/config_types.h \
+    config/startup.h \
+    gui/isrmainwindow.h \
+    logger/logger.h \
+    logger/logging_categories.h \
+    logger/logworker.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
