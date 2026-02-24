@@ -36,14 +36,14 @@ bool ConfigService::load(const QString& settingsPath,
 
     // Пример: host обязателен
     QString errMsg;
-    if (!readRequiredString(raw, "host", cfg.host, &errMsg)) {
+    /*if (!readRequiredString(raw, "host", cfg.host, &errMsg)) {
         if (error) {
             error->filePath.clear();
             error->line = -1;
             error->message = errMsg;
         }
         return false;
-    }
+    }*/
 
     // Пример: timeoutMs не обязателен, дефолт 1000, диапазон 1..600000
     const int defTimeout = cfg.timeoutMs; // 1000
