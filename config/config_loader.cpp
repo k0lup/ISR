@@ -90,7 +90,7 @@ bool ConfigLoader::parseLine(const QString& line,
 
 bool ConfigLoader::isCommentLine(const QString& trimmedLine) const
 {
-    return trimmedLine.startsWith('#') || trimmedLine.startsWith("//");
+    return trimmedLine.startsWith('#') || trimmedLine.startsWith("//") || trimmedLine.startsWith("/*");
 }
 
 void ConfigLoader::setError(ConfigError* error,

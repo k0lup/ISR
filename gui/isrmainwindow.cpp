@@ -89,6 +89,14 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
     menuBar()->addMenu(segments_rep_menu);
 
     qCDebug(logCore) << QString("Завершена инициализация окна ISRMainWindow");
+
+    //INFO-OUTPUT-START
+    //qCInfo(logCore) << cfg->files_path;
+
+
+    QString spoPath = cfg->spo_path;
+    qCInfo(logCore) << spoPath;
+    //INFO-OUTPUT-END
 }
 
 void ISRMainWindow::closeEvent(QCloseEvent *event) {

@@ -12,30 +12,71 @@ bool ConfigService::load(const QString& settingsPath,
                          AppConfig& outConfig,
                          ConfigError* error) const
 {
-    RawConfig raw;
+    RawConfig raw_setting;
+    RawConfig raw_config;
     ConfigError localErr;
 
     if (!settingsPath.isEmpty()) {
-        if (!loader_.loadFile(settingsPath, raw, &localErr)) {
+        if (!loader_.loadFile(settingsPath, raw_setting, &localErr)) {
             if (error) *error = localErr;
             return false;
         }
     }
 
     if (!configPath.isEmpty()) {
-        RawConfig raw2;
-        if (!loader_.loadFile(configPath, raw2, &localErr)) {
+        if (!loader_.loadFile(configPath, raw_config, &localErr)) {
             if (error) *error = localErr;
             return false;
         }
-        mergeAppend(raw, raw2);
+        //mergeAppend(raw, raw2);
     }
 
     // ---- Map RawConfig -> AppConfig ----
     AppConfig cfg;
 
-    // Пример: host обязателен
+    QStringList programs_list = getList(raw_setting, "ПРОГРАММЫ");
+    if (programs_list.isEmpty()) {
+        if (error) {
+            error->filePath.clear();
+            error->line = -1;
+            error->message = "НЕ НАЙДЕН ОБЯЗАТЕЛЬНЫЙ ПАРАМЕТР ПРОГРАММЫ";
+        }
+        return false;
+    }
+    cfg.programs_paths = programs_list;
+
+    QStringList sections_list = getList(raw_setting, "РАЗДЕЛЫ");
+    if (programs_list.isEmpty()) {
+        if (error) {
+            error->filePath.clear();
+            error->line = -1;
+            error->message = "НЕ НАЙДЕН ОБЯЗАТЕЛЬНЫЙ ПАРАМЕТР РАЗДЕЛЫ";
+        }
+        return false;
+    }
+    cfg.sections_paths = sections_list;
+
+
     QString errMsg;
+    if (!readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_СПО", cfg.spo_path, &errMsg) ||
+        !readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_НАСТРОЕК", cfg.settings_path, &errMsg) ||
+        !readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_ФАЙЛОВ", cfg.files_path, &errMsg) ||
+        !readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_РАЗДЕЛОВ", cfg.files_path, &errMsg) ||
+        !readRequiredString(raw_setting, "ПРОТОКОЛ", cfg.files_path, &errMsg) ||
+        !readRequiredString(raw_setting, "НШС_ИЗД", cfg.nshc_isd, &errMsg) ||
+        !readRequiredString(raw_setting, "АВАР_ИЗД", cfg.avar_isd, &errMsg) ||
+        !readRequiredString(raw_setting, "ПРИ_ИЗД", cfg.pri_isd, &errMsg) ||
+        !readRequiredString(raw_setting, "НШС_РЭП", cfg.nshc_rep, &errMsg) ||
+        !readRequiredString(raw_setting, "ПРИ_РЭП", cfg.pri_rep, &errMsg) ||
+        !readRequiredString(raw_setting, "АВАР_РЭП", cfg.avar_rep, &errMsg))
+    {
+        if (error) {
+            error->filePath.clear();
+            error->line = -1;
+            error->message = errMsg;
+        }
+        return false;
+    }
     /*if (!readRequiredString(raw, "host", cfg.host, &errMsg)) {
         if (error) {
             error->filePath.clear();
@@ -46,19 +87,19 @@ bool ConfigService::load(const QString& settingsPath,
     }*/
 
     // Пример: timeoutMs не обязателен, дефолт 1000, диапазон 1..600000
-    const int defTimeout = cfg.timeoutMs; // 1000
-    if (!readInt(raw, "timeoutMs", cfg.timeoutMs, /*required=*/false, &defTimeout,
-                 /*min=*/1, /*max=*/600000, &errMsg)) {
-        if (error) {
-            error->filePath.clear();
-            error->line = -1;
-            error->message = errMsg;
-        }
-        return false;
-    }
+    //const int defTimeout = cfg.timeoutMs; // 1000
+    //if (!readInt(raw, "timeoutMs", cfg.timeoutMs, /*required=*/false, &defTimeout,
+    //             /*min=*/1, /*max=*/600000, &errMsg)) {
+    //    if (error) {
+    //        error->filePath.clear();
+    //        error->line = -1;
+    //        error->message = errMsg;
+    //    }
+    //    return false;
+    //}
 
     // Пример: ports может быть пустым, но если хочешь сделать обязательным — проверь.
-    cfg.ports = getList(raw, "port");
+    //cfg.ports = getList(raw, "port");
 
     // Дополнительная валидация, если нужно:
     // if (cfg.ports.isEmpty()) { ... }
