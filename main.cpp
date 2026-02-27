@@ -104,7 +104,6 @@ int main(int argc, char *argv[])
     }
 
     // раздаём конфиг UI (удобно как shared_ptr<const AppConfig>)
-    qCInfo(logCore) << cfg.spo_path;
     auto cfgPtr = std::make_shared<const AppConfig>(cfg);
 
     ISRMainWindow w(cfgPtr);

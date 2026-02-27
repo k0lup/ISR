@@ -16,9 +16,11 @@ SOURCES += \
     logger/logger.cpp \
     logger/logging_categories.cpp \
     logger/logworker.cpp \
-    main.cpp
+    main.cpp \
+    setReader/setfilesreader.cpp
 
 HEADERS += \
+    ErrorReadFileStruct.h \
     config/app_config.h \
     config/config_loader.h \
     config/config_service.h \
@@ -27,7 +29,8 @@ HEADERS += \
     gui/isrmainwindow.h \
     logger/logger.h \
     logger/logging_categories.h \
-    logger/logworker.h
+    logger/logworker.h \
+    setReader/setfilesreader.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

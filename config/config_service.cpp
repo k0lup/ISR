@@ -61,7 +61,7 @@ bool ConfigService::load(const QString& settingsPath,
     if (!readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_СПО", cfg.spo_path, &errMsg) ||
         !readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_НАСТРОЕК", cfg.settings_path, &errMsg) ||
         !readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_ФАЙЛОВ", cfg.files_path, &errMsg) ||
-        !readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_РАЗДЕЛОВ", cfg.files_path, &errMsg) ||
+        !readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_РАЗДЕЛОВ", cfg.sections_folder_path, &errMsg) ||
         !readRequiredString(raw_setting, "ПРОТОКОЛ", cfg.files_path, &errMsg) ||
         !readRequiredString(raw_setting, "НШС_ИЗД", cfg.nshc_isd, &errMsg) ||
         !readRequiredString(raw_setting, "АВАР_ИЗД", cfg.avar_isd, &errMsg) ||

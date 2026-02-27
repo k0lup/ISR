@@ -7,6 +7,25 @@
 #include "logger/logging_categories.h"
 #include <QLoggingCategory>
 
+
+#include "setReader/setfilesreader.h"
+#include <QDir>
+#include <QMap>
+#include "ErrorReadFileStruct.h"
+
+static QString expandUserPath(const QString &path)
+{
+    if (path.startsWith("~"))
+    {
+        QString home = QDir::homePath();
+        QString newPath = path;
+        newPath.replace(0, 1, home);
+        return QDir::cleanPath(newPath);
+    }
+
+    return QDir::cleanPath(path);
+}
+
 ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* parent) :
     QMainWindow(parent),
     cfg_(std::move(cfg))
@@ -90,13 +109,62 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
 
     qCDebug(logCore) << QString("Завершена инициализация окна ISRMainWindow");
 
-    //INFO-OUTPUT-START
-    //qCInfo(logCore) << cfg->files_path;
+    QString folder = cfg_->sections_folder_path;
+    QStringList sections = cfg_->sections_paths;
+
+    for (auto& section : sections) section.append(".SET");
+
+    QString expandedFolder = expandUserPath(folder);
+
+    QDir dir(expandedFolder);
+
+    QStringList fullPaths;
+
+    QMap<QString, SetFileData> file_data_map;
 
 
-    QString spoPath = cfg->spo_path;
-    qCInfo(logCore) << spoPath;
-    //INFO-OUTPUT-END
+    for (const QString& fileName : sections) {
+        fullPaths << dir.filePath(fileName);
+    }
+
+    for (const auto& fileName : fullPaths) {
+        ErrorReadFile error{};
+        SetFilesReader setReader;
+        if (!setReader.readFile(fileName, error)) {
+            qCWarning(logCore) << error.toString();
+        } else {
+            if (file_data_map.contains(fileName)) {
+                qCWarning(logCore) << QString("Повторно встретился файл: %1").arg(fileName);
+            } else {
+                file_data_map.insert(fileName, setReader.getFileData());
+            }
+        }
+    }
+
+    for (const auto &fileName : file_data_map.keys()) {
+        QString attributes;
+        QString directories;
+        QString structures;
+        attributes = file_data_map.value(fileName).abbreviation.join(" ");
+        for (const auto& abr : file_data_map.value(fileName).directory.keys()) {
+            directories.append(QString("{%1 : ").arg(abr));
+            for (const auto& dir : file_data_map.value(fileName).directory.value(abr)) {
+                directories.append(QString("%1, ").arg(dir));
+            }
+            directories.chop(2);
+            directories.append("}, ");
+        }
+        directories.chop(2);
+
+        for (const auto& structure : file_data_map.value(fileName).structure.keys()) {
+            structures.append(QString("{%1 : %2}, ").arg(structure).arg(file_data_map.value(fileName).structure.value(structure)));
+        }
+        structures.chop(2);
+
+        qCInfo(logCore) << "abr: " << attributes;
+        qCInfo(logCore) << "directories: " << directories;
+        qCInfo(logCore) << "structures: " << structures;
+    }
 }
 
 void ISRMainWindow::closeEvent(QCloseEvent *event) {

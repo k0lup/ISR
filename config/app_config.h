@@ -10,7 +10,7 @@ struct AppConfig
     QString spo_path;
     QString settings_path;
     QString files_path;
-    QString sections_path;
+    QString sections_folder_path;
 
     QString prot_path;
     QStringList programs_paths;
