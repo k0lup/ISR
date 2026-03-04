@@ -27,11 +27,13 @@ SectionsLoader::SectionsLoader(std::shared_ptr<const AppConfig> cfg, QObject *pa
 
 void SectionsLoader::cancel() {
     qCInfo(logCore) << "Запрошена останов чтения разделов";
-    cancel_requested_ = true;
+    cancel_requested_.store(true);
 }
 
 void SectionsLoader::start() {
     qCInfo(logCore) << "Запрошен старт чтения разделов";
+    cancel_requested_.store(false);
+    sections_names_.clear();
 
     qCInfo(logCore) << "Читаем основные set файлы разделов (из файла настройки)";
     ErrorReadFile error;
@@ -46,6 +48,13 @@ void SectionsLoader::start() {
     }
 
     for (int i = 0; i < sections.size(); ++i) {
+        if (cancel_requested_.load()) {
+            qCInfo(logCore) << "Пользователем запрошена остановка загрузки";
+            emit message("Загрузка отменена");
+            emit finished();
+            return;
+        }
+
         const QString& file_name = sections.at(i);
         int percent_progress = std::lround(100.0 * (i + 1) / sections.size());
         emit progress(percent_progress);
@@ -84,7 +93,7 @@ QSet<QString> SectionsLoader::readMasterSectionsFile(const QString& file_path, E
     if (!data.directory.isEmpty() || !data.structure.isEmpty()) {
         error.message = QString("В файле (%1) обнаружены данные в столбцах кроме аббревиатуры!").arg(file_path);
         emit errorMessage(error.toString());
-        qCWarning(logCore()) << error.toString();
+        qCWarning(logCore) << error.toString();
         return QSet<QString>();
     }
     for (const auto& section_name : data.abbreviation) {

@@ -6,9 +6,11 @@
 #include <QCloseEvent>
 #include <memory>
 #include <QListWidget>
+#include <QThread>
 #include "config/app_config.h"
 #include "loadingoverlay.h"
 #include "setReader/sectionsloader.h"
+#include "menuWgt/sectionlistwgt.h"
 
 class ISRMainWindow : public QMainWindow
 {
@@ -22,13 +24,19 @@ public slots:
     void setLoadingProgress(int percent);
     void hideLoading();
     void showErrorMessage(const QString& msg);
+
+    void onSectionsListActTriggered();
+    void setSelectedSection(const QString& section_name);
 protected:
     void closeEvent(QCloseEvent *event) override;
 private:
     std::shared_ptr<const AppConfig> cfg_;
     LoadingOverlay* load_overlay_ = nullptr;
     SectionsLoader* sections_loader_ = nullptr;
-    QListWidget* info_test_wgt_ = nullptr;
+    SectionListWgt* section_list_wgt_ = nullptr; //виджет пункт меню "выбрать раздел"
+
+    QString active_section_name_;
+    QThread* sections_thread_ = nullptr;
 
     bool readSections(const QStringList& sections_path, const QStringList& sections);
 private slots:

@@ -7,13 +7,14 @@
 #include <QString>
 #include <QFile>
 #include <memory>
+#include <atomic>
 #include "config/app_config.h"
 #include "setfilesreader.h"
 #include "ErrorReadFileStruct.h"
 
 struct Section {
     QString section_name;
-    QFile dii_file;
+    QString dii_file_path;
 };
 
 class SectionsLoader : public QObject
@@ -36,7 +37,7 @@ signals:
 private:
     QSet<QString> readMasterSectionsFile(const QString& file_path, ErrorReadFile& error);
 
-    bool cancel_requested_ = false;
+    std::atomic_bool cancel_requested_{false};
     std::shared_ptr<const AppConfig> cfg_;
     QVector<Section> sections_;
     QSet<QString> sections_names_;

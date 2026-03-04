@@ -31,9 +31,8 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
     qCDebug(logCore) << QString("Инициализация окна ISRMainWindow");
 
     load_overlay_ = new LoadingOverlay(this);
-    sections_loader_ = new SectionsLoader(cfg_, this);
-    info_test_wgt_ = new QListWidget(this);
-    setCentralWidget(info_test_wgt_);
+    //sections_loader_ = new SectionsLoader(cfg_, this);
+    section_list_wgt_ = new SectionListWgt(this);
 
     setWindowTitle("ИСР - [раздел не выбран]");
 
@@ -112,6 +111,8 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
     menuBar()->addMenu(sections_rep_menu);
     menuBar()->addMenu(segments_rep_menu);
 
+    QObject::connect(sections_list_action, &QAction::triggered, this, &ISRMainWindow::onSectionsListActTriggered);
+
     qCDebug(logCore) << QString("Завершена инициализация окна ISRMainWindow");
 
     QTimer::singleShot(0, this, &ISRMainWindow::beginStartup);
@@ -136,22 +137,47 @@ void ISRMainWindow::showLoading(const QString& msg, bool indeterminate)
 }
 
 void ISRMainWindow::beginStartup() {
-    QObject::connect(sections_loader_, &SectionsLoader::progress, this, &ISRMainWindow::setLoadingProgress);
-    QObject::connect(sections_loader_, &SectionsLoader::message, this, &ISRMainWindow::setLoadingMessage);
-    QObject::connect(sections_loader_, &SectionsLoader::finished, this, &ISRMainWindow::hideLoading);
-    QObject::connect(sections_loader_, &SectionsLoader::errorMessage, this, [this](const QString& msg){
-        hideLoading();
-        showErrorMessage(msg);
-    });
+    // 1) UI overlay
+        showLoading("Загрузка списка разделов...", true);
 
-    QObject::connect(sections_loader_, &SectionsLoader::finished, this, [this](){
-        QStringList list = sections_loader_->getSectionsNames().toList();
-        list.sort();
-        this->info_test_wgt_->addItems(list);
-    });
+        // 2) поток
+        sections_thread_ = new QThread(this);
 
-    showLoading("Загрузка списка разделов...", true);
-    sections_loader_->start();
+        // 3) воркер (без parent = this, чтобы не привязать к UI-потоку)
+        sections_loader_ = new SectionsLoader(cfg_, nullptr);
+        sections_loader_->moveToThread(sections_thread_);
+
+        // 4) запуск работы
+        connect(sections_thread_, &QThread::started, sections_loader_, &SectionsLoader::start);
+
+        // 5) сигналы -> UI
+        connect(sections_loader_, &SectionsLoader::progress, this, &ISRMainWindow::setLoadingProgress);
+        connect(sections_loader_, &SectionsLoader::message,  this, &ISRMainWindow::setLoadingMessage);
+
+        // 6) завершение: скрыть overlay + остановить поток
+        connect(sections_loader_, &SectionsLoader::finished, this, &ISRMainWindow::hideLoading);
+        connect(sections_loader_, &SectionsLoader::finished, sections_thread_, &QThread::quit);
+
+        // 7) ошибка: скрыть overlay + показать ошибку + остановить поток
+        connect(sections_loader_, &SectionsLoader::errorMessage, this, [this](const QString& msg){
+            hideLoading();
+            showErrorMessage(msg);
+        });
+        connect(sections_loader_, &SectionsLoader::errorMessage, sections_thread_, &QThread::quit);
+
+        // 8) после finished забрать результат (важно: в UI-потоке)
+        connect(sections_loader_, &SectionsLoader::finished, this, [this](){
+            QStringList list = sections_loader_->getSectionsNames().values();
+            list.sort();
+            section_list_wgt_->setSections(list);
+        });
+
+        // 9) аккуратная очистка объектов
+        connect(sections_thread_, &QThread::finished, sections_loader_, &QObject::deleteLater);
+        connect(sections_thread_, &QThread::finished, sections_thread_, &QObject::deleteLater);
+
+        // 10) старт
+        sections_thread_->start();
 }
 
 void ISRMainWindow::setLoadingMessage(const QString& msg)
@@ -173,6 +199,26 @@ void ISRMainWindow::showErrorMessage(const QString &msg)
 {
     qCWarning(logCore) << QString("Был запрошен вывод сообщения об ошибке: %1").arg(msg);
     QMessageBox::critical(nullptr, "Ошибка!", msg);
+}
+
+void ISRMainWindow::onSectionsListActTriggered() {
+    if (section_list_wgt_->exec() == QDialog::Accepted) {
+        setSelectedSection(section_list_wgt_->getSelectedSection());
+        //setWindowTitle(QString("ИСР - [%1]").arg(active_section_name_));
+    }
+    qCInfo(logCore) << QString("Было открыто окно со списком разделов, но раздел не был выбран");
+}
+
+void ISRMainWindow::setSelectedSection(const QString& section_name) {
+    if (!section_name.isEmpty()) {
+        active_section_name_ = section_name;
+        setWindowTitle(QString("ИСР - [%1]").arg(active_section_name_));
+        qCInfo(logCore) << QString("Был выбран раздел '%1'").arg(section_name);
+    } else {
+        QString message("В качестве имени выбранного раздела была получена пустая строка");
+        qCWarning(logCore) << message;
+        QMessageBox::warning(nullptr, "Предупреждение", message);
+    }
 }
 
 ISRMainWindow::~ISRMainWindow() {
