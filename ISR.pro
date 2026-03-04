@@ -13,10 +13,14 @@ SOURCES += \
     config/config_service.cpp \
     config/startup.cpp \
     gui/isrmainwindow.cpp \
+    gui/loadingoverlay.cpp \
+    gui/menuWgt/findwgt.cpp \
+    gui/menuWgt/sectionlistwgt.cpp \
     logger/logger.cpp \
     logger/logging_categories.cpp \
     logger/logworker.cpp \
     main.cpp \
+    setReader/sectionsloader.cpp \
     setReader/setfilesreader.cpp
 
 HEADERS += \
@@ -27,9 +31,13 @@ HEADERS += \
     config/config_types.h \
     config/startup.h \
     gui/isrmainwindow.h \
+    gui/loadingoverlay.h \
+    gui/menuWgt/findwgt.h \
+    gui/menuWgt/sectionlistwgt.h \
     logger/logger.h \
     logger/logging_categories.h \
     logger/logworker.h \
+    setReader/sectionsloader.h \
     setReader/setfilesreader.h
 
 # Default rules for deployment.

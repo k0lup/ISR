@@ -6,14 +6,12 @@
 #include <QApplication>
 #include "logger/logging_categories.h"
 #include <QLoggingCategory>
+#include <QTimer>
+#include <QMessageBox>
+#include <QStringList>
 
 
-#include "setReader/setfilesreader.h"
-#include <QDir>
-#include <QMap>
-#include "ErrorReadFileStruct.h"
-
-static QString expandUserPath(const QString &path)
+/*static QString expandUserPath(const QString &path)
 {
     if (path.startsWith("~"))
     {
@@ -24,13 +22,20 @@ static QString expandUserPath(const QString &path)
     }
 
     return QDir::cleanPath(path);
-}
+}*/
 
 ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* parent) :
     QMainWindow(parent),
     cfg_(std::move(cfg))
 {
     qCDebug(logCore) << QString("Инициализация окна ISRMainWindow");
+
+    load_overlay_ = new LoadingOverlay(this);
+    sections_loader_ = new SectionsLoader(cfg_, this);
+    info_test_wgt_ = new QListWidget(this);
+    setCentralWidget(info_test_wgt_);
+
+    setWindowTitle("ИСР - [раздел не выбран]");
 
     QMenu* preparation_menu = new QMenu("Подготовка", this);
     QMenu* sections_menu = new QMenu("Разделы", this);
@@ -109,62 +114,7 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
 
     qCDebug(logCore) << QString("Завершена инициализация окна ISRMainWindow");
 
-    QString folder = cfg_->sections_folder_path;
-    QStringList sections = cfg_->sections_paths;
-
-    for (auto& section : sections) section.append(".SET");
-
-    QString expandedFolder = expandUserPath(folder);
-
-    QDir dir(expandedFolder);
-
-    QStringList fullPaths;
-
-    QMap<QString, SetFileData> file_data_map;
-
-
-    for (const QString& fileName : sections) {
-        fullPaths << dir.filePath(fileName);
-    }
-
-    for (const auto& fileName : fullPaths) {
-        ErrorReadFile error{};
-        SetFilesReader setReader;
-        if (!setReader.readFile(fileName, error)) {
-            qCWarning(logCore) << error.toString();
-        } else {
-            if (file_data_map.contains(fileName)) {
-                qCWarning(logCore) << QString("Повторно встретился файл: %1").arg(fileName);
-            } else {
-                file_data_map.insert(fileName, setReader.getFileData());
-            }
-        }
-    }
-
-    for (const auto &fileName : file_data_map.keys()) {
-        QString attributes;
-        QString directories;
-        QString structures;
-        attributes = file_data_map.value(fileName).abbreviation.join(" ");
-        for (const auto& abr : file_data_map.value(fileName).directory.keys()) {
-            directories.append(QString("{%1 : ").arg(abr));
-            for (const auto& dir : file_data_map.value(fileName).directory.value(abr)) {
-                directories.append(QString("%1, ").arg(dir));
-            }
-            directories.chop(2);
-            directories.append("}, ");
-        }
-        directories.chop(2);
-
-        for (const auto& structure : file_data_map.value(fileName).structure.keys()) {
-            structures.append(QString("{%1 : %2}, ").arg(structure).arg(file_data_map.value(fileName).structure.value(structure)));
-        }
-        structures.chop(2);
-
-        qCInfo(logCore) << "abr: " << attributes;
-        qCInfo(logCore) << "directories: " << directories;
-        qCInfo(logCore) << "structures: " << structures;
-    }
+    QTimer::singleShot(0, this, &ISRMainWindow::beginStartup);
 }
 
 void ISRMainWindow::closeEvent(QCloseEvent *event) {
@@ -172,6 +122,57 @@ void ISRMainWindow::closeEvent(QCloseEvent *event) {
 
 
     QCoreApplication::quit();
+}
+
+
+
+void ISRMainWindow::showLoading(const QString& msg, bool indeterminate)
+{
+    load_overlay_->setIndeterminate(indeterminate);
+    load_overlay_->setMessage(msg);
+    load_overlay_->raise();
+    load_overlay_->show();
+    load_overlay_->setFocus();
+}
+
+void ISRMainWindow::beginStartup() {
+    QObject::connect(sections_loader_, &SectionsLoader::progress, this, &ISRMainWindow::setLoadingProgress);
+    QObject::connect(sections_loader_, &SectionsLoader::message, this, &ISRMainWindow::setLoadingMessage);
+    QObject::connect(sections_loader_, &SectionsLoader::finished, this, &ISRMainWindow::hideLoading);
+    QObject::connect(sections_loader_, &SectionsLoader::errorMessage, this, [this](const QString& msg){
+        hideLoading();
+        showErrorMessage(msg);
+    });
+
+    QObject::connect(sections_loader_, &SectionsLoader::finished, this, [this](){
+        QStringList list = sections_loader_->getSectionsNames().toList();
+        list.sort();
+        this->info_test_wgt_->addItems(list);
+    });
+
+    showLoading("Загрузка списка разделов...", true);
+    sections_loader_->start();
+}
+
+void ISRMainWindow::setLoadingMessage(const QString& msg)
+{
+    if (load_overlay_->isVisible()) load_overlay_->setMessage(msg);
+}
+
+void ISRMainWindow::setLoadingProgress(int percent)
+{
+    if (load_overlay_->isVisible()) load_overlay_->setProgress(percent);
+}
+
+void ISRMainWindow::hideLoading()
+{
+    load_overlay_->hide();
+}
+
+void ISRMainWindow::showErrorMessage(const QString &msg)
+{
+    qCWarning(logCore) << QString("Был запрошен вывод сообщения об ошибке: %1").arg(msg);
+    QMessageBox::critical(nullptr, "Ошибка!", msg);
 }
 
 ISRMainWindow::~ISRMainWindow() {

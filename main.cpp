@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     QString startErr;
     if (!resolveStartupPaths(app, paths, &startErr)) {
         QMessageBox::warning(nullptr, "Startup", startErr);
-        qCCritical(logCore) << QString("Ошибка загрузки данных из входных файлов: %1.\nПриложение завершается.").arg(startErr);
+        qCWarning(logCore) << QString("Ошибка загрузки данных из входных файлов: %1.\nПриложение завершается.").arg(startErr);
 
         Logger::uninstallQtHandler();
         Logger::instance().stop();
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 
     if (!service.load(paths.settingsPath, paths.configPath, cfg, &cfgErr)) {
         QMessageBox::critical(nullptr, "Config error", cfgErr.toString());
-        qCCritical(logCore) << QString("Ошибка загрузки данных из входных файлов: %1.\nПриложение завершается.").arg(cfgErr.toString());
+        qCWarning(logCore) << QString("Ошибка загрузки данных из входных файлов: %1.\nПриложение завершается.").arg(cfgErr.toString());
 
         // Корректное завершение логгера
         Logger::uninstallQtHandler();
