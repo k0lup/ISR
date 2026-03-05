@@ -11,6 +11,7 @@
 #include "loadingoverlay.h"
 #include "setReader/sectionsloader.h"
 #include "menuWgt/sectionlistwgt.h"
+#include "menuWgt/titlesectionwgt.h"
 
 class ISRMainWindow : public QMainWindow
 {
@@ -25,7 +26,6 @@ public slots:
     void hideLoading();
     void showErrorMessage(const QString& msg);
 
-    void onSectionsListActTriggered();
     void setSelectedSection(const QString& section_name);
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -34,6 +34,7 @@ private:
     LoadingOverlay* load_overlay_ = nullptr;
     SectionsLoader* sections_loader_ = nullptr;
     SectionListWgt* section_list_wgt_ = nullptr; //виджет пункт меню "выбрать раздел"
+    TitleSectionWgt* title_section_wgt_ = nullptr; //виджет пункта меню "заголовок раздела"
 
     QString active_section_name_;
     QThread* sections_thread_ = nullptr;
@@ -41,6 +42,8 @@ private:
     bool readSections(const QStringList& sections_path, const QStringList& sections);
 private slots:
     void beginStartup();
+    void onSectionsListActTriggered();
+    void onTitleOfSectionActTriggered();
 };
 
 #endif // ISRMAINWINDOW_H

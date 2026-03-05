@@ -1,6 +1,7 @@
 #include "logworker.h"
 #include <QCoreApplication>
 #include <QDateTime>
+#include <QFileInfo>
 
 #ifdef Q_OS_WIN
   #include <windows.h>
@@ -8,6 +9,13 @@
 
 static QString nowTsFileSafe() {
     return QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
+}
+
+static QString crashLastNameFromBase(const QString& baseFileName) {
+    QString stem = baseFileName, ext;
+    const int dot = baseFileName.lastIndexOf('.');
+    if (dot > 0) { stem = baseFileName.left(dot); ext = baseFileName.mid(dot); }
+    return QString("%1_crash_last%2").arg(stem, ext);
 }
 
 LogWorker::LogWorker(Logger* owner, Logger::Config cfg)
@@ -19,6 +27,18 @@ void LogWorker::openFileIfNeeded() {
     if (m_file.isOpen()) return;
 
     QDir().mkpath(m_cfg.logDir);
+
+    // Если в прошлый раз было падение, crash handler оставил *_crash_last.log.
+    // Сохраним его под уникальным именем (с timestamp) при следующем запуске.
+    {
+        QDir dir(m_cfg.logDir);
+        const QString last = dir.filePath(crashLastNameFromBase(m_cfg.baseFileName));
+        if (QFileInfo::exists(last)) {
+            const QString archived = dir.filePath(crashName());
+            QFile::rename(last, archived);
+        }
+    }
+
     const QString path = QDir(m_cfg.logDir).filePath(m_cfg.baseFileName);
 
     m_file.setFileName(path);
@@ -191,6 +211,10 @@ void LogWorker::run() {
 
             for (const auto& it : batch) {
                 writeLine(it.line);
+
+                if (it.line.contains(QStringLiteral("[logCore]"))) {
+                    flushIfNeeded(true);
+                }
 
                 // при Error/Fatal — форс-флаш и crash-dump (ring buffer)
                 if (it.severity >= Logger::Error) {

@@ -27,6 +27,11 @@ public:
 
         int  maxQueue = 50000;          // защита от лог-шторма
         int  ringBufferLines = 2000;    // последние N строк для crash-dump
+
+        // crash handler: гарантированно пишет *_crash_last.log при SIGSEGV/Access Violation
+        bool enableCrashHandler = true;
+        int  crashRingLines = 512;        // сколько последних строк держать для crash handler
+        int  crashMaxLineBytes = 1024;    // max bytes per line (UTF-8) в crash handler
     };
 
     static Logger& instance();

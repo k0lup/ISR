@@ -1,5 +1,6 @@
 #include "logger.h"
 #include "logworker.h"
+#include "crashhandler.h"
 
 #include <QDateTime>
 #include <QThread>
@@ -122,6 +123,17 @@ void Logger::start(const Config& cfg) {
         m_lastDropReportMs = 0;
     }
 
+    // crash handler (SIGSEGV/SEH): пишет отдельный crash_last файл даже при падении
+    if (m_cfg.enableCrashHandler) {
+        CrashHandler::Settings cs;
+        cs.logDir = m_cfg.logDir;
+        cs.baseFileName = m_cfg.baseFileName;
+        cs.ringLines = (m_cfg.crashRingLines > 0) ? m_cfg.crashRingLines : m_cfg.ringBufferLines;
+        cs.maxLineBytes = m_cfg.crashMaxLineBytes;
+        cs.alsoStdErr = m_cfg.alsoStdErr;
+        CrashHandler::instance().install(cs);
+    }
+
     m_worker = new LogWorker(this, cfg);
     m_worker->moveToThread(&m_thread);
 
@@ -141,6 +153,7 @@ void Logger::stop() {
 
     if (QThread::currentThread() == &m_thread) {
         m_thread.quit();
+        CrashHandler::instance().uninstall();
         return;
     }
 

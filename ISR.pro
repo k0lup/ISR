@@ -16,6 +16,8 @@ SOURCES += \
     gui/loadingoverlay.cpp \
     gui/menuWgt/findwgt.cpp \
     gui/menuWgt/sectionlistwgt.cpp \
+    gui/menuWgt/titlesectionwgt.cpp \
+    logger/crashhandler.cpp \
     logger/logger.cpp \
     logger/logging_categories.cpp \
     logger/logworker.cpp \
@@ -34,6 +36,8 @@ HEADERS += \
     gui/loadingoverlay.h \
     gui/menuWgt/findwgt.h \
     gui/menuWgt/sectionlistwgt.h \
+    gui/menuWgt/titlesectionwgt.h \
+    logger/crashhandler.h \
     logger/logger.h \
     logger/logging_categories.h \
     logger/logworker.h \

@@ -24,11 +24,15 @@ SectionListWgt::SectionListWgt(QWidget* parent) :
     find_wgt_ = new FindWgt(this);
 
     QPushButton* select_btn = new QPushButton("Выбрать", this);
+    QPushButton* load_btn = new QPushButton("Загрузить", this);
     QPushButton* search_btn = new QPushButton("Найти", this);
+    QPushButton* cancel_btn = new QPushButton("Отмена", this);
 
     QVBoxLayout *btn_layout = new QVBoxLayout;
     btn_layout->addWidget(select_btn);
+    btn_layout->addWidget(load_btn);
     btn_layout->addWidget(search_btn);
+    btn_layout->addWidget(cancel_btn);
 
     QHBoxLayout *layout = new QHBoxLayout(this);
     layout->addWidget(list_of_sections_);
@@ -40,6 +44,7 @@ SectionListWgt::SectionListWgt(QWidget* parent) :
     //QObject::connect(find_wgt_, &FindWgt::searchTextEntered, this, &SectionListWgt::searchSection);
     QObject::connect(search_btn, &QPushButton::clicked, this, &SectionListWgt::onSearhBtnClicked);
     QObject::connect(select_btn, &QPushButton::clicked, this, &SectionListWgt::onSelectBtnClicked);
+    QObject::connect(cancel_btn, &QPushButton::clicked, this, &QDialog::reject);
 
     qCDebug(logCore) << "Закончили инициализацию окна SectionListWgt";
 }

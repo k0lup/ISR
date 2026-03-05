@@ -33,6 +33,7 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
     load_overlay_ = new LoadingOverlay(this);
     //sections_loader_ = new SectionsLoader(cfg_, this);
     section_list_wgt_ = new SectionListWgt(this);
+    title_section_wgt_ = new TitleSectionWgt(this);
 
     setWindowTitle("ИСР - [раздел не выбран]");
 
@@ -112,6 +113,7 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
     menuBar()->addMenu(segments_rep_menu);
 
     QObject::connect(sections_list_action, &QAction::triggered, this, &ISRMainWindow::onSectionsListActTriggered);
+    QObject::connect(title_of_section, &QAction::triggered, this, &ISRMainWindow::onTitleOfSectionActTriggered);
 
     qCDebug(logCore) << QString("Завершена инициализация окна ISRMainWindow");
 
@@ -205,8 +207,9 @@ void ISRMainWindow::onSectionsListActTriggered() {
     if (section_list_wgt_->exec() == QDialog::Accepted) {
         setSelectedSection(section_list_wgt_->getSelectedSection());
         //setWindowTitle(QString("ИСР - [%1]").arg(active_section_name_));
+    } else {
+        qCInfo(logCore) << QString("Было открыто окно со списком разделов, но раздел не был выбран");
     }
-    qCInfo(logCore) << QString("Было открыто окно со списком разделов, но раздел не был выбран");
 }
 
 void ISRMainWindow::setSelectedSection(const QString& section_name) {
@@ -218,6 +221,18 @@ void ISRMainWindow::setSelectedSection(const QString& section_name) {
         QString message("В качестве имени выбранного раздела была получена пустая строка");
         qCWarning(logCore) << message;
         QMessageBox::warning(nullptr, "Предупреждение", message);
+    }
+}
+
+void ISRMainWindow::onTitleOfSectionActTriggered() {
+    if (active_section_name_.isEmpty()) {
+        QString message = "Имя выбранного раздела пустое! Открытие окна 'Заголовок раздела' недопустимо";
+        QMessageBox::warning(nullptr, "Предупреждение", message);
+        qCWarning(logCore) << message;
+    }
+    if (title_section_wgt_->exec(active_section_name_) == QDialog::Accepted) {
+        qCInfo(logCore) << "Получен заголовок раздела";
+        setWindowTitle(QString("ИСР - [%1, файл структуры не загружен]").arg(active_section_name_));
     }
 }
 
