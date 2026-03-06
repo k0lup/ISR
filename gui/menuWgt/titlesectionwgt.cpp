@@ -164,9 +164,6 @@ TitleSection TitleSectionWgt::getTitleOfSection() const {
 }
 
 int TitleSectionWgt::exec(const QString& section_name) {
-    rep_field_ = nullptr;
-    rep_field_->setText("");
-
     qCDebug(logCore) << "Запрошен exec пункта меню 'Заголовок раздела'";
     clearWgt();
     name_section_field_->setText(section_name);
