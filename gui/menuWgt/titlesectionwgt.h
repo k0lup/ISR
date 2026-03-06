@@ -20,7 +20,7 @@ struct TitleSection {
         name_section = section_name;
         name_of_prot = section_name;
     }
-    QString getString() {
+    QString getString() const {
         return QString("{Заголовок раздела: %1},\n"
                        "{Имя протокола: %2.%3},\n"
                        "{РЭП: %4},\n"
@@ -43,12 +43,15 @@ struct TitleSection {
 
 class TitleSectionWgt : public QDialog
 {
+    Q_OBJECT
 public:
     TitleSectionWgt(const QString& title_of_section, QWidget* parent = nullptr);
     TitleSectionWgt(QWidget* parent = nullptr);
     int exec(const QString& section_name);
 
     TitleSection getTitleOfSection() const;
+signals:
+    void failed(const QString& error_message);
 private:
     //TitleSection title_of_sections_;
 

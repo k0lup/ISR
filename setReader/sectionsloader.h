@@ -31,7 +31,7 @@ public slots:
 signals:
     void progress(int percent);
     void message(const QString& text);
-    void errorMessage(const QString& text);
+    void failed(const QString& error_message);
     void finished();
 
 private:

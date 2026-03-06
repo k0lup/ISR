@@ -46,7 +46,7 @@ bool ConfigService::load(const QString& settingsPath,
     cfg.programs_paths = programs_list;
 
     QStringList sections_list = getList(raw_setting, "РАЗДЕЛЫ");
-    if (programs_list.isEmpty()) {
+    if (sections_list.isEmpty()) {
         if (error) {
             error->filePath.clear();
             error->line = -1;
@@ -62,7 +62,7 @@ bool ConfigService::load(const QString& settingsPath,
         !readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_НАСТРОЕК", cfg.settings_path, &errMsg) ||
         !readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_ФАЙЛОВ", cfg.files_path, &errMsg) ||
         !readRequiredString(raw_setting, "РАЗМЕЩЕНИЕ_РАЗДЕЛОВ", cfg.sections_folder_path, &errMsg) ||
-        !readRequiredString(raw_setting, "ПРОТОКОЛ", cfg.files_path, &errMsg) ||
+        !readRequiredString(raw_setting, "ПРОТОКОЛ", cfg.prot_path, &errMsg) ||
         !readRequiredString(raw_setting, "НШС_ИЗД", cfg.nshc_isd, &errMsg) ||
         !readRequiredString(raw_setting, "АВАР_ИЗД", cfg.avar_isd, &errMsg) ||
         !readRequiredString(raw_setting, "ПРИ_ИЗД", cfg.pri_isd, &errMsg) ||

@@ -152,9 +152,15 @@ bool SetFilesReader::isValidCheckSum() const {
 }
 
 CheckSumType SetFilesReader::calculateCheckSum(const QStringList& file_data) const {
+    Q_UNUSED(file_data);
+    // TODO: Реализовать реальную проверку checksum для .SET файла.
+    // Временное поведение: считаем checksum валидной, пока алгоритм не внедрён
     return 0;
 }
 
 CheckSumType SetFilesReader::getCheckSumFromString(const QStringList& file_data) const {
+    Q_UNUSED(file_data);
+    // TODO: Реализовать реальную проверку checksum для .SET файла.
+    // Временное поведение: считаем checksum валидной, пока алгоритм не внедрён
     return 0;
 }

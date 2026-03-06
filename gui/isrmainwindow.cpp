@@ -328,12 +328,12 @@ void ISRMainWindow::beginStartup() {
     connect(sections_loader_, &SectionsLoader::finished, sections_thread_, &QThread::quit);
 
     // 7) ошибка: скрыть overlay + показать ошибку + остановить поток
-    connect(sections_loader_, &SectionsLoader::errorMessage, this, [this](const QString& msg){
+    connect(sections_loader_, &SectionsLoader::failed, this, [this](const QString& msg){
         hideLoading();
         showErrorMessage(msg);
         emit errorDetected();
     });
-    connect(sections_loader_, &SectionsLoader::errorMessage, sections_thread_, &QThread::quit);
+    connect(sections_loader_, &SectionsLoader::failed, sections_thread_, &QThread::quit);
 
     // 8) после finished забрать результат (важно: в UI-потоке)
     connect(sections_loader_, &SectionsLoader::finished, this, [this](){
@@ -380,9 +380,23 @@ void ISRMainWindow::showErrorMessage(const QString &msg)
 }
 
 void ISRMainWindow::onSectionsListActTriggered() {
-    if (section_list_wgt_->exec() == QDialog::Accepted) {
-        setSelectedSection(section_list_wgt_->getSelectedSection());
-        //setWindowTitle(QString("ИСР - [%1]").arg(active_section_name_));
+    if (section_list_wgt_->exec(mode_sections_list_wgt_) == QDialog::Accepted) {
+        SectionSelected section = section_list_wgt_->getSection();
+        switch (section.mode) {
+        case MODE_SECTION_LIST_WGT::FOR_SELECT:
+            setSelectedSection(section.section_name);
+            break;
+        case MODE_SECTION_LIST_WGT::FOR_LOAD:
+            loadSelectedSection(section.section_name);
+            break;
+        default:
+            QString message = "Получен раздел для выбора/загрузки в неизвестном режиме!";
+            qCCritical(logCore) << message;
+            QMessageBox::critical(nullptr, "Ошибка", message);
+            emit errorDetected();
+            break;
+        }
+
     } else {
         qCInfo(logCore) << QString("Было открыто окно со списком разделов, но раздел не был выбран");
     }
@@ -397,6 +411,16 @@ void ISRMainWindow::setSelectedSection(const QString& section_name) {
         QString message("В качестве имени выбранного раздела была получена пустая строка");
         qCWarning(logCore) << message;
         QMessageBox::warning(nullptr, "Предупреждение", message);
+    }
+}
+
+void ISRMainWindow::loadSelectedSection(const QString& section_name) {
+    if (!section_name.isEmpty()) {
+        qCInfo(logCore) << QString("Запрошена загрузка раздела '%1'").arg(section_name);
+
+        //загрузки структуры
+
+        emit structureLoaded();
     }
 }
 

@@ -1,5 +1,6 @@
 #ifndef ERRORREADFILESTRUCT_H
 #define ERRORREADFILESTRUCT_H
+#include <QString>
 
 struct ErrorReadFile
 {

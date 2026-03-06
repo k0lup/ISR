@@ -38,6 +38,7 @@ public slots:
     void showErrorMessage(const QString& msg);
 
     void setSelectedSection(const QString& section_name);
+    void loadSelectedSection(const QString& section_name);
 private slots:
     void beginStartup();
     void onSectionsListActTriggered();
@@ -56,6 +57,7 @@ private:
     LoadingOverlay* load_overlay_ = nullptr;
     SectionsLoader* sections_loader_ = nullptr;
     SectionListWgt* section_list_wgt_ = nullptr; //виджет пункт меню "выбрать раздел"
+    MODE_SECTION_LIST_WGT mode_sections_list_wgt_ = MODE_SECTION_LIST_WGT::FOR_SELECT; //режим работы окна пунккта меню "выбрать раздел"
     TitleSectionWgt* title_section_wgt_ = nullptr; //виджет пункта меню "заголовок раздела"
 
     QElapsedTimer time_after_start_head_section_;

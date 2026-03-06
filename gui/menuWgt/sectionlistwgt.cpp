@@ -23,14 +23,15 @@ SectionListWgt::SectionListWgt(QWidget* parent) :
     list_of_sections_ = new QListWidget(this);
     find_wgt_ = new FindWgt(this);
 
-    QPushButton* select_btn = new QPushButton("Выбрать", this);
-    QPushButton* load_btn = new QPushButton("Загрузить", this);
+    select_btn_ = new QPushButton("Выбрать", this);
+    load_btn_ = new QPushButton("Загрузить", this);
+    load_btn_->setEnabled(false);
     QPushButton* search_btn = new QPushButton("Найти", this);
     QPushButton* cancel_btn = new QPushButton("Отмена", this);
 
     QVBoxLayout *btn_layout = new QVBoxLayout;
-    btn_layout->addWidget(select_btn);
-    btn_layout->addWidget(load_btn);
+    btn_layout->addWidget(select_btn_);
+    btn_layout->addWidget(load_btn_);
     btn_layout->addWidget(search_btn);
     btn_layout->addWidget(cancel_btn);
 
@@ -43,7 +44,8 @@ SectionListWgt::SectionListWgt(QWidget* parent) :
     //используем QDialog подход в SectionListWgt::onSearchBtnClicked();
     //QObject::connect(find_wgt_, &FindWgt::searchTextEntered, this, &SectionListWgt::searchSection);
     QObject::connect(search_btn, &QPushButton::clicked, this, &SectionListWgt::onSearhBtnClicked);
-    QObject::connect(select_btn, &QPushButton::clicked, this, &SectionListWgt::onSelectBtnClicked);
+    QObject::connect(select_btn_, &QPushButton::clicked, this, &SectionListWgt::onAccpetBtnClicked);
+    QObject::connect(load_btn_, &QPushButton::clicked, this, &SectionListWgt::onAccpetBtnClicked);
     QObject::connect(cancel_btn, &QPushButton::clicked, this, &QDialog::reject);
 
     qCDebug(logCore) << "Закончили инициализацию окна SectionListWgt";
@@ -55,8 +57,25 @@ void SectionListWgt::setSections(const QStringList& sections) {
     list_of_sections_->addItems(sections);
 }
 
-int SectionListWgt::exec() {
+int SectionListWgt::exec(MODE_SECTION_LIST_WGT mode) {
     qCInfo(logCore) << "Вызвали окно SectionListWgt";
+    mode_ = mode;
+    switch (mode) {
+    case MODE_SECTION_LIST_WGT::FOR_LOAD:
+        load_btn_->setEnabled(true);
+        select_btn_->setEnabled(false);
+        break;
+    case MODE_SECTION_LIST_WGT::FOR_SELECT:
+        load_btn_->setEnabled(false);
+        select_btn_->setEnabled(true);
+        break;
+    default:
+        QString message = "НЕВЕРНО ЗАДАН РЕЖИМ РАБОТЫ ОКНА ВЫБОРА РАЗДЕЛА";
+        qCWarning(logCore) << message;
+        emit failed(message);
+        return QDialog::Rejected;
+    }
+
     selected_section_.clear();
     list_of_sections_->clearSelection();
     list_of_sections_->setCurrentRow(-1);
@@ -75,15 +94,30 @@ void SectionListWgt::onSearhBtnClicked() {
     return;
 }
 
-void SectionListWgt::onSelectBtnClicked() {
-    qCDebug(logCore) << "Нажали на кнопку Выбрать в Выборе раздела";
+void SectionListWgt::onAccpetBtnClicked() {
+    QString button_name;
+    switch (mode_) {
+    case MODE_SECTION_LIST_WGT::FOR_SELECT:
+        button_name = "Вызвать";
+        break;
+    case MODE_SECTION_LIST_WGT::FOR_LOAD:
+        button_name = "Загрузить";
+        break;
+    default:
+        QString message = "НЕВЕРНО ЗАДАН РЕЖИМ РАБОТЫ ОКНА ВЫБОРА РАЗДЕЛА";
+        qCWarning(logCore) << message;
+        emit failed(message);
+        reject();
+    }
+
+    qCDebug(logCore) << QString("Нажали на кнопку '%1' в Выборе раздела").arg(button_name);
     QListWidgetItem *item = list_of_sections_->currentItem();
     if (item) {
         selected_section_ = item->text();
         qCInfo(logCore) << QString("Выбран раздел '%1'").arg(selected_section_);
         accept();
     } else {
-        QString message = QString("Кнопка 'Выбрать' нажата, но не удалось найти ни одного раздела");
+        QString message = QString("Кнопка '%1' нажата, но не удалось найти ни одного раздела").arg(button_name);
         qCInfo(logCore) << message;
         QMessageBox::warning(nullptr, "Предупреждение", message);
     }
@@ -112,6 +146,9 @@ void SectionListWgt::searchSection(const QString& section_name) {
     }
 }
 
-QString SectionListWgt::getSelectedSection() const {
-    return selected_section_;
+SectionSelected SectionListWgt::getSection() const {
+    SectionSelected result;
+    result.section_name = selected_section_;
+    result.mode = mode_;
+    return result;
 }

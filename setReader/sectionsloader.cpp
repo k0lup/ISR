@@ -47,6 +47,11 @@ void SectionsLoader::start() {
         section = dir.filePath(section + QString(".SET"));
     }
 
+    if (sections.isEmpty()) {
+        emit failed("Список разделов пуст");
+        return;
+    }
+
     for (int i = 0; i < sections.size(); ++i) {
         if (cancel_requested_.load()) {
             qCInfo(logCore) << "Пользователем запрошена остановка загрузки";
@@ -59,14 +64,16 @@ void SectionsLoader::start() {
         int percent_progress = std::lround(100.0 * (i + 1) / sections.size());
         emit progress(percent_progress);
         QSet new_sections = readMasterSectionsFile(file_name, error);
-        if (!error.message.isEmpty())
+        if (!error.message.isEmpty()) {
+            emit failed(error.toString());
             return;
+        }
         sections_names_.unite(new_sections);
     }
 
     folder = cfg_->spo_path;
 
-    dir.setCurrent(folder);
+    dir = QDir(folder);
     for (const auto& section : sections_names_) {
         QDir section_dir(dir.filePath(section));
         QString filePath  = section_dir.filePath(section + QString(".SET"));
@@ -85,14 +92,12 @@ QSet<QString> SectionsLoader::readMasterSectionsFile(const QString& file_path, E
 
     qCInfo(logCore) << QString("Читаем файл %1").arg(file_path);
     if (!set_reader_.readFile(file_path, error)) {
-        emit errorMessage(error.toString());
         qCWarning(logCore) << error.toString();
         return QSet<QString>();
     }
     SetFileData data = set_reader_.getFileData();
     if (!data.directory.isEmpty() || !data.structure.isEmpty()) {
         error.message = QString("В файле (%1) обнаружены данные в столбцах кроме аббревиатуры!").arg(file_path);
-        emit errorMessage(error.toString());
         qCWarning(logCore) << error.toString();
         return QSet<QString>();
     }
