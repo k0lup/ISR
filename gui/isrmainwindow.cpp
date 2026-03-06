@@ -480,5 +480,11 @@ void ISRMainWindow::buildStateMachine() {
 }
 
 ISRMainWindow::~ISRMainWindow() {
-
+    if (sections_loader_ != nullptr) {
+        sections_loader_->cancel();
+    }
+    if (sections_thread_ != nullptr) {
+        sections_thread_->quit();
+        sections_thread_->wait();
+    }
 }

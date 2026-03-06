@@ -107,7 +107,7 @@ void SectionListWgt::onAccpetBtnClicked() {
         QString message = "НЕВЕРНО ЗАДАН РЕЖИМ РАБОТЫ ОКНА ВЫБОРА РАЗДЕЛА";
         qCWarning(logCore) << message;
         emit failed(message);
-        reject();
+        return reject();
     }
 
     qCDebug(logCore) << QString("Нажали на кнопку '%1' в Выборе раздела").arg(button_name);

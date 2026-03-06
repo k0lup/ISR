@@ -154,6 +154,7 @@ TitleSection TitleSectionWgt::getTitleOfSection() const {
     result.name_section = name_section_field_->text();
     result.name_of_prot = name_prot_field_->text();
     result.traf = traf_prot_field_->text();
+    result.rep = rep_field_->text();
     result.operator_pu_ais = operator_pu_ais_field_->text();
     result.operator_ais = operator_ais_field_->text();
     result.operator_tkck_ss_bvs = operator_tkck_ss_bvs_field_->text();
