@@ -1,490 +1,280 @@
-#include "isrmainwindow.h"
+#include "gui/isrmainwindow.h"
+
+#include <QAction>
 #include <QMenu>
 #include <QMenuBar>
-#include <QCloseEvent>
-#include <QCoreApplication>
-#include <QApplication>
-#include "logger/logging_categories.h"
-#include <QLoggingCategory>
-#include <QTimer>
 #include <QMessageBox>
-#include <QStringList>
+#include <QCoreApplication>
 
+#include "application/isr_controller.h"
+#include "domain/title_section_data.h"
+#include "gui/loadingoverlay.h"
+#include "menuWgt/sectionlistwgt.h"
+#include "menuWgt/titlesectionwgt.h"
 
-/*static QString expandUserPath(const QString &path)
+ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* parent)
+    : QMainWindow(parent)
+    , cfg_(std::move(cfg))
 {
-    if (path.startsWith("~"))
-    {
-        QString home = QDir::homePath();
-        QString newPath = path;
-        newPath.replace(0, 1, home);
-        return QDir::cleanPath(newPath);
+    loadOverlay_ = new LoadingOverlay(this);
+    sectionListWgt_ = new SectionListWgt(this);
+    titleSectionWgt_ = new TitleSectionWgt(this);
+
+    buildMenus();
+    connectUi();
+
+    controller_ = new isr::ISRController(cfg_, this);
+    connect(controller_, &isr::ISRController::uiStateChanged,
+            this, &ISRMainWindow::applyUiState);
+    connect(controller_, &isr::ISRController::permissionsChanged,
+            this, &ISRMainWindow::applyPermissions);
+    connect(controller_, &isr::ISRController::sectionsListChanged,
+            this, &ISRMainWindow::setSectionsList);
+    connect(controller_, &isr::ISRController::showErrorRequested,
+            this, &ISRMainWindow::showErrorMessage);
+    connect(controller_, &isr::ISRController::showWarningRequested,
+            this, &ISRMainWindow::showWarningMessage);
+
+    controller_->start();
+}
+
+ISRMainWindow::~ISRMainWindow() = default;
+
+void ISRMainWindow::buildMenus()
+{
+    setWindowTitle(QStringLiteral("ИСР - [раздел не выбран]"));
+
+    preparationMenu_ = menuBar()->addMenu(QStringLiteral("Подготовка"));
+    sectionsMenu_ = menuBar()->addMenu(QStringLiteral("Разделы"));
+    segmentsMenu_ = menuBar()->addMenu(QStringLiteral("Секции"));
+    workMenu_ = menuBar()->addMenu(QStringLiteral("Работа"));
+    autoMenu_ = menuBar()->addMenu(QStringLiteral("Авто"));
+    docsMenu_ = menuBar()->addMenu(QStringLiteral("ЭД"));
+    sectionsRepMenu_ = menuBar()->addMenu(QStringLiteral("Разделы РЭП"));
+    segmentsRepMenu_ = menuBar()->addMenu(QStringLiteral("Секции РЭП"));
+
+    sectionsListAction_ = preparationMenu_->addAction(QStringLiteral("Список разделов..."));
+    titleOfSectionAction_ = preparationMenu_->addAction(QStringLiteral("Заголовок раздела..."));
+    pfksAction_ = preparationMenu_->addAction(QStringLiteral("ПФКС..."));
+    controlSpoAction_ = preparationMenu_->addAction(QStringLiteral("Контроль СПО..."));
+    loadStructureAction_ = preparationMenu_->addAction(QStringLiteral("Загрузка структуры"));
+    preparationMenu_->addSeparator();
+    debugOfSectionAction_ = preparationMenu_->addAction(QStringLiteral("Отладка раздела..."));
+    preparationMenu_->addSeparator();
+    addSectionsAction_ = preparationMenu_->addAction(QStringLiteral("Добавить разделы в список разделов..."));
+    rebuildSectionsAction_ = preparationMenu_->addAction(QStringLiteral("Перестроить список разделов"));
+    stencilAction_ = preparationMenu_->addAction(QStringLiteral("Трафарет..."));
+    QMenu* dangerMenu = preparationMenu_->addMenu(QStringLiteral("Нештат"));
+    dangerMenu->addAction(QStringLiteral("Выход"));
+
+    regularSectionAction_ = segmentsMenu_->addAction(QStringLiteral("Штатное проведение раздела"));
+    nshsSectionAction_ = segmentsMenu_->addAction(QStringLiteral("НШС раздела"));
+    priSectionAction_ = segmentsMenu_->addAction(QStringLiteral("ПРИ раздела"));
+
+    runOperationAction_ = workMenu_->addAction(QStringLiteral("Выполнить операцию"));
+    cancelVariantAction_ = workMenu_->addAction(QStringLiteral("Отменить вариант"));
+    spAction_ = workMenu_->addAction(QStringLiteral("СП..."));
+    goToActiveSegmentsAction_ = workMenu_->addAction(QStringLiteral("Перейти к активной сессии"));
+    imitatePrisAnswerAction_ = workMenu_->addAction(QStringLiteral("Имитация ответа ПРИС на КО (ненорм.)"));
+    headSectionTimeAction_ = workMenu_->addAction(QStringLiteral("Продолжительность головного раздела..."));
+    workMenu_->addAction(QStringLiteral("Вернуть окно на место"));
+    workMenu_->addSeparator();
+    endSectionAction_ = workMenu_->addAction(QStringLiteral("Конец раздела..."));
+    exitSectionsAction_ = workMenu_->addAction(QStringLiteral("Выход из разделов..."));
+    workMenu_->addSeparator();
+    workMenu_->addAction(QStringLiteral("Настройка"));
+
+    markAutoAction_ = autoMenu_->addAction(QStringLiteral("Начать/окончить отметку блока 'Авто'"));
+    unsetAutoAction_ = autoMenu_->addAction(QStringLiteral("Снять отметку блока 'Авто'"));
+    autoMenu_->addSeparator();
+    runAutoBlockAction_ = autoMenu_->addAction(QStringLiteral("Выполнить блок 'Авто'"));
+    stopAutoBlockAction_ = autoMenu_->addAction(QStringLiteral("Остановить выполнение блока 'Авто'"));
+
+    docsMenu_->addAction(QStringLiteral("НШС изделия"));
+    docsMenu_->addAction(QStringLiteral("АВАР изделия"));
+    docsMenu_->addAction(QStringLiteral("ПРИ изделия"));
+    docsMenu_->addAction(QStringLiteral("НШС РЭП"));
+    docsMenu_->addAction(QStringLiteral("АВАР РЭП"));
+    docsMenu_->addAction(QStringLiteral("ПРИ РЭП"));
+
+    sectionsRepMenu_->addAction(QStringLiteral("Список разделов РЭП"));
+
+    segmentsRepMenu_->addAction(QStringLiteral("Раздел РЭП"));
+    segmentsRepMenu_->addAction(QStringLiteral("Второй раздел"));
+    segmentsRepMenu_->addAction(QStringLiteral("Третий раздел"));
+    segmentsRepMenu_->addAction(QStringLiteral("Конец раздела"));
+    segmentsRepMenu_->addAction(QStringLiteral("Выход из разделов"));
+
+    rebuildSectionsMenu(QStringList());
+}
+
+void ISRMainWindow::connectUi()
+{
+    connect(sectionsListAction_, &QAction::triggered,
+            this, &ISRMainWindow::onSectionsListActTriggered);
+    connect(titleOfSectionAction_, &QAction::triggered,
+            this, &ISRMainWindow::onTitleOfSectionActTriggered);
+    connect(loadStructureAction_, &QAction::triggered,
+            this, &ISRMainWindow::onLoadStructureTriggered);
+    connect(exitSectionsAction_, &QAction::triggered,
+            this, &ISRMainWindow::onExitSectionsTriggered);
+}
+
+void ISRMainWindow::applyUiState(const isr::ISRUiState& state)
+{
+    currentUiState_ = state;
+    setWindowTitle(state.windowTitle);
+
+    if (state.loadingVisible) {
+        showLoading(state.loadingMessage, state.loadingIndeterminate);
+        if (state.loadingProgressKnown) {
+            setLoadingProgress(state.loadingProgress);
+        }
+    } else {
+        hideLoading();
     }
 
-    return QDir::cleanPath(path);
-}*/
+    rebuildSectionsMenu(state.openedSections);
+}
 
-ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* parent) :
-    QMainWindow(parent),
-    cfg_(std::move(cfg))
+void ISRMainWindow::applyPermissions(const isr::ISRPermissions& p)
 {
-    qCDebug(logCore) << QString("Инициализация окна ISRMainWindow");
+    sectionsListAction_->setEnabled(p.canOpenSectionsList);
+    titleOfSectionAction_->setEnabled(p.canEditTitle);
+    pfksAction_->setEnabled(p.canOpenPfks);
+    controlSpoAction_->setEnabled(p.canControlSpo);
+    loadStructureAction_->setEnabled(p.canLoadStructure);
+    debugOfSectionAction_->setEnabled(p.canDebugSection);
+    addSectionsAction_->setEnabled(p.canAddSections);
+    rebuildSectionsAction_->setEnabled(p.canRebuildSections);
+    stencilAction_->setEnabled(p.canOpenStencil);
 
-    load_overlay_ = new LoadingOverlay(this);
-    //sections_loader_ = new SectionsLoader(cfg_, this);
-    section_list_wgt_ = new SectionListWgt(this);
-    title_section_wgt_ = new TitleSectionWgt(this);
+    regularSectionAction_->setEnabled(p.canSelectRegularSection);
+    nshsSectionAction_->setEnabled(p.canSelectNshsSection);
+    priSectionAction_->setEnabled(p.canSelectPriSection);
 
-    setWindowTitle("ИСР - [раздел не выбран]");
+    runOperationAction_->setEnabled(p.canRunOperation);
+    cancelVariantAction_->setEnabled(p.canCancelVariant);
+    spAction_->setEnabled(p.canOpenSp);
+    goToActiveSegmentsAction_->setEnabled(p.canGoToActiveSegments);
+    imitatePrisAnswerAction_->setEnabled(p.canImitatePrisAnswer);
+    headSectionTimeAction_->setEnabled(p.canShowHeadDuration);
+    endSectionAction_->setEnabled(p.canEndSection);
+    exitSectionsAction_->setEnabled(p.canExitSections);
 
-    preparation_menu_ = new QMenu("Подготовка", this);
-    sections_menu_ = new QMenu("Разделы", this);
-    segments_menu_ = new QMenu("Секции", this);
-    work_menu_ = new QMenu("Работа", this);
-    auto_menu_ = new QMenu("Авто", this);
-    docs_menu_ = new QMenu("ЭД", this);
-    sections_rep_menu_ = new QMenu("Разделы РЭП", this);
-    segments_rep_menu_ = new QMenu("Секции РЭП", this);
+    markAutoAction_->setEnabled(p.canMarkAuto);
+    unsetAutoAction_->setEnabled(p.canUnsetAuto);
+    runAutoBlockAction_->setEnabled(p.canRunAutoBlock);
+    stopAutoBlockAction_->setEnabled(p.canStopAutoBlock);
+}
 
-    sections_list_action_ = preparation_menu_->addAction("Список разделов...");
-    title_of_section_ = preparation_menu_->addAction("Заголовок раздела...");
-    pfks_action_ = preparation_menu_->addAction("ПФКС...");
-    control_spo_action_ = preparation_menu_->addAction("Контроль СПО...");
-    load_structure_action_ = preparation_menu_->addAction("Загрузка структуры");
-    preparation_menu_->addSeparator();
-    debug_of_section_action_ = preparation_menu_->addAction("Отладка раздела...");
-    preparation_menu_->addSeparator();
-    add_sections_on_list_sections_action_ = preparation_menu_->addAction("Добавить разделы в список разделов...");
-    rebuild_sections_list_action_ = preparation_menu_->addAction("Перестроить список разделов");
-    stencil_action_ = preparation_menu_->addAction("Трафарет...");
-    QMenu* danger_menu = preparation_menu_->addMenu("Нештат");
-    danger_menu->addAction("Выход");
+void ISRMainWindow::setSectionsList(const QStringList& sections)
+{
+    sectionListWgt_->setSections(sections);
+}
 
-    regular_con_section_action_ = segments_menu_->addAction("Штатное проведение раздела");
-    nshc_of_section_action_ = segments_menu_->addAction("НШС раздела");
-    pri_of_section_action_ = segments_menu_->addAction("ПРИ раздела");
+void ISRMainWindow::showLoading(const QString& msg, bool indeterminate)
+{
+    loadOverlay_->setIndeterminate(indeterminate);
+    loadOverlay_->setMessage(msg);
+    loadOverlay_->raise();
+    loadOverlay_->show();
+    loadOverlay_->setFocus();
+}
 
-    run_operation_action_ = work_menu_->addAction("Выполнить операцию");
-    cancel_var_action_ = work_menu_->addAction("Отменить вариант");
-    sp_action_ = work_menu_->addAction("СП...");
-    go_to_active_segmets_action_ = work_menu_->addAction("Перейти к активной сессии");
-    imin_answer_pris_to_ko_action_ = work_menu_->addAction("Имитация ответа ПРИС на КО (ненорм.)");
-    time_of_head_section_action_ = work_menu_->addAction("Продолжительность головного раздела...");
-    QAction* move_window_to_position_action = work_menu_->addAction("Вернуть окно на место");
-    work_menu_->addSeparator();
-    end_section_action_ = work_menu_->addAction("Конец раздела...");
-    exit_of_sections_action_ = work_menu_->addAction("Выход из разделов...");
-    work_menu_->addSeparator();
-    QAction* settings_action = work_menu_->addAction("Настройка");
+void ISRMainWindow::setLoadingMessage(const QString& msg)
+{
+    loadOverlay_->setMessage(msg);
+}
 
-    start_or_end_auto_label_action_ = auto_menu_->addAction("Начать/окончить отметку блока 'Авто'");
-    start_or_end_auto_label_action_->setShortcut(QKeySequence(Qt::Key_F7));
-    unset_auto_label_action_ = auto_menu_->addAction("Снять отметку блока 'Авто'");
-    unset_auto_label_action_->setShortcut(QKeySequence(Qt::Key_F7));
-    auto_menu_->addSeparator();
-    run_auto_block_action_ = auto_menu_->addAction("Выполнить блок 'Авто'");
-    stop_auto_block_action_ = auto_menu_->addAction("Остановить выполнение блока 'Авто'");
+void ISRMainWindow::setLoadingProgress(int percent)
+{
+    loadOverlay_->setProgress(percent);
+}
 
-    QAction* nshc_of_product_action = docs_menu_->addAction("НШС изделия");
-    QAction* avar_of_product_action = docs_menu_->addAction("АВАР изделия");
-    QAction* pri_of_product_action = docs_menu_->addAction("ПРИ изделия");
-    QAction* nshc_rep_action = docs_menu_->addAction("НШС РЭП");
-    QAction* avar_pep_action = docs_menu_->addAction("АВАР РЭП");
-    QAction* pri_rep_action = docs_menu_->addAction("ПРИ РЭП");
+void ISRMainWindow::hideLoading()
+{
+    loadOverlay_->hide();
+}
 
-    QAction* list_of_sections_rep_action = sections_rep_menu_->addAction("Список разделов РЭП");
+void ISRMainWindow::showErrorMessage(const QString& msg)
+{
+    QMessageBox::critical(this, QStringLiteral("Ошибка"), msg);
+}
 
-    QAction* section_rep_action = segments_rep_menu_->addAction("Раздел РЭП");
-    QAction* sectond_section_action = segments_rep_menu_->addAction("Второй раздел");
-    QAction* third_section_action = segments_rep_menu_->addAction("Третий раздел");
-    QAction* end_of_section_action = segments_rep_menu_->addAction("Конец раздела");
-    QAction* exit_of_the_sections_action = segments_rep_menu_->addAction("Выход из разделов");
+void ISRMainWindow::showWarningMessage(const QString& msg)
+{
+    QMessageBox::warning(this, QStringLiteral("Предупреждение"), msg);
+}
 
+void ISRMainWindow::onSectionsListActTriggered()
+{
+    if (sectionListWgt_->exec(MODE_SECTION_LIST_WGT::FOR_SELECT) != QDialog::Accepted) {
+        return;
+    }
 
-    menuBar()->addMenu(preparation_menu_);
-    menuBar()->addMenu(sections_menu_);
-    menuBar()->addMenu(segments_menu_);
-    menuBar()->addMenu(work_menu_);
-    menuBar()->addMenu(auto_menu_);
-    menuBar()->addMenu(docs_menu_);
-    menuBar()->addMenu(sections_rep_menu_);
-    menuBar()->addMenu(segments_rep_menu_);
+    const SectionSelected selected = sectionListWgt_->getSection();
+    if (selected.mode == MODE_SECTION_LIST_WGT::FOR_LOAD) {
+        controller_->onLoadSectionRequested(selected.section_name);
+        return;
+    }
 
-    buildStateMachine();
+    controller_->onSectionChosen(selected.section_name);
+}
 
-    QObject::connect(sections_list_action_, &QAction::triggered, this, &ISRMainWindow::onSectionsListActTriggered);
-    QObject::connect(title_of_section_, &QAction::triggered, this, &ISRMainWindow::onTitleOfSectionActTriggered);
+void ISRMainWindow::onTitleOfSectionActTriggered()
+{
+    if (currentUiState_.activeSectionName.trimmed().isEmpty()) {
+        showWarningMessage(QStringLiteral("Сначала выберите раздел"));
+        return;
+    }
 
-    qCDebug(logCore) << QString("Завершена инициализация окна ISRMainWindow");
-    machine_.start();
+    if (titleSectionWgt_->exec(currentUiState_.activeSectionName) != QDialog::Accepted) {
+        return;
+    }
+
+    const TitleSection title = titleSectionWgt_->getTitleOfSection();
+
+    isr::TitleSectionData data;
+    data.nameSection = title.name_section;
+    data.protocolName = title.name_of_prot;
+    data.traf = title.traf;
+    data.rep = title.rep;
+    data.operatorPuAis = title.operator_pu_ais;
+    data.operatorAis = title.operator_ais;
+    data.operatorTkckSsBvs = title.operator_tkck_ss_bvs;
+    data.operatorNtkSi = title.operator_ntk_si;
+    data.operatorBs = title.operator_bs;
+
+    controller_->onTitleConfirmed(data);
+}
+
+void ISRMainWindow::onLoadStructureTriggered()
+{
+    controller_->onLoadStructureRequested();
+}
+
+void ISRMainWindow::onExitSectionsTriggered()
+{
+    controller_->onCloseSectionsRequested();
+}
+
+void ISRMainWindow::rebuildSectionsMenu(const QStringList& sections)
+{
+    sectionsMenu_->clear();
+
+    if (sections.isEmpty()) {
+        sectionsMenu_->addAction(QStringLiteral("< Разделов нет >"));
+        return;
+    }
+
+    for (const QString& section : sections) {
+        sectionsMenu_->addAction(section);
+    }
 }
 
 void ISRMainWindow::closeEvent(QCloseEvent *event) {
     event->accept();
 
-
     QCoreApplication::quit();
-}
-
-
-
-void ISRMainWindow::showLoading(const QString& msg, bool indeterminate)
-{
-    load_overlay_->setIndeterminate(indeterminate);
-    load_overlay_->setMessage(msg);
-    load_overlay_->raise();
-    load_overlay_->show();
-    load_overlay_->setFocus();
-}
-
-void ISRMainWindow::enterStartupLoading() {
-    qCInfo(logCore) << "Машана состояний переводится в st_startup_loading_";
-
-    /*sections_menu_->setEnabled(false);
-    preparation_menu_->setEnabled(false);
-    segments_menu_->setEnabled(false);
-    work_menu_->setEnabled(false);
-    auto_menu_->setEnabled(false);
-    docs_menu_->setEnabled(false);
-    sections_rep_menu_->setEnabled(false);
-    segments_rep_menu_->setEnabled(false);*/
-    this->setEnabled(false);
-
-    beginStartup();
-
-    qCInfo(logCore) << "Машана состояний переведена в st_startup_loading_";
-}
-
-void ISRMainWindow::enterIdleNoSection() {
-    qCInfo(logCore) << "Машана состояний переводится в st_idle_no_section_";
-    this->setEnabled(true);
-    /*
-    sections_menu_->                    setEnabled(true);
-    preparation_menu_->                 setEnabled(true);
-    segments_menu_->                    setEnabled(true);
-    work_menu_->                        setEnabled(true);
-    auto_menu_->                        setEnabled(true);
-    docs_menu_->                        setEnabled(true);
-    sections_rep_menu_->                setEnabled(true);
-    segments_rep_menu_->                setEnabled(true);
-    */
-
-    sections_list_action_->                 setEnabled(true);
-    title_of_section_->                     setEnabled(false);
-    pfks_action_->                          setEnabled(false);
-    control_spo_action_->                   setEnabled(false);
-    load_structure_action_->                setEnabled(false);
-    debug_of_section_action_->              setEnabled(true);
-    add_sections_on_list_sections_action_-> setEnabled(true);
-    rebuild_sections_list_action_->         setEnabled(true);
-    stencil_action_->                       setEnabled(true);
-
-    regular_con_section_action_->           setEnabled(false);
-    nshc_of_section_action_->               setEnabled(false);
-    pri_of_section_action_->                setEnabled(false);
-
-    run_operation_action_->                 setEnabled(false);
-    cancel_var_action_->                    setEnabled(false);
-    sp_action_->                            setEnabled(false);
-    go_to_active_segmets_action_->          setEnabled(false);
-    imin_answer_pris_to_ko_action_->        setEnabled(false);
-    time_of_head_section_action_->          setEnabled(false);
-    end_section_action_->                   setEnabled(false);
-    exit_of_sections_action_->              setEnabled(false);
-
-    start_or_end_auto_label_action_->       setEnabled(false);
-    unset_auto_label_action_->              setEnabled(false);
-    run_auto_block_action_->                setEnabled(false);
-    stop_auto_block_action_->               setEnabled(false);
-
-    sections_menu_->clear();
-    sections_menu_->addAction("< Разделов нет >");
-
-    qCInfo(logCore) << "Машана состояний переведена в st_idle_no_section_";
-}
-
-void ISRMainWindow::enterSectionSelected() {
-    qCInfo(logCore) << "Машана состояний переводится в st_section_selected_";
-
-    sections_list_action_->                 setEnabled(true);
-    title_of_section_->                     setEnabled(true);
-    pfks_action_->                          setEnabled(false);
-    control_spo_action_->                   setEnabled(false);
-    load_structure_action_->                setEnabled(false);
-    debug_of_section_action_->              setEnabled(true);
-    add_sections_on_list_sections_action_-> setEnabled(true);
-    rebuild_sections_list_action_->         setEnabled(true);
-    stencil_action_->                       setEnabled(true);
-
-    regular_con_section_action_->           setEnabled(false);
-    nshc_of_section_action_->               setEnabled(false);
-    pri_of_section_action_->                setEnabled(false);
-
-    run_operation_action_->                 setEnabled(false);
-    cancel_var_action_->                    setEnabled(false);
-    sp_action_->                            setEnabled(false);
-    go_to_active_segmets_action_->          setEnabled(false);
-    imin_answer_pris_to_ko_action_->        setEnabled(false);
-    time_of_head_section_action_->          setEnabled(false);
-    end_section_action_->                   setEnabled(false);
-    exit_of_sections_action_->              setEnabled(false);
-
-    start_or_end_auto_label_action_->       setEnabled(false);
-    unset_auto_label_action_->              setEnabled(false);
-    run_auto_block_action_->                setEnabled(false);
-    stop_auto_block_action_->               setEnabled(false);
-
-    setWindowTitle(QString("ИСР - [%1]").arg(active_section_name_));
-
-    qCInfo(logCore) << "Машана состояний переведена в st_section_selected_";
-}
-
-void ISRMainWindow::enterSectionTitleReady() {
-    qCInfo(logCore) << "Машана состояний переводится в st_title_ready_";
-
-    setWindowTitle(QString("ИСР - [%1, файл структуры не загружен]").arg(active_section_name_));
-
-    sections_list_action_->                 setEnabled(true);
-    title_of_section_->                     setEnabled(false);
-    pfks_action_->                          setEnabled(true);
-    control_spo_action_->                   setEnabled(true);
-    load_structure_action_->                setEnabled(true);
-    debug_of_section_action_->              setEnabled(false);
-    add_sections_on_list_sections_action_-> setEnabled(false);
-    rebuild_sections_list_action_->         setEnabled(false);
-    stencil_action_->                       setEnabled(false);
-
-    regular_con_section_action_->           setEnabled(false);
-    nshc_of_section_action_->               setEnabled(false);
-    pri_of_section_action_->                setEnabled(false);
-
-    run_operation_action_->                 setEnabled(false);
-    cancel_var_action_->                    setEnabled(false);
-    sp_action_->                            setEnabled(true);
-    go_to_active_segmets_action_->          setEnabled(false);
-    imin_answer_pris_to_ko_action_->        setEnabled(false);
-    time_of_head_section_action_->          setEnabled(true);
-    end_section_action_->                   setEnabled(true);
-    exit_of_sections_action_->              setEnabled(true);
-
-    start_or_end_auto_label_action_->       setEnabled(false);
-    unset_auto_label_action_->              setEnabled(false);
-    run_auto_block_action_->                setEnabled(false);
-    stop_auto_block_action_->               setEnabled(false);
-
-    time_after_start_head_section_.start();
-
-
-    qCInfo(logCore) << "Машана состояний переведена в st_title_ready_";
-}
-
-void ISRMainWindow::enterStructureReady() {
-    qCInfo(logCore) << "Машана состояний переводится в st_structure_ready_";
-
-
-
-    qCInfo(logCore) << "Машана состояний переведена в st_structure_ready_";
-}
-
-void ISRMainWindow::enterErrorDetected() {
-    qCInfo(logCore) << "Машана состояний переводится в st_error_detected_";
-
-    this->setEnabled(false);
-    QString message = "При работе ИСР произошла серьезная ошибка! Программа должна быть завершена!";
-    QMessageBox::critical(nullptr, "Ошибка", message);
-    qCWarning(logCore) << message;
-
-    qCInfo(logCore) << "Машана состояний переведена в st_error_detected_";
-}
-
-void ISRMainWindow::beginStartup() {
-    if (sections_thread_ != nullptr) {
-        QString message = "Попытка двойной инициализации приложения!";
-        qCCritical(logCore) << message;
-        QMessageBox::critical(nullptr, "Ошибка", message);
-        emit errorDetected();
-        return;
-    }
-
-    // 1) UI overlay
-    showLoading("Загрузка списка разделов...", true);
-
-    // 2) поток
-    sections_thread_ = new QThread(this);
-
-    // 3) воркер (без parent = this, чтобы не привязать к UI-потоку)
-    sections_loader_ = new SectionsLoader(cfg_, nullptr);
-    sections_loader_->moveToThread(sections_thread_);
-
-    // 4) запуск работы
-    connect(sections_thread_, &QThread::started, sections_loader_, &SectionsLoader::start);
-
-    // 5) сигналы -> UI
-    connect(sections_loader_, &SectionsLoader::progress, this, &ISRMainWindow::setLoadingProgress);
-    connect(sections_loader_, &SectionsLoader::message,  this, &ISRMainWindow::setLoadingMessage);
-
-    // 6) завершение: скрыть overlay + остановить поток
-    connect(sections_loader_, &SectionsLoader::finished, this, &ISRMainWindow::hideLoading);
-    connect(sections_loader_, &SectionsLoader::finished, sections_thread_, &QThread::quit);
-
-    // 7) ошибка: скрыть overlay + показать ошибку + остановить поток
-    connect(sections_loader_, &SectionsLoader::failed, this, [this](const QString& msg){
-        hideLoading();
-        showErrorMessage(msg);
-        emit errorDetected();
-    });
-    connect(sections_loader_, &SectionsLoader::failed, sections_thread_, &QThread::quit);
-
-    // 8) после finished забрать результат (важно: в UI-потоке)
-    connect(sections_loader_, &SectionsLoader::finished, this, [this](){
-        QStringList list = sections_loader_->getSectionsNames().values();
-        list.sort();
-        section_list_wgt_->setSections(list);
-
-        emit startupCompleted();
-    });
-
-    // 9) аккуратная очистка объектов
-    QObject::connect(sections_thread_, &QThread::finished, sections_loader_, &QObject::deleteLater);
-
-    QObject::connect(sections_thread_, &QThread::finished, sections_thread_, &QObject::deleteLater);
-
-    QObject::connect(sections_thread_, &QThread::finished, this, [this]() {
-        sections_loader_ = nullptr;
-        sections_thread_ = nullptr;
-    });
-
-    // 10) старт
-    sections_thread_->start();
-}
-
-void ISRMainWindow::setLoadingMessage(const QString& msg)
-{
-    if (load_overlay_->isVisible()) load_overlay_->setMessage(msg);
-}
-
-void ISRMainWindow::setLoadingProgress(int percent)
-{
-    if (load_overlay_->isVisible()) load_overlay_->setProgress(percent);
-}
-
-void ISRMainWindow::hideLoading()
-{
-    load_overlay_->hide();
-}
-
-void ISRMainWindow::showErrorMessage(const QString &msg)
-{
-    qCWarning(logCore) << QString("Был запрошен вывод сообщения об ошибке: %1").arg(msg);
-    QMessageBox::critical(nullptr, "Ошибка!", msg);
-}
-
-void ISRMainWindow::onSectionsListActTriggered() {
-    if (section_list_wgt_->exec(mode_sections_list_wgt_) == QDialog::Accepted) {
-        SectionSelected section = section_list_wgt_->getSection();
-        switch (section.mode) {
-        case MODE_SECTION_LIST_WGT::FOR_SELECT:
-            setSelectedSection(section.section_name);
-            break;
-        case MODE_SECTION_LIST_WGT::FOR_LOAD:
-            loadSelectedSection(section.section_name);
-            break;
-        default:
-            QString message = "Получен раздел для выбора/загрузки в неизвестном режиме!";
-            qCCritical(logCore) << message;
-            QMessageBox::critical(nullptr, "Ошибка", message);
-            emit errorDetected();
-            break;
-        }
-
-    } else {
-        qCInfo(logCore) << QString("Было открыто окно со списком разделов, но раздел не был выбран");
-    }
-}
-
-void ISRMainWindow::setSelectedSection(const QString& section_name) {
-    if (!section_name.isEmpty()) {
-        active_section_name_ = section_name;
-        qCInfo(logCore) << QString("Был выбран раздел '%1'").arg(section_name);
-        emit sectionChosen();
-    } else {
-        QString message("В качестве имени выбранного раздела была получена пустая строка");
-        qCWarning(logCore) << message;
-        QMessageBox::warning(nullptr, "Предупреждение", message);
-    }
-}
-
-void ISRMainWindow::loadSelectedSection(const QString& section_name) {
-    if (!section_name.isEmpty()) {
-        qCInfo(logCore) << QString("Запрошена загрузка раздела '%1'").arg(section_name);
-
-        //загрузки структуры
-
-        emit structureLoaded();
-    }
-}
-
-void ISRMainWindow::onTitleOfSectionActTriggered() {
-    if (active_section_name_.isEmpty()) {
-        QString message = "Имя выбранного раздела пустое! Открытие окна 'Заголовок раздела' недопустимо";
-        QMessageBox::warning(nullptr, "Предупреждение", message);
-        qCWarning(logCore) << message;
-        return;
-    }
-    if (title_section_wgt_->exec(active_section_name_) == QDialog::Accepted) {
-        qCInfo(logCore) << "Получен заголовок раздела";
-        emit titleConfirmed();
-    }
-}
-
-void ISRMainWindow::buildStateMachine() {
-    st_startup_loading_ = new QState(&machine_);
-    st_idle_no_section_ = new QState(&machine_);
-    st_section_selected_ = new QState(&machine_);
-    st_title_ready_ = new QState(&machine_);
-    st_structure_ready_ = new QState(&machine_);
-    st_error_detected_ = new QState(&machine_);
-
-    machine_.setInitialState(st_startup_loading_);
-
-    // Переходы
-    st_startup_loading_->addTransition(this, &ISRMainWindow::startupCompleted, st_idle_no_section_);
-
-    st_idle_no_section_->addTransition(this, &ISRMainWindow::sectionChosen, st_section_selected_);
-
-    st_section_selected_->addTransition(this, &ISRMainWindow::titleConfirmed, st_title_ready_);
-    st_section_selected_->addTransition(this, &ISRMainWindow::sectionChosen, st_section_selected_);
-
-    st_title_ready_->addTransition(this, &ISRMainWindow::structureLoaded, st_structure_ready_);
-    st_title_ready_->addTransition(this, &ISRMainWindow::sectionsClosed, st_idle_no_section_);
-
-    st_structure_ready_->addTransition(this, &ISRMainWindow::sectionsClosed, st_idle_no_section_);
-
-    st_startup_loading_->addTransition(this, &ISRMainWindow::errorDetected, st_error_detected_);
-    st_idle_no_section_->addTransition(this, &ISRMainWindow::errorDetected, st_error_detected_);
-    st_section_selected_->addTransition(this, &ISRMainWindow::errorDetected, st_error_detected_);
-    st_title_ready_->addTransition(this, &ISRMainWindow::errorDetected, st_error_detected_);
-    st_structure_ready_->addTransition(this, &ISRMainWindow::errorDetected, st_error_detected_);
-    st_error_detected_->addTransition(this, &ISRMainWindow::errorDetected, st_error_detected_);
-
-    st_error_detected_->addTransition(this, &ISRMainWindow::errorResetRequested, st_startup_loading_);
-
-
-    // Реакция на вход
-    QObject::connect(st_startup_loading_, &QState::entered, this, &ISRMainWindow::enterStartupLoading);
-    QObject::connect(st_idle_no_section_, &QState::entered, this, &ISRMainWindow::enterIdleNoSection);
-    QObject::connect(st_section_selected_, &QState::entered, this, &ISRMainWindow::enterSectionSelected);
-    QObject::connect(st_title_ready_, &QState::entered, this, &ISRMainWindow::enterSectionTitleReady);
-    QObject::connect(st_structure_ready_, &QState::entered, this, &ISRMainWindow::enterStructureReady);
-    QObject::connect(st_error_detected_, &QState::entered, this, &ISRMainWindow::enterErrorDetected);
-}
-
-ISRMainWindow::~ISRMainWindow() {
-    if (sections_loader_ != nullptr) {
-        sections_loader_->cancel();
-    }
-    if (sections_thread_ != nullptr) {
-        sections_thread_->quit();
-        sections_thread_->wait();
-    }
 }

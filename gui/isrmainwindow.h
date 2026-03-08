@@ -1,118 +1,99 @@
-#ifndef ISRMAINWINDOW_H
-#define ISRMAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
-#include <QObject>
 #include <QCloseEvent>
 #include <memory>
-#include <QListWidget>
-#include <QThread>
-#include <QStateMachine>
-#include <QState>
-#include <QElapsedTimer>
+
 #include "config/app_config.h"
-#include "loadingoverlay.h"
-#include "setReader/sectionsloader.h"
-#include "menuWgt/sectionlistwgt.h"
-#include "menuWgt/titlesectionwgt.h"
+#include "domain/isr_permissions.h"
+#include "domain/isr_ui_state.h"
+
+class LoadingOverlay;
+class SectionListWgt;
+class TitleSectionWgt;
+class QMenu;
+class QAction;
+
+namespace isr {
+class ISRController;
+}
 
 class ISRMainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget *parent = nullptr);
-    ~ISRMainWindow();
-signals:
-    void startupCompleted();
-    void sectionChosen();
-    void titleConfirmed();
-    void sectionsClosed();
-    void structureLoaded();
-    void errorDetected();
-    void errorResetRequested();
+    explicit ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* parent = nullptr);
+    ~ISRMainWindow() override;
+
 public slots:
+    void applyUiState(const isr::ISRUiState& state);
+    void applyPermissions(const isr::ISRPermissions& permissions);
+    void setSectionsList(const QStringList& sections);
+
     void showLoading(const QString& msg, bool indeterminate = false);
     void setLoadingMessage(const QString& msg);
     void setLoadingProgress(int percent);
     void hideLoading();
     void showErrorMessage(const QString& msg);
+    void showWarningMessage(const QString& msg);
 
-    void setSelectedSection(const QString& section_name);
-    void loadSelectedSection(const QString& section_name);
 private slots:
-    void beginStartup();
     void onSectionsListActTriggered();
     void onTitleOfSectionActTriggered();
-
-    void enterStartupLoading();
-    void enterIdleNoSection();
-    void enterSectionSelected();
-    void enterSectionTitleReady();
-    void enterStructureReady();
-    void enterErrorDetected();
+    void onLoadStructureTriggered();
+    void onExitSectionsTriggered();
 protected:
     void closeEvent(QCloseEvent *event) override;
+
+private:
+    void buildMenus();
+    void connectUi();
+    void rebuildSectionsMenu(const QStringList& sections);
+
 private:
     std::shared_ptr<const AppConfig> cfg_;
-    LoadingOverlay* load_overlay_ = nullptr;
-    SectionsLoader* sections_loader_ = nullptr;
-    SectionListWgt* section_list_wgt_ = nullptr; //виджет пункт меню "выбрать раздел"
-    MODE_SECTION_LIST_WGT mode_sections_list_wgt_ = MODE_SECTION_LIST_WGT::FOR_SELECT; //режим работы окна пунккта меню "выбрать раздел"
-    TitleSectionWgt* title_section_wgt_ = nullptr; //виджет пункта меню "заголовок раздела"
+    isr::ISRController* controller_ = nullptr;
 
-    QElapsedTimer time_after_start_head_section_;
+    LoadingOverlay* loadOverlay_ = nullptr;
+    SectionListWgt* sectionListWgt_ = nullptr;
+    TitleSectionWgt* titleSectionWgt_ = nullptr;
 
-    QString active_section_name_;
-    QThread* sections_thread_ = nullptr;
+    isr::ISRUiState currentUiState_;
 
-    bool readSections(const QStringList& sections_path, const QStringList& sections);
+    QMenu* sectionsMenu_ = nullptr;
+    QMenu* preparationMenu_ = nullptr;
+    QMenu* segmentsMenu_ = nullptr;
+    QMenu* workMenu_ = nullptr;
+    QMenu* autoMenu_ = nullptr;
+    QMenu* docsMenu_ = nullptr;
+    QMenu* sectionsRepMenu_ = nullptr;
+    QMenu* segmentsRepMenu_ = nullptr;
 
-    QStateMachine machine_;
-    QState* st_startup_loading_ = nullptr;
-    QState* st_idle_no_section_ = nullptr;
-    QState* st_section_selected_ = nullptr;
-    QState* st_title_ready_ = nullptr;
-    QState* st_structure_ready_ = nullptr;
-    QState* st_error_detected_ = nullptr;
+    QAction* sectionsListAction_ = nullptr;
+    QAction* titleOfSectionAction_ = nullptr;
+    QAction* pfksAction_ = nullptr;
+    QAction* controlSpoAction_ = nullptr;
+    QAction* loadStructureAction_ = nullptr;
+    QAction* debugOfSectionAction_ = nullptr;
+    QAction* addSectionsAction_ = nullptr;
+    QAction* rebuildSectionsAction_ = nullptr;
+    QAction* stencilAction_ = nullptr;
 
-    void buildStateMachine();
+    QAction* regularSectionAction_ = nullptr;
+    QAction* nshsSectionAction_ = nullptr;
+    QAction* priSectionAction_ = nullptr;
 
-    QMenu* sections_menu_ = nullptr;
-    QMenu* preparation_menu_ = nullptr;
-    QMenu* segments_menu_ = nullptr;
-    QMenu* work_menu_ = nullptr;
-    QMenu* auto_menu_ = nullptr;
-    QMenu* docs_menu_ = nullptr;
-    QMenu* sections_rep_menu_ = nullptr;
-    QMenu* segments_rep_menu_ = nullptr;
+    QAction* runOperationAction_ = nullptr;
+    QAction* cancelVariantAction_ = nullptr;
+    QAction* spAction_ = nullptr;
+    QAction* goToActiveSegmentsAction_ = nullptr;
+    QAction* imitatePrisAnswerAction_ = nullptr;
+    QAction* headSectionTimeAction_ = nullptr;
+    QAction* endSectionAction_ = nullptr;
+    QAction* exitSectionsAction_ = nullptr;
 
-    QAction* sections_list_action_ = nullptr;
-    QAction* title_of_section_ = nullptr;
-    QAction* pfks_action_ = nullptr;
-    QAction* control_spo_action_ = nullptr;
-    QAction* load_structure_action_ = nullptr;
-    QAction* debug_of_section_action_ = nullptr;
-    QAction* add_sections_on_list_sections_action_ = nullptr;
-    QAction* rebuild_sections_list_action_ = nullptr;
-    QAction* stencil_action_ = nullptr;
-
-    QAction* regular_con_section_action_ = nullptr;
-    QAction* nshc_of_section_action_ = nullptr;
-    QAction* pri_of_section_action_ = nullptr;
-
-    QAction* run_operation_action_ = nullptr;
-    QAction* cancel_var_action_ = nullptr;
-    QAction* sp_action_ = nullptr;
-    QAction* go_to_active_segmets_action_ = nullptr;
-    QAction* imin_answer_pris_to_ko_action_ = nullptr;
-    QAction* time_of_head_section_action_ = nullptr;
-    QAction* end_section_action_ = nullptr;
-    QAction* exit_of_sections_action_ = nullptr;
-
-    QAction* start_or_end_auto_label_action_ = nullptr;
-    QAction* unset_auto_label_action_ = nullptr;
-    QAction* run_auto_block_action_ = nullptr;
-    QAction* stop_auto_block_action_ = nullptr;
+    QAction* markAutoAction_ = nullptr;
+    QAction* unsetAutoAction_ = nullptr;
+    QAction* runAutoBlockAction_ = nullptr;
+    QAction* stopAutoBlockAction_ = nullptr;
 };
-
-#endif // ISRMAINWINDOW_H

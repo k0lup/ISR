@@ -9,6 +9,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    application/isr_controller.cpp \
     config/config_loader.cpp \
     config/config_service.cpp \
     config/startup.cpp \
@@ -22,16 +23,23 @@ SOURCES += \
     logger/logging_categories.cpp \
     logger/logworker.cpp \
     main.cpp \
+    services/sections_catalog_service.cpp \
     setReader/sectionsloader.cpp \
     setReader/setfilesreader.cpp
 
+
 HEADERS += \
     ErrorReadFileStruct.h \
+    application/isr_controller.h \
     config/app_config.h \
     config/config_loader.h \
     config/config_service.h \
     config/config_types.h \
     config/startup.h \
+    domain/isr_permissions.h \
+    domain/isr_session_state.h \
+    domain/isr_ui_state.h \
+    domain/title_section_data.h \
     gui/isrmainwindow.h \
     gui/loadingoverlay.h \
     gui/menuWgt/findwgt.h \
@@ -41,8 +49,10 @@ HEADERS += \
     logger/logger.h \
     logger/logging_categories.h \
     logger/logworker.h \
+    services/sections_catalog_service.h \
     setReader/sectionsloader.h \
     setReader/setfilesreader.h
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
