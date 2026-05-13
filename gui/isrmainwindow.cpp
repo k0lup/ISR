@@ -418,7 +418,6 @@ void ISRMainWindow::loadSelectedSection(const QString& section_name) {
     if (!section_name.isEmpty()) {
         qCInfo(logCore) << QString("Запрошена загрузка раздела '%1'").arg(section_name);
 
-        //загрузки структуры
 
         emit structureLoaded();
     }
@@ -457,6 +456,7 @@ void ISRMainWindow::buildStateMachine() {
 
     st_title_ready_->addTransition(this, &ISRMainWindow::structureLoaded, st_structure_ready_);
     st_title_ready_->addTransition(this, &ISRMainWindow::sectionsClosed, st_idle_no_section_);
+    st_title_ready_->addTransition(this, &ISRMainWindow::sectionChosen, st_section_selected_);
 
     st_structure_ready_->addTransition(this, &ISRMainWindow::sectionsClosed, st_idle_no_section_);
 

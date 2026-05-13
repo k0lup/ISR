@@ -77,6 +77,8 @@ void SectionsLoader::start() {
     for (const auto& section : sections_names_) {
         QDir section_dir(dir.filePath(section));
         QString filePath  = section_dir.filePath(section + QString(".SET"));
+
+
     }
     qCInfo(logCore) << "Закончили чтение списка разделов";
     emit finished();
@@ -110,4 +112,19 @@ QSet<QString> SectionsLoader::readMasterSectionsFile(const QString& file_path, E
 
 QSet<QString> SectionsLoader::getSectionsNames() {
     return sections_names_;
+}
+
+void SectionsLoader::onLoadStructForSectionRequested(const QString &section_name) {
+    auto it = std::find_if(sections_.begin(), sections_.end(),
+        [&](const Section& sec) { return sec.section_name == section_name; });
+    if (it != sections_.end()) {
+        emit failed("Запрошена загрузка несуществующего раздела!");
+        return;
+    }
+
+    QString folder = cfg_->sections_folder_path;
+    QDir dir(expandUserPath(folder));
+
+    Section& section = *it;
+    QFile section_file;
 }
