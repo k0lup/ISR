@@ -22,6 +22,7 @@ SOURCES += \
     logger/logging_categories.cpp \
     logger/logworker.cpp \
     main.cpp \
+    servises/catalogmanager.cpp \
     setReader/sectionsloader.cpp \
     setReader/setfilesreader.cpp
 
@@ -41,6 +42,7 @@ HEADERS += \
     logger/logger.h \
     logger/logging_categories.h \
     logger/logworker.h \
+    servises/catalogmanager.h \
     setReader/sectionsloader.h \
     setReader/setfilesreader.h
 
