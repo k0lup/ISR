@@ -114,17 +114,57 @@ QSet<QString> SectionsLoader::getSectionsNames() {
     return sections_names_;
 }
 
-void SectionsLoader::onLoadStructForSectionRequested(const QString &section_name) {
-    auto it = std::find_if(sections_.begin(), sections_.end(),
-        [&](const Section& sec) { return sec.section_name == section_name; });
-    if (it != sections_.end()) {
+void SectionsLoader::onLoadSectionRequested(const QString &section_name) {
+    if (!sections_names_.contains(section_name)) {
         emit failed("Запрошена загрузка несуществующего раздела!");
         return;
     }
 
-    QString folder = cfg_->sections_folder_path;
-    QDir dir(expandUserPath(folder));
+    auto it = std::find_if(sections_.begin(), sections_.end(),
+        [&](const Section& sec) { return sec.section_name == section_name; });
 
-    Section& section = *it;
-    QFile section_file;
+    if (it != sections_.end()) {
+        emit failed("Запрошена загрузка уже загруженного раздела!");
+        return;
+    }
+
+    QString folder = cfg_->spo_path;
+    QDir dir(expandUserPath(folder));
+    dir = dir.filePath(section_name);
+
+    QString section_set_filepath = dir.filePath(section_name + QString(".SET"));
+    qDebug() << "section_set_filepath: " << section_set_filepath;
+    ErrorReadFile error;
+    error.filePath = section_set_filepath;
+    error.line = -1;
+    error.message = "";
+
+    if (!set_reader_.readFile(section_set_filepath, error)) {
+        emit failed(error.toString());
+        return;
+    }
+
+    SetFileData data = set_reader_.getFileData();
+    if (!data.abbreviation.contains(section_name)) {
+        emit failed("в файле структуры раздела нет аббревиатуры этого раздела. Файл '" + section_set_filepath + "'");
+        return;
+    }
+
+    QString dii_file_path;
+    QStringList dip_dirs;
+
+    if (data.structure.contains(section_name)) {
+        dii_file_path = data.structure.value(section_name);
+    }
+
+    dip_dirs = data.directory.value(section_name);
+
+    Section section;
+    section.section_name = section_name;
+    section.active_chapter_type = ChapterType::NOT_LOAD;
+    section.dii_file_path = dii_file_path;
+    section.dip_dirs = dip_dirs;
+
+    sections_.append(section);
+    emit sectionLoaded(section_name, sections_.last());
 }

@@ -7,7 +7,7 @@ CatalogManager::CatalogManager(QObject *parent)
 
 }
 
-void CatalogManager::addCatalog(const quint64 request_id, const QString &section, const QString& path, DirectType direct_type) {
+/*void CatalogManager::addCatalog(const quint64 request_id, const QString &section, const QString& path, DirectType direct_type) {
     QString error_message;
     bool res{false};
 
@@ -17,10 +17,40 @@ void CatalogManager::addCatalog(const quint64 request_id, const QString &section
     case (DirectType::PRIVATE_SECTION):             res = addPrivateSection(section, path, error_message);               break;
     }
 
-    if (res) {
+    if (!res) {
         emit requestFailed(request_id, error_message);
-    } else {
-        emit requestCompleted(request_id);
+    }
+}*/
+
+void CatalogManager::addCatalog(const quint64 request_id, const QString &section, const QStringList &paths) {
+    QString error_message;
+    bool res{false};
+    DirectType direct_type{DirectType::SPO_SECTION};
+
+    for (QString path : paths) {
+        if (path.isEmpty()) {
+            continue;
+        }
+        if (path.at(0) == "*") {
+            direct_type = DirectType::PUBLIC_PRIORITY_SECTION;
+            path = path.remove(0, 1);
+        } else if (path.at(0) == "#") {
+            direct_type = DirectType::PRIVATE_SECTION;
+            path = path.remove(0, 1);
+        } else {
+            direct_type = DirectType::SPO_SECTION;
+        }
+
+        switch (direct_type) {
+        case (DirectType::SPO_SECTION):                 res = addSpoPath(section, path, error_message);                      break;
+        case (DirectType::PUBLIC_PRIORITY_SECTION):     res = addPublicPrioritySection(section, path, error_message);        break;
+        case (DirectType::PRIVATE_SECTION):             res = addPrivateSection(section, path, error_message);               break;
+        }
+
+        if (!res) {
+            emit requestFailed(request_id, error_message);
+            return;
+        }
     }
 }
 
@@ -38,15 +68,12 @@ void CatalogManager::removeSectionsPaths(const quint64 request_id, const QString
     spo_sections_.remove(section);
     public_priority_sections_.remove(section);
     private_sections_.remove(section);
-
-    emit requestCompleted(request_id);
 }
 
-void CatalogManager::requestSectionsPaths(const quint64 request_id, const QString& section) {
+void CatalogManager::requestSectionPaths(const quint64 request_id, const QString& section) {
     QString error_message;
     QStringList paths;
 
-    paths.append(public_priority_sections_.values());
     for (const auto& list : public_priority_sections_) {
         paths.append(list);
     }
@@ -67,7 +94,6 @@ void CatalogManager::requestSectionsPaths(const quint64 request_id, const QStrin
         emit requestFailed(request_id, error_message);
         return;
     }
-
     emit sectionsReady(request_id, section, paths);
 }
 

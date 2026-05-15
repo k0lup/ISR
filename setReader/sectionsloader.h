@@ -27,10 +27,15 @@ struct Chapter {
 struct Section {
     QString section_name;
     QString dii_file_path;
+    QString set_file_path;
+    QStringList dip_dirs;
 
     ChapterType active_chapter_type = ChapterType::NOT_LOAD;
     QList<Chapter> chapters;
+    QList<int> num_command;
 };
+
+Q_DECLARE_METATYPE(Section)
 
 class SectionsLoader : public QObject
 {
@@ -43,7 +48,7 @@ public slots:
     void start();
     void cancel();
 
-    void onLoadStructForSectionRequested(const QString& section_name);
+    void onLoadSectionRequested(const QString& section_name);
 
 signals:
     void progress(int percent);
@@ -52,7 +57,7 @@ signals:
     void finished();
 
 
-    void structForSectionLoaded(const QString& section_name, Section& section);
+    void sectionLoaded(const QString& section_name, Section section);
 private:
     QSet<QString> readMasterSectionsFile(const QString& file_path, ErrorReadFile& error);
 

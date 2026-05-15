@@ -15,6 +15,7 @@
 #include "setReader/sectionsloader.h"
 #include "menuWgt/sectionlistwgt.h"
 #include "menuWgt/titlesectionwgt.h"
+#include "servises/catalogmanager.h"
 
 class ISRMainWindow : public QMainWindow
 {
@@ -30,6 +31,8 @@ signals:
     void structureLoaded();
     void errorDetected();
     void errorResetRequested();
+
+    void loadSetSectionRequest(const QString& section_name);
 public slots:
     void showLoading(const QString& msg, bool indeterminate = false);
     void setLoadingMessage(const QString& msg);
@@ -38,7 +41,11 @@ public slots:
     void showErrorMessage(const QString& msg);
 
     void setSelectedSection(const QString& section_name);
+
     void loadSelectedSection(const QString& section_name);
+    void onSectionSetLoaded(const QString& section_name, Section section);
+
+    void onReadySectionPaths(const quint64 request_id, const QString& section, const QStringList& paths);
 private slots:
     void beginStartup();
     void onSectionsListActTriggered();
@@ -64,6 +71,12 @@ private:
 
     QString active_section_name_;
     QThread* sections_thread_ = nullptr;
+
+    CatalogManager* catalog_manager_ = nullptr;
+    QThread* catalog_manager_thread_ = nullptr;
+    quint64 last_request_id_ = -1;
+
+    quint64 getNextRequestId();
 
     bool readSections(const QStringList& sections_path, const QStringList& sections);
 

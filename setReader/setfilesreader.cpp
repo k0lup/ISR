@@ -91,7 +91,7 @@ SetFileData SetFilesReader::parseFile(ErrorReadFile& error, const QString& file_
             return file_data;
         }
 
-        if (curLine[idx(ColumnName::TYPE)] != "П" || curLine[idx(ColumnName::TYPE)].isEmpty()) {
+        if (curLine[idx(ColumnName::TYPE)] != "П" && !curLine[idx(ColumnName::TYPE)].isEmpty()) {
             continue;
         }
 

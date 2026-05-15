@@ -114,6 +114,9 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
 
     QObject::connect(sections_list_action_, &QAction::triggered, this, &ISRMainWindow::onSectionsListActTriggered);
     QObject::connect(title_of_section_, &QAction::triggered, this, &ISRMainWindow::onTitleOfSectionActTriggered);
+    QObject::connect(load_structure_action_, &QAction::triggered, this, [this](){
+        loadSelectedSection(active_section_name_);
+    });
 
     qCDebug(logCore) << QString("Завершена инициализация окна ISRMainWindow");
     machine_.start();
@@ -298,7 +301,8 @@ void ISRMainWindow::enterErrorDetected() {
 }
 
 void ISRMainWindow::beginStartup() {
-    if (sections_thread_ != nullptr) {
+    qRegisterMetaType<Section>("Section");
+    if (sections_thread_ != nullptr || catalog_manager_thread_ != nullptr) {
         QString message = "Попытка двойной инициализации приложения!";
         qCCritical(logCore) << message;
         QMessageBox::critical(nullptr, "Ошибка", message);
@@ -325,7 +329,7 @@ void ISRMainWindow::beginStartup() {
 
     // 6) завершение: скрыть overlay + остановить поток
     connect(sections_loader_, &SectionsLoader::finished, this, &ISRMainWindow::hideLoading);
-    connect(sections_loader_, &SectionsLoader::finished, sections_thread_, &QThread::quit);
+    //connect(sections_loader_, &SectionsLoader::finished, sections_thread_, &QThread::quit);
 
     // 7) ошибка: скрыть overlay + показать ошибку + остановить поток
     connect(sections_loader_, &SectionsLoader::failed, this, [this](const QString& msg){
@@ -354,8 +358,38 @@ void ISRMainWindow::beginStartup() {
         sections_thread_ = nullptr;
     });
 
+    QObject::connect(this, &ISRMainWindow::loadSetSectionRequest, sections_loader_, &SectionsLoader::onLoadSectionRequested);
+    QObject::connect(sections_loader_, &SectionsLoader::sectionLoaded, this, &ISRMainWindow::onSectionSetLoaded);
+
     // 10) старт
     sections_thread_->start();
+
+    catalog_manager_thread_ = new QThread(this);
+    catalog_manager_ = new CatalogManager();
+    catalog_manager_->moveToThread(catalog_manager_thread_);
+
+    QObject::connect(catalog_manager_, &CatalogManager::requestFailed, this, [this](quint64 request_id, const QString& msg) {
+        showErrorMessage(msg);
+        emit errorDetected();
+    });
+
+    QObject::connect(catalog_manager_, &CatalogManager::sectionsReady, this, &ISRMainWindow::onReadySectionPaths);
+
+    QObject::connect(catalog_manager_thread_, &QThread::finished, catalog_manager_, &QObject::deleteLater);
+
+    QObject::connect(catalog_manager_thread_, &QThread::finished, catalog_manager_thread_, &QObject::deleteLater);
+
+    QObject::connect(catalog_manager_thread_, &QThread::finished, this, [this](){
+        catalog_manager_ = nullptr;
+        catalog_manager_thread_ = nullptr;
+    });
+
+    catalog_manager_thread_->start();
+}
+
+quint64 ISRMainWindow::getNextRequestId() {
+    last_request_id_ += 1;
+    return last_request_id_;
 }
 
 void ISRMainWindow::setLoadingMessage(const QString& msg)
@@ -417,10 +451,41 @@ void ISRMainWindow::setSelectedSection(const QString& section_name) {
 void ISRMainWindow::loadSelectedSection(const QString& section_name) {
     if (!section_name.isEmpty()) {
         qCInfo(logCore) << QString("Запрошена загрузка раздела '%1'").arg(section_name);
-
-
-        emit structureLoaded();
+        emit loadSetSectionRequest(section_name);
     }
+}
+
+void ISRMainWindow::onSectionSetLoaded(const QString &section_name_OLD, Section section) {
+    QStringList dip_dirs = section.dip_dirs;
+    QString section_name = section.section_name;
+
+    quint64 request_id = getNextRequestId();
+
+    QMetaObject::invokeMethod(
+                catalog_manager_,
+                [this, section_name, dip_dirs, request_id]() {
+        catalog_manager_->addCatalog(request_id, section_name, dip_dirs);
+    }, Qt::QueuedConnection);
+
+    //loadDII;
+
+    //for test begin
+    request_id = getNextRequestId();
+    QMetaObject::invokeMethod(
+                catalog_manager_,
+                [this, request_id, section_name]() {
+        catalog_manager_->requestSectionPaths(request_id, section_name);
+    }, Qt::QueuedConnection);
+    //for test end
+}
+
+void ISRMainWindow::onReadySectionPaths(const quint64 request_id, const QString &section, const QStringList &paths) {
+    qDebug() << "section_name: " << section;
+    qDebug() << "paths: ";
+    for (const auto& path : paths) {
+        qDebug() << path;
+    }
+    return;
 }
 
 void ISRMainWindow::onTitleOfSectionActTriggered() {
@@ -486,5 +551,10 @@ ISRMainWindow::~ISRMainWindow() {
     if (sections_thread_ != nullptr) {
         sections_thread_->quit();
         sections_thread_->wait();
+    }
+
+    if (catalog_manager_thread_ != nullptr) {
+        catalog_manager_thread_->quit();
+        catalog_manager_thread_->wait();
     }
 }
