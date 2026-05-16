@@ -104,6 +104,10 @@ SetFileData SetFilesReader::parseFile(ErrorReadFile& error, const QString& file_
             file_data.abbreviation.append(curLine[idx(ColumnName::ABBREVIATION)]);
         }
 
+        if (curLine[idx(ColumnName::TYPE)] == "П") {
+            continue;
+        }
+
         if (!curLine[idx(ColumnName::DIRECTORY)].isEmpty()) {
             if (file_data.abbreviation.isEmpty()) {
                 error.line = line + 1;
