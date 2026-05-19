@@ -99,9 +99,7 @@ Line DiiReader::parseLine(const QString& line, QString& error) const {
         str = str.trimmed();
     }
 
-    if ((isPassportLine(line_split) && line_split.size() != 3) ||
-            (isSectionLine(line_split) && line_split.size() != 2) ||
-            line_split.size() != col(ColumnName::COUNT_COLUMNS)) {
+    if (!isPassportLine(line_split) && !isSectionLine(line_split) && line_split.size() != col(ColumnName::COUNT_COLUMNS)) {
         error = "НЕДОПУСТИМОЕ КОЛИЧЕСТВО СТОЛБЦОВ В СТРОКЕ";
         result.clear();
         return result;
