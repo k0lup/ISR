@@ -20,6 +20,7 @@ enum class LineType {
     SECTION,
     START_COMMAND,
     CONTINUE_COMMAND,
+    EMPTY,
     BAD_TYPE
 };
 
@@ -41,6 +42,7 @@ struct CommandLine {
     CommandType command_type;
     QString command;
     QString operation;
+    QString type;
 };
 
 struct Command {

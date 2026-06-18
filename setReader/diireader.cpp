@@ -91,12 +91,12 @@ Line DiiReader::parseLine(const QString& line, QString& error) const {
     Line result;
     QStringList line_split = line.split("|");
 
-    if (!line_split.isEmpty() && line_split.last().isEmpty()) {
-        line_split.removeLast();
-    }
-
     for (auto& str : line_split) {
         str = str.trimmed();
+    }
+
+    if (!line_split.isEmpty() && line_split.last().isEmpty()) {
+        line_split.removeLast();
     }
 
     if (!isPassportLine(line_split) && !isSectionLine(line_split) && line_split.size() != col(ColumnName::COUNT_COLUMNS)) {
@@ -130,6 +130,9 @@ QList<Line> DiiReader::readLines(const QStringList &lines, QString &error) const
         return result;
     }
     for (int num_line = 0; num_line < lines.count(); ++num_line) {
+        if (lines[num_line].isEmpty()) {
+            continue;
+        }
         QString error_message;
         Line line = parseLine(lines[num_line], error_message);
         if (!error_message.isEmpty()) {
@@ -173,6 +176,7 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
             CommandLine command_line;
             command_line.line_type = LineType::PASSPORT;
             command_line.command_type = CommandType::PASSPORT;
+            command_line.type = lines[num_line].line[0];
             command_line.command = lines[num_line].line[1];
             command_line.operation = lines[num_line].line[2];
 

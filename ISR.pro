@@ -12,6 +12,7 @@ SOURCES += \
     config/config_loader.cpp \
     config/config_service.cpp \
     config/startup.cpp \
+    gui/diiViewer/diiviewer.cpp \
     gui/isrmainwindow.cpp \
     gui/loadingoverlay.cpp \
     gui/menuWgt/findwgt.cpp \
@@ -34,6 +35,7 @@ HEADERS += \
     config/config_service.h \
     config/config_types.h \
     config/startup.h \
+    gui/diiViewer/diiviewer.h \
     gui/isrmainwindow.h \
     gui/loadingoverlay.h \
     gui/menuWgt/findwgt.h \
