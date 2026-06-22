@@ -3,7 +3,8 @@
 
 #include <QWidget>
 #include <QTableWidget>
-#include "setReader/diireader.h"
+#include <QColor>
+#include "setReader/sectionsloader.h"
 
 enum class ColumnViewTableName {
     EMPTY = 0,
@@ -21,9 +22,22 @@ public:
 signals:
 public slots:
     void clearAllRows();
-    void addNewCommand(const Command& command);
+    void setSection(const Section& section);
+private slots:
+    void onCellClicked(int row, int);
+private:
+    struct CommandInfo {
+        int first_row;
+        int last_row;
+
+        bool is_active = false;
+    };
 private:
     QTableWidget *table_wgt_ = nullptr;
+    QVector<CommandInfo> commands_;
+private:
+    void paintRow(int row_index, const QColor& color_row, const QColor& color_text);
+    void clearRowColor(int row_index);
 };
 
 #endif // DIIVIEWER_H

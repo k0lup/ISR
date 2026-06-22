@@ -12,27 +12,30 @@
 #include "config/app_config.h"
 #include "setfilesreader.h"
 #include "ErrorReadFileStruct.h"
-
-enum class ChapterType {
-    STATE = 0,
-    NON_STATE = 1,
-    ACCIDENT = 2,
-    NOT_LOAD = -1
-};
-
-struct Chapter {
-    QStringList command_list;
-};
+#include "diireader.h"
 
 struct Section {
+    QString section_path;
     QString section_name;
     QString dii_file_path;
     QString set_file_path;
     QStringList dip_dirs;
 
-    ChapterType active_chapter_type = ChapterType::NOT_LOAD;
-    QList<Chapter> chapters;
+    ChapterType active_chapter_type = ChapterType::INCORRECT;
+    //QList<Chapter> chapters;
+    DiiFile dii_file;
     QList<int> num_command;
+
+    void clear() {
+        section_path.clear();
+        section_name.clear();
+        dii_file_path.clear();
+        set_file_path.clear();
+        dip_dirs.clear();
+        active_chapter_type = ChapterType::INCORRECT;
+        dii_file.clear();
+        num_command.clear();
+    }
 };
 
 Q_DECLARE_METATYPE(Section)
@@ -49,6 +52,7 @@ public slots:
     void cancel();
 
     void onLoadSectionRequested(const QString& section_name);
+    void onDiiFileReaded(const quint64& request_id, const DiiFile& data);
 
 signals:
     void progress(int percent);
@@ -58,6 +62,7 @@ signals:
 
 
     void sectionLoaded(const QString& section_name, Section section);
+    void requestDiiFileRead(const quint64 request_id, const QString& file_name);
 private:
     QSet<QString> readMasterSectionsFile(const QString& file_path, ErrorReadFile& error);
 
@@ -66,6 +71,11 @@ private:
     QVector<Section> sections_;
     QSet<QString> sections_names_;
     SetFilesReader set_reader_;
+    DiiReader dii_reader_;
+
+    Section loaded_section_;
+
+    static quint64 request_id;
 };
 
 #endif // SECTIONSLOADER_H

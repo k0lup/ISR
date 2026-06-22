@@ -1,5 +1,6 @@
 #include "diireader.h"
 #include <QFile>
+#include <QDebug>
 
 static int col(ColumnName name) {
     return static_cast<int>(name);
@@ -17,6 +18,10 @@ bool DiiReader::isSectionLine(const QStringList& line) const {
         res = true;
     }
 
+    if (line.count() == 2 && line[0].isEmpty()) {
+        res = true;
+    }
+
     return res;
 }
 
@@ -25,7 +30,7 @@ bool DiiReader::isPassportLine(const QStringList &line) const {
     if (line.isEmpty()) {
         return false;
     }
-    if (line[0] == "П" && line.size() == 3) {
+    if (line[0] == "П" && line.count() == 2) {
         res = true;
     }
 
@@ -39,6 +44,7 @@ DiiReader::DiiReader(QObject *parent)
 }
 
 void DiiReader::onReadFileRequested(const quint64 request_id, const QString& file_path) {
+    qDebug() << "I'm HERE";
     QString error_message;
     QStringList file_data_lines = getAllDataOnFile(file_path, error_message);
 
@@ -106,7 +112,11 @@ Line DiiReader::parseLine(const QString& line, QString& error) const {
     }
 
     if (line_split[col(ColumnName::NUMBER)].isEmpty()) {
-        result.type = LineType::CONTINUE_COMMAND;
+        if (line_split.count() == 2) {
+            result.type = LineType::CONTINUE_SECTION;
+        } else {
+            result.type = LineType::CONTINUE_COMMAND;
+        }
     } else if (line_split[col(ColumnName::NUMBER)].at(0) == "#") {
         result.type = LineType::SECTION;
     } else if (line_split[col(ColumnName::NUMBER)] == "П") {
@@ -178,7 +188,7 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
             command_line.command_type = CommandType::PASSPORT;
             command_line.type = lines[num_line].line[0];
             command_line.command = lines[num_line].line[1];
-            command_line.operation = lines[num_line].line[2];
+            //command_line.operation = lines[num_line].line[2];
 
             command.command_lines.append(command_line);
             passport.append(command);
@@ -207,7 +217,8 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
                 }
                 if ((lines[num_line].line[col(ColumnName::NUMBER)] == "#1" && chapter.type != ChapterType::STATE) ||
                         (lines[num_line].line[col(ColumnName::NUMBER)] == "#2" && chapter.type != ChapterType::NON_STATE) ||
-                        (lines[num_line].line[col(ColumnName::NUMBER)] == "#3" && chapter.type != ChapterType::ACCIDENT)) {
+                        (lines[num_line].line[col(ColumnName::NUMBER)] == "#3" && chapter.type != ChapterType::ACCIDENT) ||
+                        (lines[num_line].line[col(ColumnName::NUMBER)] == "#4" && chapter.type != ChapterType::PRILOSHENIE)) {
                     error_messages.append(QString("Строка %1: СТРОКА ЗАВЕРШЕНИЯ РАЗДЕЛА НЕ СООТВЕТСТВУЕТ ОТКРЫТОМУ РАЗДЕЛУ").arg(num_line + 1));
                     res = false;
                     chapter.type = ChapterType::INCORRECT;
@@ -227,6 +238,8 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
                     chapter.type = ChapterType::NON_STATE;
                 } else if (lines[num_line].line[col(ColumnName::NUMBER)] == "#3") {
                     chapter.type = ChapterType::ACCIDENT;
+                } else if (lines[num_line].line[col(ColumnName::NUMBER)] == "#4") {
+                    chapter.type = ChapterType::PRILOSHENIE;
                 } else {
                     chapter.type = ChapterType::INCORRECT;
                     error_messages.append(QString("Строка %1: НЕ УДАЛОСЬ РАСПОЗНАТЬ ТИП РАЗДЕЛА!").arg(num_line + 1));
@@ -246,6 +259,11 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
                 continue;
             }
             if (has_start_command) {
+                if (chapter.commands.isEmpty()) {
+                    command.number = 0;
+                } else {
+                    command.number = chapter.commands.last().number + 1;
+                }
                 chapter.commands.append(command);
                 if (has_active_block) {
                     chapter.blocks.last().num_dirs_for_block.append(chapter.commands.count() - 1);
@@ -267,6 +285,8 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
                 command_line.command_type = CommandType::SECTION_START;
             } else if (lines[num_line].line[col(ColumnName::TYPE)] == "О") {
                 command_line.command_type = CommandType::MAIN_OPERATION;
+            } else if (chapter.type == ChapterType::PRILOSHENIE) {
+                command_line.command_type = CommandType::PRILOSHENIE;
             } else {
                 error_messages.append(QString("Строка %1: НЕДОПУСТИМЫЙ ТИП СТРОКИ ДЛЯ НАЧАЛА КОМАНДЫ (1-ой СТРОКИ КОМАНДЫ)").arg(num_line + 1));
                 res = false;
@@ -275,6 +295,7 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
 
             command_line.command = lines[num_line].line[col(ColumnName::COMMAND)];
             command_line.operation = lines[num_line].line[col(ColumnName::OPERATION)];
+            command_line.type = lines[num_line].line[col(ColumnName::TYPE)];
 
             command.command_lines.append(command_line);
             continue;
@@ -356,6 +377,7 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
                 CommandLine command_line;
                 command_line.command = lines[num_line].line[col(ColumnName::COMMAND)];
                 command_line.operation = lines[num_line].line[col(ColumnName::OPERATION)];
+                command_line.type = lines[num_line].line[col(ColumnName::TYPE)];
                 command_line.line_type = LineType::CONTINUE_COMMAND;
                 command_line.command_type = CommandType::ADDITIONAL;
                 command.command_lines.append(command_line);
@@ -369,14 +391,15 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
             continue;
         }
     }
-    if (chapters.count() != 3) {
-        error_messages.append(QString("ДОЛЖНО БЫТЬ ОПИСАНО 3 РАЗДЕЛА!"));
+    if (chapters.count() != 4) {
+        error_messages.append(QString("ДОЛЖНО БЫТЬ ОПИСАНО 4 РАЗДЕЛА!"));
         res = false;
     } else {
-        if ((chapters[0].type != ChapterType::STATE && chapters[1].type != ChapterType::STATE && chapters[2].type != ChapterType::STATE) ||
-                (chapters[0].type != ChapterType::NON_STATE && chapters[1].type != ChapterType::NON_STATE && chapters[2].type != ChapterType::NON_STATE) ||
-                (chapters[0].type != ChapterType::ACCIDENT && chapters[1].type != ChapterType::ACCIDENT && chapters[2].type != ChapterType::ACCIDENT)) {
-            error_messages.append(QString("ДОЖНО БЫТЬ ОПИСАНО 3 РАЗДЕЛА - ШТАТ, НШС, АВАР!"));
+        if ((chapters[0].type != ChapterType::STATE && chapters[1].type != ChapterType::STATE && chapters[2].type != ChapterType::STATE && chapters[3].type != ChapterType::STATE) ||
+            (chapters[0].type != ChapterType::NON_STATE && chapters[1].type != ChapterType::NON_STATE && chapters[2].type != ChapterType::NON_STATE && chapters[3].type != ChapterType::NON_STATE) ||
+            (chapters[0].type != ChapterType::ACCIDENT && chapters[1].type != ChapterType::ACCIDENT && chapters[2].type != ChapterType::ACCIDENT && chapters[3].type != ChapterType::ACCIDENT) ||
+            (chapters[0].type != ChapterType::PRILOSHENIE && chapters[1].type != ChapterType::PRILOSHENIE && chapters[2].type != ChapterType::PRILOSHENIE && chapters[3].type != ChapterType::PRILOSHENIE)) {
+            error_messages.append(QString("ДОЖНО БЫТЬ ОПИСАНО 4 РАЗДЕЛА - ШТАТ, НШС, АВАР, ПРИЛОЖЕНИЕ!"));
             res = false;
         }
     }
@@ -392,6 +415,8 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
         dii_file.chapters.append(chapters[1]);
     } else if (chapters[2].type == ChapterType::STATE) {
         dii_file.chapters.append(chapters[2]);
+    } else if (chapters[3].type == ChapterType::STATE) {
+        dii_file.chapters.append(chapters[3]);
     }
 
     if (chapters[0].type == ChapterType::NON_STATE) {
@@ -400,6 +425,8 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
         dii_file.chapters.append(chapters[1]);
     } else if (chapters[2].type == ChapterType::NON_STATE) {
         dii_file.chapters.append(chapters[2]);
+    } else if (chapters[3].type == ChapterType::NON_STATE) {
+        dii_file.chapters.append(chapters[3]);
     }
 
     if (chapters[0].type == ChapterType::ACCIDENT) {
@@ -408,6 +435,18 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
         dii_file.chapters.append(chapters[1]);
     } else if (chapters[2].type == ChapterType::ACCIDENT) {
         dii_file.chapters.append(chapters[2]);
+    } else if (chapters[3].type == ChapterType::ACCIDENT) {
+        dii_file.chapters.append(chapters[3]);
+    }
+
+    if (chapters[0].type == ChapterType::PRILOSHENIE) {
+        dii_file.chapters.append(chapters[0]);
+    } else if (chapters[1].type == ChapterType::PRILOSHENIE) {
+        dii_file.chapters.append(chapters[1]);
+    } else if (chapters[2].type == ChapterType::PRILOSHENIE) {
+        dii_file.chapters.append(chapters[2]);
+    } else if (chapters[3].type == ChapterType::PRILOSHENIE) {
+        dii_file.chapters.append(chapters[3]);
     }
 
     dii_file.passport = passport;

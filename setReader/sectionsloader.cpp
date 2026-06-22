@@ -4,6 +4,9 @@
 #include "config/app_config.h"
 #include <QDir>
 #include <cmath>
+#include "diireader.h"
+
+quint64 SectionsLoader::request_id = 0;
 
 static QString expandUserPath(const QString &path)
 {
@@ -23,6 +26,13 @@ SectionsLoader::SectionsLoader(std::shared_ptr<const AppConfig> cfg, QObject *pa
     cfg_(cfg)
 {
     qCDebug(logCore) << "Инициализирован SectionsLoader";
+
+    qRegisterMetaType<DiiFile>("DiiFile");
+    QObject::connect(this, &SectionsLoader::requestDiiFileRead, &dii_reader_, &DiiReader::onReadFileRequested);
+    QObject::connect(&dii_reader_, &DiiReader::fileReaded, this, &SectionsLoader::onDiiFileReaded);
+    QObject::connect(&dii_reader_, &DiiReader::failed, this, [this](const quint64, const QString& message) {
+        emit failed(message);
+    });
 }
 
 void SectionsLoader::cancel() {
@@ -157,14 +167,38 @@ void SectionsLoader::onLoadSectionRequested(const QString &section_name) {
         dii_file_path = data.structure.value(section_name);
     }
 
+    dii_file_path = dir.filePath(dii_file_path + ".DII");
+
     dip_dirs = data.directory.value(section_name);
 
     Section section;
+    section.section_path = dir.path();
     section.section_name = section_name;
-    section.active_chapter_type = ChapterType::NOT_LOAD;
+    section.active_chapter_type = ChapterType::INCORRECT;
     section.dii_file_path = dii_file_path;
     section.dip_dirs = dip_dirs;
 
-    sections_.append(section);
-    emit sectionLoaded(section_name, sections_.last());
+    loaded_section_.clear();
+    loaded_section_ = section;
+
+    emit requestDiiFileRead(request_id++, dii_file_path);
+
+    //sections_.append(section);
+    //emit sectionLoaded(section_name, sections_.last());
+}
+
+void SectionsLoader::onDiiFileReaded(const quint64 &request_id, const DiiFile &data) {
+    if (request_id != this->request_id - 1) {
+        QString error_message = "Ошибка в номере ответа на запрос при чтении dii файла";
+        qCCritical(logCore) << error_message;
+        emit failed(error_message);
+    }
+
+    loaded_section_.dii_file = data;
+    loaded_section_.active_chapter_type = ChapterType::STATE;
+    loaded_section_.num_command = {0, 0, 0};
+
+    sections_.append(loaded_section_);
+    emit sectionLoaded(loaded_section_.section_name, sections_.last());
+    loaded_section_.clear();
 }

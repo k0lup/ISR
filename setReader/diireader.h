@@ -20,6 +20,7 @@ enum class LineType {
     SECTION,
     START_COMMAND,
     CONTINUE_COMMAND,
+    CONTINUE_SECTION,
     EMPTY,
     BAD_TYPE
 };
@@ -34,7 +35,8 @@ enum class CommandType {
     OPTION_NUMBER,
     LABEL,
     ADDITIONAL,
-    PASSPORT
+    PASSPORT,
+    PRILOSHENIE
 };
 
 struct CommandLine {
@@ -59,6 +61,7 @@ enum class ChapterType {
     STATE = 0,
     NON_STATE = 1,
     ACCIDENT = 2,
+    PRILOSHENIE = 3,
     INCORRECT = -1
 };
 
@@ -103,7 +106,14 @@ struct Line
 struct DiiFile {
     QList<Command> passport;
     QList<Chapter> chapters;
+
+    void clear() {
+        passport.clear();
+        chapters.clear();
+    }
 };
+
+Q_DECLARE_METATYPE(DiiFile)
 
 class DiiReader : public QObject
 {

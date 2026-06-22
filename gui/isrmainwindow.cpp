@@ -112,6 +112,9 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
 
     buildStateMachine();
 
+    dii_viewer_ = new DiiViewer(this);
+    setCentralWidget(dii_viewer_);
+
     QObject::connect(sections_list_action_, &QAction::triggered, this, &ISRMainWindow::onSectionsListActTriggered);
     QObject::connect(title_of_section_, &QAction::triggered, this, &ISRMainWindow::onTitleOfSectionActTriggered);
     QObject::connect(load_structure_action_, &QAction::triggered, this, [this](){
@@ -477,6 +480,8 @@ void ISRMainWindow::onSectionSetLoaded(const QString &section_name_OLD, Section 
         catalog_manager_->requestSectionPaths(request_id, section_name);
     }, Qt::QueuedConnection);
     //for test end
+
+    dii_viewer_->setSection(section);
 }
 
 void ISRMainWindow::onReadySectionPaths(const quint64 request_id, const QString &section, const QStringList &paths) {
