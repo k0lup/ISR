@@ -78,7 +78,7 @@ static void qtMessageHandler(QtMsgType type, const QMessageLogContext& ctx, cons
     QString text = normalizeNewlines(msg);
 
     // Важно: keepEmptyParts, чтобы пустые строки внутри блока тоже сохранились.
-    const QStringList parts = text.split('\n', Qt::KeepEmptyParts);
+    const QStringList parts = text.split('\n', QString::KeepEmptyParts);
 
     // Первая строка как обычно, остальные — как продолжения
     for (int i = 0; i < parts.size(); ++i) {

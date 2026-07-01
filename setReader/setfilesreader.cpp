@@ -84,7 +84,7 @@ SetFileData SetFilesReader::parseFile(ErrorReadFile& error, const QString& file_
     }
 
     for (int line = 6; line < source_lines_.count(); ++line) {
-        QStringList curLine = source_lines_[line].split("|", Qt::KeepEmptyParts);
+        QStringList curLine = source_lines_[line].split("|", QString::KeepEmptyParts);
         if (curLine.count() != idx(ColumnName::TOTAL_COUNT_COLUMN)) {
             error.line = line + 1;
             error.message = QString("Строка не соотвествует ТФ (меньше столбцов, чем требуется)!");

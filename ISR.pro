@@ -9,6 +9,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    Directives/mainoperdirecitve.cpp \
     config/config_loader.cpp \
     config/config_service.cpp \
     config/startup.cpp \
@@ -29,6 +30,8 @@ SOURCES += \
     setReader/setfilesreader.cpp
 
 HEADERS += \
+    Directives/directive.h \
+    Directives/mainoperdirecitve.h \
     ErrorReadFileStruct.h \
     config/app_config.h \
     config/config_loader.h \

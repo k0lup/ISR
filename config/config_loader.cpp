@@ -68,11 +68,11 @@ bool ConfigLoader::parseLine(const QString& line,
     QStringList values;
     if (opt_.keepEmptyValues) {
         // Оставляем пустые куски: "a=1;;2" -> ["1", "", "2"]
-        values = valuesPart.split(';', Qt::KeepEmptyParts);
+        values = valuesPart.split(';', QString::KeepEmptyParts);
         for (QString& v : values) v = v.trimmed();
     } else {
         // Пропускаем пустые: "a=1;;2" -> ["1", "2"]
-        values = valuesPart.split(';', Qt::SkipEmptyParts);
+        values = valuesPart.split(';', QString::SkipEmptyParts);
         for (QString& v : values) v = v.trimmed();
         values.removeAll(QString());
     }
