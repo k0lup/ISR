@@ -73,7 +73,7 @@ void SectionsLoader::start() {
         const QString& file_name = sections.at(i);
         int percent_progress = std::lround(100.0 * (i + 1) / sections.size());
         emit progress(percent_progress);
-        QSet new_sections = readMasterSectionsFile(file_name, error);
+        QSet<QString> new_sections = readMasterSectionsFile(file_name, error);
         if (!error.message.isEmpty()) {
             emit failed(error.toString());
             return;
