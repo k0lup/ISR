@@ -13,6 +13,8 @@ SOURCES += \
     Directives/dokladdirective.cpp \
     Directives/insructionsdirective.cpp \
     Directives/mainoperdirecitve.cpp \
+    Directives/startsectiondirective.cpp \
+    Directives/variantdirective.cpp \
     config/config_loader.cpp \
     config/config_service.cpp \
     config/startup.cpp \
@@ -38,6 +40,8 @@ HEADERS += \
     Directives/dokladdirective.h \
     Directives/insructionsdirective.h \
     Directives/mainoperdirecitve.h \
+    Directives/startsectiondirective.h \
+    Directives/variantdirective.h \
     ErrorReadFileStruct.h \
     config/app_config.h \
     config/config_loader.h \
