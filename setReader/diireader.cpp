@@ -364,6 +364,9 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
                 }
             } else {
                 if (!has_start_command) {
+                    if (lines[num_line].line.join("").trimmed().isEmpty()) {
+                        continue;
+                    }
                     error_messages.append(QString("Строка %1: ДОПОЛНИТЕЛЬНАЯ СТРОКА, КОТОРАЯ НЕ ОТНОСИТСЯ НИ К ОДНОЙ КОМАНДЕ!").arg(num_line + 1));
                     res = false;
                     continue;

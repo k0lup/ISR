@@ -44,6 +44,20 @@ struct PRISMessage {
     QString message;
 };
 
+struct START_SECTION_PARAMS {
+    QString abbrev;
+    QString section;
+    QString label;
+    QString mode;
+
+    void clear() {
+        abbrev.clear();
+        section.clear();
+        label.clear();
+        mode.clear();
+    }
+};
+
 class Direct : public QObject
 {
     Q_OBJECT
@@ -72,12 +86,16 @@ public:
 signals:
     void showWindow(const WidgetTypes& types, const WidgetInfo& info);
     void sendMessageToPris(const PRISMessage& message);
+    void requestStartProgram(const START_SECTION_PARAMS& params);
     void finished(const ResultDirective& result);
 public slots:
     virtual void onWindowResult(const WindowResultData& result) {
         Q_UNUSED(result);
     }
     virtual void onPRISResult(const PRISResultData& result) {
+        Q_UNUSED(result);
+    }
+    virtual void onReqStartProgResult(const bool result) {
         Q_UNUSED(result);
     }
 protected:
