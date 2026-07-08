@@ -2,6 +2,7 @@
 #define DIRECTIVE_H
 
 #include <QObject>
+#include <QMap>
 #include "setReader/diireader.h"
 
 enum class TypeDirect {
@@ -20,13 +21,26 @@ enum class WidgetTypes {
     WARNING
 };
 
+struct VARIANT_DATA_VAR_DIRECTIVE {
+    QString command;
+    QString operation;
+
+    void clear() {
+        command.clear();
+        operation.clear();
+    }
+};
+
 struct WidgetInfo {
     QString title;
     QStringList information;
 
+    QMap<int, VARIANT_DATA_VAR_DIRECTIVE> variants; //only_for_variant_direct
+
     void clear() {
         title.clear();
         information.clear();
+        variants.clear();
     }
 };
 
