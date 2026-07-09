@@ -11,6 +11,7 @@ CONFIG += c++17
 SOURCES += \
     Directives/commanddirective.cpp \
     Directives/dokladdirective.cpp \
+    Directives/executor.cpp \
     Directives/insructionsdirective.cpp \
     Directives/mainoperdirecitve.cpp \
     Directives/startsectiondirective.cpp \
@@ -38,6 +39,7 @@ HEADERS += \
     Directives/commanddirective.h \
     Directives/directive.h \
     Directives/dokladdirective.h \
+    Directives/executor.h \
     Directives/insructionsdirective.h \
     Directives/mainoperdirecitve.h \
     Directives/startsectiondirective.h \
