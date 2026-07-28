@@ -1,4 +1,6 @@
 #include "executor.h"
+#include <QLoggingCategory>
+#include "logger/logging_categories.h"
 
 Executor::Executor(QObject* parent) :
     QObject(parent)
@@ -10,6 +12,7 @@ Executor::Executor(QObject* parent) :
 }
 
 void Executor::startFrom(const int index, const ExecutorMode mode) {
+    qCDebug(logCore) << QString("Получили запрос на выполение директивы %1").arg(index);
     if (index < 0 || index > directives_.count()) {
         emit failed(QString("НЕДОПУСТИМЫЙ ИНДЕКС ЗАПРАШИВАЕМОЙ ДЛЯ ЗАПУСКА ДИРЕТИВЫ: %1").arg(index));
         return;
@@ -17,9 +20,11 @@ void Executor::startFrom(const int index, const ExecutorMode mode) {
 
     cur_index_ = index;
     mode_ = mode;
+    startDirective();
 }
 
 void Executor::startDirective() {
+        qCDebug(logCore) << QString("Получили запрос на выполение очередной директивы");
         state_ = ExecutorState::RUNNING;
         emit curDirectiveChanged(cur_index_);
         Direct* directive = directives_.at(cur_index_);
@@ -37,16 +42,21 @@ void Executor::startDirective() {
 }
 
 void Executor::onDirectiveFinished(const Direct::ResultDirective& result) {
+    qCDebug(logCore) << QString("Получили сигнал о завершении директивы");
     for (auto& connection : last_connections_) {
         QObject::disconnect(connection);
     }
     last_connections_.clear();
     state_ = ExecutorState::IDLE;
+    emit directiveFinished(result, cur_index_);
     cur_index_++;
-    emit directiveFinished(result);
     if (result.type == Direct::RESULT_DIRECTIVE_TYPES::OK) {
         if (mode_ == ExecutorMode::AUTO && cur_index_ < directives_.count()) {
             startDirective();
         }
     }
+}
+
+void Executor::setDirectives(const QVector<Direct *> &directives) {
+    this->directives_ = directives;
 }

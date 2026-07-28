@@ -10,7 +10,7 @@ bool InsructionsDirective::isValid(QStringList &errors) const {
     bool res {true};
     errors.clear();
 
-    if (m_directive_.number <= 0) {
+    if (m_directive_.number < 0) {
         errors.append("Недопустимый номер директивы!");
         res = false;
     }
@@ -20,7 +20,7 @@ bool InsructionsDirective::isValid(QStringList &errors) const {
         res = false;
     }
 
-    if (m_directive_.command_lines.at(0).type.trimmed() != "О") {
+    if (m_directive_.command_lines.at(0).type.trimmed() != "П") {
         errors.append("Неверно указан тип директивы");
         res = false;
     }

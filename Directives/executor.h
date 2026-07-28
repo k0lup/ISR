@@ -4,6 +4,7 @@
 #include <QVector>
 #include "Directives/directive.h"
 
+
 class Executor : public QObject
 {
     Q_OBJECT
@@ -27,7 +28,7 @@ public:
     ExecutorMode mode() const;
     ExecutorState state() const;
 signals:
-    void directiveFinished(const Direct::ResultDirective result);
+    void directiveFinished(const Direct::ResultDirective result, const int index);
     void curDirectiveChanged(const int new_cur_index);
     /*
      * void showWindow(const WidgetTypes& types, const WidgetInfo& info);

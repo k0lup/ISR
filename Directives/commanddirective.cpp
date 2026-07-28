@@ -1,4 +1,6 @@
 #include "commanddirective.h"
+#include <QLoggingCategory>
+#include "logger/logging_categories.h"
 
 CommandDirective::CommandDirective(const Command directive, QObject *parent) :
     Direct(directive, parent)
@@ -10,7 +12,7 @@ bool CommandDirective::isValid(QStringList &errors) const {
     bool res {true};
     errors.clear();
 
-    if (m_directive_.number <= 0) {
+    if (m_directive_.number < 0) {
         errors.append("Недопустимый номер директивы!");
         res = false;
     }
@@ -20,7 +22,7 @@ bool CommandDirective::isValid(QStringList &errors) const {
         res = false;
     }
 
-    if (m_directive_.command_lines.at(0).type.trimmed() != "О") {
+    if (m_directive_.command_lines.at(0).type.trimmed() != "К") {
         errors.append("Неверно указан тип директивы");
         res = false;
     }
@@ -34,6 +36,7 @@ bool CommandDirective::isValid(QStringList &errors) const {
 }
 
 void CommandDirective::start() {
+    qCDebug(logCore) << "Начали выполнять директиву КОМАНДА";
     command_.clear();
     ResultDirective result;
 
@@ -41,6 +44,7 @@ void CommandDirective::start() {
     if (!isValid(errors)) {
         result.type = RESULT_DIRECTIVE_TYPES::ERROR;
         result.message = errors.join(" ");
+        qCDebug(logCore) << "закончили выполнять директиву КОМАНДА с ошибкой";
         emit finished(result);
         return;
     }
@@ -54,7 +58,8 @@ void CommandDirective::start() {
 
     if (command_.isEmpty()) {
         result.type = RESULT_DIRECTIVE_TYPES::ERROR;
-        result.message = "Пустая операция для передачи в прис";
+        result.message = "Пустая операция для передачи в ПРИС";
+        qCDebug(logCore) << "закончили выполнять директиву КОМАНДА с ошибкой";
         emit finished(result);
         return;
     }
@@ -63,6 +68,7 @@ void CommandDirective::start() {
     widget_info.title = "Директива для ПРИС";
     widget_info.information.append(command_);
 
+    qCDebug(logCore) << "отправили запрос директивы КОМАНДА на отображение окна в GUI";
     emit showWindow(WidgetTypes::INFO, widget_info);
 }
 

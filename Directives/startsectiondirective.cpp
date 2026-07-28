@@ -22,6 +22,11 @@ bool StartSectionDirective::isValid(QStringList &errors) const {
         res = false;
     }
 
+    if (m_directive_.command_lines.at(0).type.trimmed() != "И") {
+        errors.append("Неверно указан тип директивы");
+        res = false;
+    }
+
     QString operation;
 
     for (int num_line = 0; num_line < m_directive_.command_lines.count(); ++num_line) {

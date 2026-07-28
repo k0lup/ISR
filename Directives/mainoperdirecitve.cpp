@@ -1,4 +1,6 @@
 #include "mainoperdirecitve.h"
+#include <QLoggingCategory>
+#include "logger/logging_categories.h"
 
 MainOperDirecitve::MainOperDirecitve(const Command directive, QObject *parent) :
     Direct(directive, parent)
@@ -10,7 +12,7 @@ bool MainOperDirecitve::isValid(QStringList &errors) const {
     bool res {true};
     errors.clear();
 
-    if (m_directive_.number <= 0) {
+    if (m_directive_.number < 0) {
         errors.append("Недопустимый номер директивы!");
         res = false;
     }
@@ -34,6 +36,7 @@ bool MainOperDirecitve::isValid(QStringList &errors) const {
 }
 
 void MainOperDirecitve::start() {
+    qCDebug(logCore) << "Начали выполнять директиву ОСНОВНАЯ ОПЕРАЦИЯ";
     operation_.clear();
     ResultDirective result;
 
@@ -41,6 +44,7 @@ void MainOperDirecitve::start() {
     if (!isValid(errors)) {
         result.type = RESULT_DIRECTIVE_TYPES::ERROR;
         result.message = errors.join(" ");
+        qCDebug(logCore) << "закончили выполнять директиву ОСНОВНАЯ ОПЕРАЦИЯ с ошибкой";
         emit finished(result);
         return;
     }
@@ -55,6 +59,7 @@ void MainOperDirecitve::start() {
     if (operation_.isEmpty()) {
         result.type = RESULT_DIRECTIVE_TYPES::ERROR;
         result.message = "Пустая операция для передачи в прис";
+        qCDebug(logCore) << "закончили выполнять директиву ОСНОВНАЯ ОПЕРАЦИЯ с ошибкой";
         emit finished(result);
         return;
     }
@@ -63,6 +68,7 @@ void MainOperDirecitve::start() {
     widget_info.title = "Директива для ПРИС";
     widget_info.information.append(operation_);
 
+    qCDebug(logCore) << "отправили запрос директивы ОСНОВНАЯ ОПЕРАЦИЯ на отображение окна в GUI";
     emit showWindow(WidgetTypes::INFO, widget_info);
 }
 

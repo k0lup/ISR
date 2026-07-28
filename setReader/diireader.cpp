@@ -211,6 +211,11 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
                     continue;
                 }
                 if (has_start_command) {
+                    if (chapter.commands.isEmpty()) {
+                        command.number = 0;
+                    } else {
+                        command.number = chapter.commands.last().number + 1;
+                    }
                     chapter.commands.append(command);
                     command.clear();
                     has_start_command = false;

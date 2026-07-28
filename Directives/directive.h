@@ -35,12 +35,12 @@ struct WidgetInfo {
     QString title;
     QStringList information;
 
-    QMap<int, VARIANT_DATA_VAR_DIRECTIVE> variants; //only_for_variant_direct
+    //QMap<int, VARIANT_DATA_VAR_DIRECTIVE> variants; //only_for_variant_direct
 
     void clear() {
         title.clear();
         information.clear();
-        variants.clear();
+        //variants.clear();
     }
 };
 

@@ -22,6 +22,11 @@ bool VariantDirective::isValid(QStringList& errors) const {
         res = false;
     }
 
+    if (m_directive_.command_lines.at(0).type.trimmed() != "В") {
+        errors.append("Неверно указан тип директивы");
+        res = false;
+    }
+
     QStringList errors_parse_variants;
     QMap<int, VARIANT_DATA_VAR_DIRECTIVE> variants = getVariants(m_directive_.command_lines, errors);
     if (!errors_parse_variants.isEmpty()) {
@@ -91,6 +96,23 @@ QMap<int, VARIANT_DATA_VAR_DIRECTIVE> VariantDirective::getVariants(const QList<
         }
     }
 
+    if (variant_start) {
+        if (cur_operation.isEmpty()) {
+            errors.append(QString("ПУСТОЕ ПОЯСЕНЕНИЯ ДЛЯ ВАРИАНТА %1").arg(cur_number_variant));
+        }
+        if (cur_command.isEmpty()) {
+            errors.append(QString("НЕТ КОМАНДЫ ДЛЯ ВАРИАНТА %1").arg(cur_number_variant));
+        }
+        if (variants.contains(cur_number_variant)) {
+            errors.append(QString("ПОВТОРНАЯ ПОПЫТКА ДОБАВИТЬ ВАРИАНТ %1").arg(cur_number_variant));
+        } else {
+            VARIANT_DATA_VAR_DIRECTIVE cur_variant;
+            cur_variant.command = cur_command.join("\n");
+            cur_variant.operation = cur_operation.join("\n");
+            variants.insert(cur_number_variant, cur_variant);
+        }
+    }
+
     return variants;
 }
 
@@ -115,7 +137,10 @@ void VariantDirective::start() {
 
     WidgetInfo wgt_info;
     wgt_info.title = "Директива ВАРИАНТ";
-    wgt_info.variants = variants_;
+    //wgt_info.variants = variants_;
+    for (auto var : variants_.keys()) {
+        wgt_info.information.append(QString::number(var));
+    }
 
     emit showWindow(WidgetTypes::VARIANT, wgt_info);
 }
