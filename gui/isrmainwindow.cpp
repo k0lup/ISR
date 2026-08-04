@@ -287,7 +287,7 @@ void ISRMainWindow::enterSectionTitleReady() {
 void ISRMainWindow::enterStructureReady() {
     qCInfo(logCore) << "Машана состояний переводится в st_structure_ready_";
 
-
+    setWindowTitle(QString("ИСР - [%1, файл структуры загружен]").arg(active_section_name_));
 
     qCInfo(logCore) << "Машана состояний переведена в st_structure_ready_";
 }
@@ -388,6 +388,13 @@ void ISRMainWindow::beginStartup() {
     });
 
     catalog_manager_thread_->start();
+
+    QObject::connect(sections_loader_, &SectionsLoader::failed, this, [this](const QString& error_message) {
+        showErrorMessage(error_message);
+        emit errorDetected();
+    });
+
+    QObject::connect(sections_loader_, &SectionsLoader::sectionLoaded, this, &ISRMainWindow::onSectionSetLoaded);
 }
 
 quint64 ISRMainWindow::getNextRequestId() {
@@ -459,6 +466,8 @@ void ISRMainWindow::loadSelectedSection(const QString& section_name) {
 }
 
 void ISRMainWindow::onSectionSetLoaded(const QString &section_name_OLD, Section section) {
+    Q_UNUSED(section_name_OLD);
+
     QStringList dip_dirs = section.dip_dirs;
     QString section_name = section.section_name;
 
@@ -482,6 +491,8 @@ void ISRMainWindow::onSectionSetLoaded(const QString &section_name_OLD, Section 
     //for test end
 
     dii_viewer_->setSection(section);
+
+    emit structureLoaded();
 }
 
 void ISRMainWindow::onReadySectionPaths(const quint64 request_id, const QString &section, const QStringList &paths) {
