@@ -17,6 +17,7 @@
 #include "menuWgt/titlesectionwgt.h"
 #include "servises/catalogmanager.h"
 #include "diiViewer/diiviewer.h"
+#include "Directives/executor.h"
 
 class ISRMainWindow : public QMainWindow
 {
@@ -29,7 +30,7 @@ signals:
     void sectionChosen();
     void titleConfirmed();
     void sectionsClosed();
-    void structureLoaded();
+    void structureLoaded(const Section& section);
     void errorDetected();
     void errorResetRequested();
 
@@ -74,6 +75,8 @@ private:
 
     QString active_section_name_;
     QThread* sections_thread_ = nullptr;
+
+    Executor* executor_directives_ = nullptr;
 
     CatalogManager* catalog_manager_ = nullptr;
     QThread* catalog_manager_thread_ = nullptr;

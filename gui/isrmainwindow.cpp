@@ -113,6 +113,7 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
     buildStateMachine();
 
     dii_viewer_ = new DiiViewer(this);
+    executor_directives_ = new Executor(this);
     setCentralWidget(dii_viewer_);
 
     QObject::connect(sections_list_action_, &QAction::triggered, this, &ISRMainWindow::onSectionsListActTriggered);
@@ -372,6 +373,7 @@ void ISRMainWindow::beginStartup() {
     catalog_manager_->moveToThread(catalog_manager_thread_);
 
     QObject::connect(catalog_manager_, &CatalogManager::requestFailed, this, [this](quint64 request_id, const QString& msg) {
+        Q_UNUSED(request_id);
         showErrorMessage(msg);
         emit errorDetected();
     });
@@ -395,6 +397,8 @@ void ISRMainWindow::beginStartup() {
     });
 
     QObject::connect(sections_loader_, &SectionsLoader::sectionLoaded, this, &ISRMainWindow::onSectionSetLoaded);
+    QObject::connect(this, &ISRMainWindow::structureLoaded, executor_directives_, &Executor::addSection);
+    QObject::connect(executor_directives_, &Executor::showSection, dii_viewer_, &DiiViewer::setSection);
 }
 
 quint64 ISRMainWindow::getNextRequestId() {
@@ -490,12 +494,13 @@ void ISRMainWindow::onSectionSetLoaded(const QString &section_name_OLD, Section 
     }, Qt::QueuedConnection);
     //for test end
 
-    dii_viewer_->setSection(section);
+    //dii_viewer_->setSection(section);
 
-    emit structureLoaded();
+    emit structureLoaded(section);
 }
 
 void ISRMainWindow::onReadySectionPaths(const quint64 request_id, const QString &section, const QStringList &paths) {
+    Q_UNUSED(request_id);
     qDebug() << "section_name: " << section;
     qDebug() << "paths: ";
     for (const auto& path : paths) {
