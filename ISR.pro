@@ -19,6 +19,7 @@ SOURCES += \
     config/config_loader.cpp \
     config/config_service.cpp \
     config/startup.cpp \
+    encodingdetector.cpp \
     gui/diiViewer/diiviewer.cpp \
     gui/isrmainwindow.cpp \
     gui/loadingoverlay.cpp \
@@ -50,6 +51,7 @@ HEADERS += \
     config/config_service.h \
     config/config_types.h \
     config/startup.h \
+    encodingdetector.h \
     gui/diiViewer/diiviewer.h \
     gui/isrmainwindow.h \
     gui/loadingoverlay.h \

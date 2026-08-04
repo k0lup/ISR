@@ -2,6 +2,8 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QTextStream>
+#include <QTextCodec>
+#include "encodingdetector.h"
 #include "logger/logging_categories.h"
 #include <QLoggingCategory>
 
@@ -27,6 +29,14 @@ bool SetFilesReader::readFile(const QString& file_path, ErrorReadFile& error) {
         return false;
     }
 
+    EncodingDetector::Encoding encoding = EncodingDetector::detectFile(file_path);
+
+    if (encoding == EncodingDetector::Encoding::ERROR) {
+        error.message = "Ошибка определения кодировки файла";
+        qCWarning(logCore) << error.toString();
+        return false;
+    }
+
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         error.message = QString("Не удалось открыть файл: ") + file.errorString();
         qCWarning(logCore) << error.toString();
@@ -34,6 +44,7 @@ bool SetFilesReader::readFile(const QString& file_path, ErrorReadFile& error) {
     }
 
     QTextStream in(&file);
+    in.setCodec(EncodingDetector::codecName(encoding));
     while (!in.atEnd()) {
         source_lines_.append(in.readLine());
     }
