@@ -2,6 +2,7 @@
 
 #include <QFile>
 #include <QTextStream>
+#include "encodingdetector.h"
 
 ConfigLoader::ConfigLoader(Options opt)
     : opt_(opt)
@@ -11,13 +12,18 @@ ConfigLoader::ConfigLoader(Options opt)
 bool ConfigLoader::loadFile(const QString& path, RawConfig& out, ConfigError* error) const
 {
     QFile f(path);
+    EncodingDetector::Encoding encoding = EncodingDetector::detectFile(path);
+
+    if (encoding == EncodingDetector::Encoding::ERROR) {
+        setError(error, path, -1, "Не удалось установить кодировку файла");
+    }
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         setError(error, path, -1, "Не удалось открыть файл");
         return false;
     }
 
     QTextStream in(&f);
-    in.setCodec("UTF-8"); // при необходимости
+    in.setCodec(EncodingDetector::codecName(encoding));
 
     int lineNo = 0;
     while (!in.atEnd()) {

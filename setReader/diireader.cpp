@@ -1,6 +1,7 @@
 #include "diireader.h"
 #include <QFile>
 #include <QDebug>
+#include "encodingdetector.h"
 
 static int col(ColumnName name) {
     return static_cast<int>(name);
@@ -75,6 +76,7 @@ void DiiReader::onReadFileRequested(const quint64 request_id, const QString& fil
 QStringList DiiReader::getAllDataOnFile(const QString &file_path, QString& error_message) const {
     error_message.clear();
     QFile file(file_path);
+
     QStringList result;
 
     if (!file.open(QIODevice::Text | QIODevice::ReadOnly)) {
@@ -82,8 +84,17 @@ QStringList DiiReader::getAllDataOnFile(const QString &file_path, QString& error
         return result;
     }
 
-    while (!file.atEnd()) {
-        QString line = file.readLine();
+    EncodingDetector::Encoding encoding = EncodingDetector::detectFile(file_path);
+    if (encoding == EncodingDetector::Encoding::ERROR) {
+        error_message = "Ошибка определения кодировки файла";
+        return result;
+    }
+
+    QTextStream in(&file);
+    in.setCodec(EncodingDetector::codecName(encoding));
+
+    while (!in.atEnd()) {
+        QString line = in.readLine();
         line = line.trimmed();
         result.append(line);
     }
