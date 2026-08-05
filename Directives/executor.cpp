@@ -2,6 +2,10 @@
 #include <QLoggingCategory>
 #include "logger/logging_categories.h"
 
+static int col(ChapterType name) {
+    return static_cast<int>(name);
+}
+
 Executor::Executor(QObject* parent) :
     QObject(parent)
 {
@@ -36,7 +40,7 @@ void Executor::startDirective() {
 
         last_connections_.append(QObject::connect(this, &Executor::windowResponse, directive, &Direct::onWindowResult));
         last_connections_.append(QObject::connect(this, &Executor::PRISResponse, directive, &Direct::onPRISResult));
-        last_connections_.append(QObject::connect(this, &Executor::StartProgResponse, directive, &Direct::onReqStartProgResult));
+        last_connections_.append(QObject::connect(this, &Executor::progStarted, directive, &Direct::onReqStartProgResult));
 
         directive->start();
 }
@@ -57,6 +61,21 @@ void Executor::onDirectiveFinished(const Direct::ResultDirective& result) {
     }
 }
 
-void Executor::setDirectives(const QVector<Direct *> &directives) {
+/*void Executor::setDirectives(const QVector<Direct *> &directives) {
     this->directives_ = directives;
+}*/
+
+void Executor::addSection(const Section& section) {
+
+
+    CallStackObject call_stack_object;
+    call_stack_object.section = section;
+    call_stack_object.mode = ExecutorMode::STEP;
+    call_stack_object.state = ExecutorState::IDLE;
+    call_stack_object.cur_index = -1;
+    call_stack_object.last_connections_.clear();
+
+    call_stack.append(call_stack_object);
+
+    emit showSection(section);
 }

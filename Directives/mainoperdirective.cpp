@@ -1,14 +1,14 @@
-#include "mainoperdirecitve.h"
+#include "MainOperDirective.h"
 #include <QLoggingCategory>
 #include "logger/logging_categories.h"
 
-MainOperDirecitve::MainOperDirecitve(const Command directive, QObject *parent) :
+MainOperDirective::MainOperDirective(const Command directive, QObject *parent) :
     Direct(directive, parent)
 {
 
 }
 
-bool MainOperDirecitve::isValid(QStringList &errors) const {
+bool MainOperDirective::isValid(QStringList &errors) const {
     bool res {true};
     errors.clear();
 
@@ -35,7 +35,7 @@ bool MainOperDirecitve::isValid(QStringList &errors) const {
     return res;
 }
 
-void MainOperDirecitve::start() {
+void MainOperDirective::start() {
     qCDebug(logCore) << "Начали выполнять директиву ОСНОВНАЯ ОПЕРАЦИЯ";
     operation_.clear();
     ResultDirective result;
@@ -72,7 +72,7 @@ void MainOperDirecitve::start() {
     emit showWindow(WidgetTypes::INFO, widget_info);
 }
 
-void MainOperDirecitve::onWindowResult(const WindowResultData& result) {
+void MainOperDirective::onWindowResult(const WindowResultData& result) {
     ResultDirective result_directive;
     if (!result.status) {
         result_directive.type = RESULT_DIRECTIVE_TYPES::NOT_COMPLETED;
@@ -92,7 +92,7 @@ void MainOperDirecitve::onWindowResult(const WindowResultData& result) {
     emit sendMessageToPris(pris_message);
 }
 
-void MainOperDirecitve::onPRISResult(const PRISResultData& result) {
+void MainOperDirective::onPRISResult(const PRISResultData& result) {
     ResultDirective result_direcitve;
     if (!result.status) {
         result_direcitve.type = RESULT_DIRECTIVE_TYPES::ERROR;
@@ -106,6 +106,6 @@ void MainOperDirecitve::onPRISResult(const PRISResultData& result) {
     emit finished(result_direcitve);
 }
 
-MainOperDirecitve::~MainOperDirecitve() {
+MainOperDirective::~MainOperDirective() {
 
 }

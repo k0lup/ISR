@@ -17,7 +17,7 @@
 #include "Directives/directive.h"
 #include "Directives/dokladdirective.h"
 #include "Directives/insructionsdirective.h"
-#include "Directives/mainoperdirecitve.h"
+#include "Directives/mainoperdirective.h"
 #include "Directives/startsectiondirective.h"
 #include "Directives/variantdirective.h"
 
@@ -53,7 +53,7 @@ DiiViewer::DiiViewer(QWidget *parent)
     QObject::connect(this, &DiiViewer::startDirectiveRequested, executor_, &Executor::startFrom);
     QObject::connect(this, &DiiViewer::windowResponse, executor_, &Executor::windowResponse);
     QObject::connect(this, &DiiViewer::PRISResponse, executor_, &Executor::PRISResponse);
-    QObject::connect(this, &DiiViewer::startProgResponse, executor_, &Executor::StartProgResponse);
+    //QObject::connect(this, &DiiViewer::startProgResponse, executor_, &Executor::StartProgResponse);
     QObject::connect(executor_, &Executor::requestSendDataToPris, this, &DiiViewer::onRequestSendDataToPRIS);
     QObject::connect(executor_, &Executor::requestShowWindow, this, &DiiViewer::onRequestShowWindow);
     QObject::connect(executor_, &Executor::requestStartProgram, this, &DiiViewer::onRequestStartProgram);
@@ -95,42 +95,7 @@ void DiiViewer::setSection(const Section &section) {
         table_wgt_->setItem(index_first_row, col(ColumnViewTableName::NUMBER), new QTableWidgetItem(QString::number(chapter.commands[command_index].number)));
         command_info.last_row = last_row - 1;
         commands_.append(command_info);
-
-        QString type = chapter.commands.at(command_index).command_lines.at(0).type;
-        Direct *directive;
-        if (type == "О") {
-            directive = new MainOperDirecitve(chapter.commands.at(command_index), executor_);
-        } else if (type == "В") {
-            directive = new VariantDirective(chapter.commands.at(command_index), executor_);
-        } else if (type == "И") {
-            directive = new StartSectionDirective(chapter.commands.at(command_index), executor_);
-        } else if (type == "К") {
-            directive = new CommandDirective(chapter.commands.at(command_index), executor_);
-        } else if (type == "Д") {
-            directive = new DokladDirective(chapter.commands.at(command_index), executor_);
-        } else if (type == "П") {
-            directive = new InsructionsDirective(chapter.commands.at(command_index), executor_);
-        } else {
-            emit failed("Не удалось распознать тип директивы");
-            clearAllRows();
-            return;
-        }
-        vec_dirs.append(directive);
-        directive = nullptr;
     }
-
-    executor_->setDirectives(vec_dirs);
-
-    /*const int new_row_index = table_wgt_->rowCount();
-    table_wgt_->insertRow(new_row_index);
-
-    table_wgt_->setItem(new_row_index, col(ColumnViewTableName::NUMBER), new QTableWidgetItem(QString(command.number)));
-
-    for (int i = 0; i < command.command_lines.count(); ++i) {
-        int cur_row_index = new_row_index + i;
-        table_wgt_->setItem(cur_row_index, col(ColumnViewTableName::TYPE), new QTableWidgetItem(command.command_lines[i].type));
-        table_wgt_->setItem(cur_row_index, col(ColumnViewTableName::COMMAND), new QTableWidgetItem(command.command_lines[i].command));
-    }*/
 }
 
 void DiiViewer::showErrorMessage(const QString& error_message) {

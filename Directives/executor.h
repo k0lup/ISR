@@ -22,7 +22,7 @@ public:
     };
 
     struct CallStackObject {
-        QVector<Direct*> directives;
+        Section section;
         int cur_index;
         ExecutorMode mode;
         ExecutorState state;
@@ -55,7 +55,7 @@ signals:
 
     void windowResponse(const WindowResultData& data);
     void PRISResponse(const PRISResultData& data);
-    void StartProgResponse(const bool status);
+    void progStarted(const bool status);
 
     void failed(const QString& failed_message);
 
@@ -68,12 +68,15 @@ private slots:
 private:
     void startDirective();
 private:
-    /*QVector<Direct*> directives_;
+
+    //DELETE START
+    QVector<Direct*> directives_;
     int cur_index_;
     ExecutorMode mode_;
     ExecutorState state_;
 
-    QVector<QMetaObject::Connection> last_connections_;*/
+    QVector<QMetaObject::Connection> last_connections_;
+    //DELETE END
 
     QVector<CallStackObject> call_stack;
 

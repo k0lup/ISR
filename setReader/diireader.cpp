@@ -3,6 +3,14 @@
 #include <QDebug>
 #include "encodingdetector.h"
 
+#include "Directives/directive.h"
+#include "Directives/commanddirective.h"
+#include "Directives/dokladdirective.h"
+#include "Directives/insructionsdirective.h"
+#include "Directives/mainoperdirective.h"
+#include "Directives/startsectiondirective.h"
+#include "Directives/variantdirective.h"
+
 static int col(ColumnName name) {
     return static_cast<int>(name);
 }
@@ -68,6 +76,13 @@ void DiiReader::onReadFileRequested(const quint64 request_id, const QString& fil
         }
         emit failed(request_id, error_message);
         return;
+    }
+
+    if (!createDirectives(dii_file, error_messages)) {
+        for (const auto& message : error_messages) {
+            error_message.append(message + "\n");
+        }
+        emit failed(request_id, error_message);
     }
 
     emit fileReaded(request_id, dii_file);
@@ -471,4 +486,48 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
     dii_file.passport = passport;
 
     return dii_file;
+}
+
+
+//Вот тут надо подумать над родителем у директив. В плане потока и родителя директивы.
+bool DiiReader::createDirectives(DiiFile &dii_file, QStringList &error_message) const {
+    bool res = true;
+    for (auto& chapter : dii_file.chapters) {
+        QVector<Direct*> directives;
+        for (const auto& command : chapter.commands) {
+            QStringList error_for_direct;
+            QString type = command.command_lines.at(0).type;
+            Direct *directive = nullptr;
+            if (type == "О") {
+                directive = new MainOperDirective(command);
+            } else if (type == "В") {
+                directive = new VariantDirective(command);
+            } else if (type == "И") {
+                directive = new StartSectionDirective(command);
+            } else if (type == "К") {
+                directive = new CommandDirective(command);
+            } else if (type == "Д") {
+                directive = new DokladDirective(command);
+            } else if (type == "П") {
+                directive = new InsructionsDirective(command);
+            } else {
+                res &= false;
+                error_message.append(QString("Ошибки для директивы №%1:\n").arg(command.number));
+                error_message.append("Не удалось распознать тип директивы");
+            }
+            if (directive) {
+                res &= directive->isValid(error_for_direct);
+                if (!res)  {
+                    error_message.append(QString("Ошибки для директивы №%1:\n").arg(command.number));
+                    error_message.append(error_for_direct);
+                }
+                directives.append(directive);
+                directive = nullptr;
+            }
+        }
+
+        chapter.directives = directives;
+    }
+
+    return res;
 }

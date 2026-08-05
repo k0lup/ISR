@@ -5,6 +5,8 @@
 #include <QString>
 #include <QList>
 #include <QStringList>
+#include <QVector>
+#include "Directives/directive.h"
 
 
 enum class ColumnName {
@@ -13,48 +15,6 @@ enum class ColumnName {
     COMMAND = 2,
     OPERATION = 3,
     COUNT_COLUMNS = 4
-};
-
-enum class LineType {
-    PASSPORT,
-    SECTION,
-    START_COMMAND,
-    CONTINUE_COMMAND,
-    CONTINUE_SECTION,
-    EMPTY,
-    BAD_TYPE
-};
-
-enum class CommandType {
-    COMMAND,
-    REPORT,
-    INSTRUCTIONS,
-    OPTION,
-    SECTION_START,
-    MAIN_OPERATION,
-    OPTION_NUMBER,
-    LABEL,
-    ADDITIONAL,
-    PASSPORT,
-    PRILOSHENIE
-};
-
-struct CommandLine {
-    LineType line_type;
-    CommandType command_type;
-    QString command;
-    QString operation;
-    QString type;
-};
-
-struct Command {
-    int number = -1;
-    QList<CommandLine> command_lines;
-
-    void clear() {
-        number = -1;
-        command_lines.clear();
-    }
 };
 
 enum class ChapterType {
@@ -75,10 +35,13 @@ struct Chapter {
     QList<Command> commands;
     QList<Block> blocks;
 
+    QVector<Direct*> directives;
+
     void clear() {
         commands.clear();
         blocks.clear();
         type = ChapterType::INCORRECT;
+        directives.clear();
     }
 
     bool containsBlock(const QString& label) {
@@ -131,6 +94,7 @@ private:
     Line parseLine(const QString& line, QString& error) const;
     QList<Line> readLines(const QStringList& lines, QString& error) const;
     DiiFile parseLines(const QList<Line>& lines, QStringList& error_messages) const;
+    bool createDirectives(DiiFile& dii_file, QStringList& error_message) const;
 
     bool isPassportLine(const QStringList& line) const;
     bool isSectionLine(const QStringList& line) const;

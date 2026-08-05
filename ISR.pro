@@ -13,7 +13,7 @@ SOURCES += \
     Directives/dokladdirective.cpp \
     Directives/executor.cpp \
     Directives/insructionsdirective.cpp \
-    Directives/mainoperdirecitve.cpp \
+    Directives/mainoperdirective.cpp \
     Directives/startsectiondirective.cpp \
     Directives/variantdirective.cpp \
     config/config_loader.cpp \
@@ -42,7 +42,7 @@ HEADERS += \
     Directives/dokladdirective.h \
     Directives/executor.h \
     Directives/insructionsdirective.h \
-    Directives/mainoperdirecitve.h \
+    Directives/mainoperdirective.h \
     Directives/startsectiondirective.h \
     Directives/variantdirective.h \
     ErrorReadFileStruct.h \

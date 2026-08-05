@@ -3,7 +3,48 @@
 
 #include <QObject>
 #include <QMap>
-#include "setReader/diireader.h"
+
+enum class LineType {
+    PASSPORT,
+    SECTION,
+    START_COMMAND,
+    CONTINUE_COMMAND,
+    CONTINUE_SECTION,
+    EMPTY,
+    BAD_TYPE
+};
+
+enum class CommandType {
+    COMMAND,
+    REPORT,
+    INSTRUCTIONS,
+    OPTION,
+    SECTION_START,
+    MAIN_OPERATION,
+    OPTION_NUMBER,
+    LABEL,
+    ADDITIONAL,
+    PASSPORT,
+    PRILOSHENIE
+};
+
+struct CommandLine {
+    LineType line_type;
+    CommandType command_type;
+    QString command;
+    QString operation;
+    QString type;
+};
+
+struct Command {
+    int number = -1;
+    QList<CommandLine> command_lines;
+
+    void clear() {
+        number = -1;
+        command_lines.clear();
+    }
+};
 
 enum class TypeDirect {
     MAIN_OPERATION,
