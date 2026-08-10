@@ -210,7 +210,7 @@ void DiiViewer::onRequestSendDataToPRIS(const PRISMessage& message) {
     emit PRISResponse(result_data);
 }
 
-void DiiViewer::onRequestStartProgram(const START_SECTION_PARAMS& params) {
+void DiiViewer::onRequestStartProgram(const QString& params) {
     Q_UNUSED(params);
     emit startProgResponse(true);
 }

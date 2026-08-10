@@ -51,7 +51,7 @@ signals:
      */
     void requestShowWindow(const WidgetTypes& type, const WidgetInfo& info);
     void requestSendDataToPris(const PRISMessage& message);
-    void requestStartProgram(const START_SECTION_PARAMS& params);
+    void requestStartProgram(const QString& name);
 
     void windowResponse(const WindowResultData& data);
     void PRISResponse(const PRISResultData& data);
@@ -63,6 +63,7 @@ signals:
 public slots:
     void startFrom(const int index, const ExecutorMode mode);
     void addSection(const Section& section);
+    void onRequestedStartProgram(const START_SECTION_PARAMS& params);
 private slots:
     void onDirectiveFinished(const Direct::ResultDirective& result);
 private:
@@ -80,6 +81,7 @@ private:
 
     QVector<CallStackObject> call_stack;
 
+    START_SECTION_PARAMS requested_start_program_info_;
 };
 
 #endif // EXECUTOR_H

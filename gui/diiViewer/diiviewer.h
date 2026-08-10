@@ -36,7 +36,7 @@ public slots:
     void onDirFinished(const Direct::ResultDirective& result, const int index);
     void onRequestShowWindow(const WidgetTypes& type, const WidgetInfo& info);
     void onRequestSendDataToPRIS(const PRISMessage& message);
-    void onRequestStartProgram(const START_SECTION_PARAMS& params);
+    void onRequestStartProgram(const QString& params);
 private slots:
     void onCellClicked(int row, int);
 

@@ -2,10 +2,6 @@
 #include <QLoggingCategory>
 #include "logger/logging_categories.h"
 
-static int col(ChapterType name) {
-    return static_cast<int>(name);
-}
-
 Executor::Executor(QObject* parent) :
     QObject(parent)
 {
@@ -33,7 +29,7 @@ void Executor::startDirective() {
         emit curDirectiveChanged(cur_index_);
         Direct* directive = directives_.at(cur_index_);
         last_connections_.clear();
-        last_connections_.append(QObject::connect(directive, &Direct::requestStartProgram, this, &Executor::requestStartProgram));
+        last_connections_.append(QObject::connect(directive, &Direct::requestStartProgram, this, &Executor::onRequestedStartProgram));
         last_connections_.append(QObject::connect(directive, &Direct::showWindow, this, &Executor::requestShowWindow));
         last_connections_.append(QObject::connect(directive, &Direct::sendMessageToPris, this, &Executor::requestSendDataToPris));
         last_connections_.append(QObject::connect(directive, &Direct::finished, this, &Executor::onDirectiveFinished));
@@ -66,7 +62,16 @@ void Executor::onDirectiveFinished(const Direct::ResultDirective& result) {
 }*/
 
 void Executor::addSection(const Section& section) {
-
+    if (!requested_start_program_info_.abbrev.isEmpty()) {
+        if (section.section_name != requested_start_program_info_.abbrev) {
+            emit failed(QString("Была запрошена загрузка секции '%1', а получена секция '%2'!")
+                        .arg(requested_start_program_info_.abbrev)
+                        .arg(section.section_name));
+            emit progStarted(false);
+            requested_start_program_info_.clear();
+            return;
+        }
+    }
 
     CallStackObject call_stack_object;
     call_stack_object.section = section;
@@ -75,7 +80,58 @@ void Executor::addSection(const Section& section) {
     call_stack_object.cur_index = -1;
     call_stack_object.last_connections_.clear();
 
+    if (!requested_start_program_info_.abbrev.isEmpty()) {
+        ChapterType chapter_type;
+        if (requested_start_program_info_.section == "ШТАТ") {
+            chapter_type = ChapterType::STATE;
+        } else if (requested_start_program_info_.section == "ПРИ") {
+            chapter_type = ChapterType::ACCIDENT;
+        } else if (requested_start_program_info_.section == "НШС") {
+            chapter_type = ChapterType::NON_STATE;
+        } else {
+            chapter_type = ChapterType::INCORRECT;
+            emit failed(QString("Недопустимая секция для загрузки. Раздел '%1', секция '%2'").arg(requested_start_program_info_.abbrev).arg(requested_start_program_info_.section));
+            emit progStarted(false);
+            requested_start_program_info_.clear();
+            return;
+        }
+
+        ExecutorMode executor_mode;
+        if (requested_start_program_info_.mode == "АВТ") {
+            executor_mode = ExecutorMode::AUTO;
+        } else if (requested_start_program_info_.mode == "ШАГ") {
+            executor_mode = ExecutorMode::STEP;
+        } else {
+            executor_mode = ExecutorMode::ERROR;
+            emit failed(QString("Недопустимый режим работы для раздела '%1'").arg(requested_start_program_info_.section));
+            emit progStarted(false);
+            requested_start_program_info_.clear();
+            return;
+        }
+
+        //ДОБАВИТЬ БЛОК НШС
+        call_stack_object.section.active_chapter_type = chapter_type;
+        call_stack_object.mode = executor_mode;
+    }
+
     call_stack.append(call_stack_object);
 
     emit showSection(section);
+
+    if (!requested_start_program_info_.abbrev.isEmpty()) {
+        requested_start_program_info_.clear();
+        emit progStarted(true);
+    }
+}
+
+void Executor::onRequestedStartProgram(const START_SECTION_PARAMS& params) {
+    if (!requested_start_program_info_.abbrev.isEmpty()) {
+        emit failed(QString("Еще не была выполнена загрузка предыдущей секции - '%1', а уже запрошена загрузка секции '%2'")
+                    .arg(requested_start_program_info_.abbrev).arg(params.section));
+        emit progStarted(false);
+        return;
+    }
+
+    requested_start_program_info_ = params;
+    emit requestStartProgram(params.abbrev);
 }
