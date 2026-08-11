@@ -112,8 +112,8 @@ ISRMainWindow::ISRMainWindow(std::shared_ptr<const AppConfig> cfg, QWidget* pare
 
     buildStateMachine();
 
-    dii_viewer_ = new DiiViewer(this);
     executor_directives_ = new Executor(this);
+    dii_viewer_ = new DiiViewer(executor_directives_, this);
     setCentralWidget(dii_viewer_);
 
     QObject::connect(sections_list_action_, &QAction::triggered, this, &ISRMainWindow::onSectionsListActTriggered);
@@ -396,9 +396,9 @@ void ISRMainWindow::beginStartup() {
         emit errorDetected();
     });
 
-    QObject::connect(sections_loader_, &SectionsLoader::sectionLoaded, this, &ISRMainWindow::onSectionSetLoaded);
     QObject::connect(this, &ISRMainWindow::structureLoaded, executor_directives_, &Executor::addSection);
     QObject::connect(executor_directives_, &Executor::showSection, dii_viewer_, &DiiViewer::setSection);
+    QObject::connect(executor_directives_, &Executor::requestStartProgram, this, &ISRMainWindow::loadSetSectionRequest);
 }
 
 quint64 ISRMainWindow::getNextRequestId() {

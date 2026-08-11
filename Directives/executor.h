@@ -71,7 +71,7 @@ private:
 private:
 
     //DELETE START
-    QVector<Direct*> directives_;
+    //QVector<Direct*> directives_;
     int cur_index_;
     ExecutorMode mode_;
     ExecutorState state_;

@@ -8,12 +8,16 @@ Executor::Executor(QObject* parent) :
     state_ = ExecutorState::IDLE;
     mode_ = ExecutorMode::STEP;
     cur_index_ = -1;
-    directives_.clear();
+    call_stack.clear();
 }
 
 void Executor::startFrom(const int index, const ExecutorMode mode) {
     qCDebug(logCore) << QString("Получили запрос на выполение директивы %1").arg(index);
-    if (index < 0 || index > directives_.count()) {
+    if (call_stack.isEmpty()) {
+        emit failed(QString("Нет загруженных разделов!"));
+        return;
+    }
+    if (index < 0 || index > call_stack.last().section.dii_file.chapters[static_cast<int>(call_stack.last().section.active_chapter_type)].directives.count()) {
         emit failed(QString("НЕДОПУСТИМЫЙ ИНДЕКС ЗАПРАШИВАЕМОЙ ДЛЯ ЗАПУСКА ДИРЕТИВЫ: %1").arg(index));
         return;
     }
@@ -27,7 +31,7 @@ void Executor::startDirective() {
         qCDebug(logCore) << QString("Получили запрос на выполение очередной директивы");
         state_ = ExecutorState::RUNNING;
         emit curDirectiveChanged(cur_index_);
-        Direct* directive = directives_.at(cur_index_);
+        Direct* directive = call_stack.last().section.dii_file.chapters[static_cast<int>(call_stack.last().section.active_chapter_type)].directives[cur_index_];
         last_connections_.clear();
         last_connections_.append(QObject::connect(directive, &Direct::requestStartProgram, this, &Executor::onRequestedStartProgram));
         last_connections_.append(QObject::connect(directive, &Direct::showWindow, this, &Executor::requestShowWindow));
@@ -51,7 +55,7 @@ void Executor::onDirectiveFinished(const Direct::ResultDirective& result) {
     emit directiveFinished(result, cur_index_);
     cur_index_++;
     if (result.type == Direct::RESULT_DIRECTIVE_TYPES::OK) {
-        if (mode_ == ExecutorMode::AUTO && cur_index_ < directives_.count()) {
+        if (mode_ == ExecutorMode::AUTO && cur_index_ < call_stack.last().section.dii_file.chapters[static_cast<int>(call_stack.last().section.active_chapter_type)].directives.count()) {
             startDirective();
         }
     }

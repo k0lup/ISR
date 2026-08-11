@@ -493,6 +493,9 @@ DiiFile DiiReader::parseLines(const QList<Line>& lines, QStringList &error_messa
 bool DiiReader::createDirectives(DiiFile &dii_file, QStringList &error_message) const {
     bool res = true;
     for (auto& chapter : dii_file.chapters) {
+        if (chapter.type == ChapterType::PRILOSHENIE) {
+            continue;
+        }
         QVector<Direct*> directives;
         for (const auto& command : chapter.commands) {
             QStringList error_for_direct;
@@ -513,7 +516,7 @@ bool DiiReader::createDirectives(DiiFile &dii_file, QStringList &error_message) 
             } else {
                 res &= false;
                 error_message.append(QString("Ошибки для директивы №%1:\n").arg(command.number));
-                error_message.append("Не удалось распознать тип директивы");
+                error_message.append(QString("Не удалось распознать тип директивы '%2'").arg(type));
             }
             if (directive) {
                 res &= directive->isValid(error_for_direct);

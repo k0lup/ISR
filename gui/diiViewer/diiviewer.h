@@ -19,7 +19,8 @@ class DiiViewer : public QWidget
 {
     Q_OBJECT
 public:
-    explicit DiiViewer(QWidget *parent = nullptr);
+    explicit DiiViewer(Executor *executor = nullptr, QWidget *parent = nullptr);
+    void setExecutor(Executor* executor) {executor_ = executor;}
 signals:
     void startDirectiveRequested(int index, Executor::ExecutorMode mode);
     void failed(const QString& message);

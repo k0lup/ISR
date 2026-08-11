@@ -31,10 +31,10 @@ static int col(ChapterType name) {
     return static_cast<int>(name);
 }
 
-DiiViewer::DiiViewer(QWidget *parent)
-    : QWidget{parent}
+DiiViewer::DiiViewer(Executor *executor, QWidget *parent)
+    : QWidget{parent}, executor_{executor}
 {
-    executor_ = new Executor(this);
+    //executor_ = new Executor(this);
     table_wgt_ = new QTableWidget(this);
     QHBoxLayout *h_box_l = new QHBoxLayout();
     h_box_l->addWidget(table_wgt_);
