@@ -9,6 +9,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    GUI/mainwindow.cpp \
     logger/crashhandler.cpp \
     logger/logger.cpp \
     logger/logging_categories.cpp \
@@ -16,6 +17,7 @@ SOURCES += \
     main.cpp \
 
 HEADERS += \
+    GUI/mainwindow.h \
     logger/crashhandler.h \
     logger/logger.h \
     logger/logging_categories.h \
