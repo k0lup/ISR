@@ -9,63 +9,17 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    Directives/commanddirective.cpp \
-    Directives/dokladdirective.cpp \
-    Directives/executor.cpp \
-    Directives/insructionsdirective.cpp \
-    Directives/mainoperdirective.cpp \
-    Directives/startsectiondirective.cpp \
-    Directives/variantdirective.cpp \
-    config/config_loader.cpp \
-    config/config_service.cpp \
-    config/startup.cpp \
-    encodingdetector.cpp \
-    gui/diiViewer/diiviewer.cpp \
-    gui/isrmainwindow.cpp \
-    gui/loadingoverlay.cpp \
-    gui/menuWgt/findwgt.cpp \
-    gui/menuWgt/sectionlistwgt.cpp \
-    gui/menuWgt/titlesectionwgt.cpp \
     logger/crashhandler.cpp \
     logger/logger.cpp \
     logger/logging_categories.cpp \
     logger/logworker.cpp \
     main.cpp \
-    servises/catalogmanager.cpp \
-    setReader/diireader.cpp \
-    setReader/sectionsloader.cpp \
-    setReader/setfilesreader.cpp
 
 HEADERS += \
-    Directives/commanddirective.h \
-    Directives/directive.h \
-    Directives/dokladdirective.h \
-    Directives/executor.h \
-    Directives/insructionsdirective.h \
-    Directives/mainoperdirective.h \
-    Directives/startsectiondirective.h \
-    Directives/variantdirective.h \
-    ErrorReadFileStruct.h \
-    config/app_config.h \
-    config/config_loader.h \
-    config/config_service.h \
-    config/config_types.h \
-    config/startup.h \
-    encodingdetector.h \
-    gui/diiViewer/diiviewer.h \
-    gui/isrmainwindow.h \
-    gui/loadingoverlay.h \
-    gui/menuWgt/findwgt.h \
-    gui/menuWgt/sectionlistwgt.h \
-    gui/menuWgt/titlesectionwgt.h \
     logger/crashhandler.h \
     logger/logger.h \
     logger/logging_categories.h \
     logger/logworker.h \
-    servises/catalogmanager.h \
-    setReader/diireader.h \
-    setReader/sectionsloader.h \
-    setReader/setfilesreader.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
