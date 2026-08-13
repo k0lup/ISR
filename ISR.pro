@@ -10,6 +10,8 @@ CONFIG += c++17
 
 SOURCES += \
     GUI/mainwindow.cpp \
+    Services/ConfigReader/configparser.cpp \
+    Services/ConfigReader/configreader.cpp \
     logger/crashhandler.cpp \
     logger/logger.cpp \
     logger/logging_categories.cpp \
@@ -18,6 +20,10 @@ SOURCES += \
 
 HEADERS += \
     GUI/mainwindow.h \
+    Services/ConfigReader/configparser.h \
+    Services/ConfigReader/configreader.h \
+    Services/ConfigReader/configschema.h \
+    Services/ConfigReader/configtypes.h \
     logger/crashhandler.h \
     logger/logger.h \
     logger/logging_categories.h \
