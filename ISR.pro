@@ -13,6 +13,7 @@ SOURCES += \
     Services/ConfigReader/configparser.cpp \
     Services/ConfigReader/configreader.cpp \
     Services/ConfigReader/configschema.cpp \
+    Services/EncodingDetector/encodingdetector.cpp \
     logger/crashhandler.cpp \
     logger/logger.cpp \
     logger/logging_categories.cpp \
@@ -25,6 +26,7 @@ HEADERS += \
     Services/ConfigReader/configreader.h \
     Services/ConfigReader/configschema.h \
     Services/ConfigReader/configtypes.h \
+    Services/EncodingDetector/encodingdetector.h \
     logger/crashhandler.h \
     logger/logger.h \
     logger/logging_categories.h \

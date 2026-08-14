@@ -18,6 +18,11 @@ public slots:
 signals:
     void failed(const QString& error_message);
     void success(const AppConfig& cfg);
+
+private:
+    QStringList readFile(const QString& file_path, QStringList& error_messages);
+
+    AppConfig createConfig(QMap<QString, QStringList> readed_params, QStringList& error_messages);
 private:
     ConfigParser parser_;
 };

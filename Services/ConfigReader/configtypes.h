@@ -33,4 +33,29 @@ struct AppConfig {
     int port_server;                /*.ON_S284*/            /*PORT_EXCHANGE_SERVER=*/
 };
 
+//Названия используемых параметров
+
+namespace app_config_names {
+    const QString spo_path_name                 =   "РАЗМЕЩЕНИЕ_СПО";
+    const QString settings_path_name            =   "РАЗМЕЩЕНИЕ_НАСТРОЕК";
+    const QString files_paths_name              =   "РАЗМЕЩЕНИЕ_ФАЙЛОВ";
+    const QString sections_folder_path_name     =   "РАЗМЕЩЕНИЕ_РАЗДЕЛОВ";
+
+    const QString prot_path_name                =   "ПРОТОКОЛ";
+    const QString programs_paths_name           =   "ПРОГРАММЫ";
+    const QString sections_paths_name           =   "РАЗДЕЛЫ";
+
+    const QString nshc_isd_name                 =   "НШС_ИЗД";
+    const QString avar_isd_name                 =   "АВАР_ИЗД";
+    const QString pri_isd_name                  =   "ПРИ_ИЗД";
+
+    const QString nshc_rep_name                 =   "НСШС_РЭП";
+    const QString avar_rep_name                 =   "АВАР_РЭП";
+    const QString pri_rep_name                  =   "ПРИ_РЭП";
+
+    const QString isr_port_name                 =   "ISR_PORT";
+    const QString ip_server_name                =   "IP_EXCHANGE_SERVER";
+    const QString port_server_name              =   "PORT_EXCHANGE_SERVER";
+}
+
 #endif // CONFIGTYPES_H
