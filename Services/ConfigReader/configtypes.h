@@ -14,7 +14,7 @@ struct AppConfig {
     QString spo_path;               /*.ON*/                 /*РАЗМЕЩЕНИЕ_СПО=*/
     QString settings_path;          /*.ON*/                 /*РАЗМЕЩЕНИЕ_НАСТРОЕК=*/
     QString files_paths;            /*.ON*/                 /*РАЗМЕЩЕНИЕ_ФАЙЛОВ=*/
-    QString sections_folder_path;   /*.ON*/                 /*РАЗМЕЩЕНИЕ РАЗДЕЛОВ=*/
+    QString sections_folder_path;   /*.ON*/                 /*РАЗМЕЩЕНИЕ_РАЗДЕЛОВ=*/
 
     QString prot_path;              /*.ON*/                 /*ПРОТОКОЛ=*/
     QStringList programs_paths;     /*.ON*/                 /*ПРОГРАММЫ=*/

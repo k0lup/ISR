@@ -12,6 +12,7 @@ SOURCES += \
     GUI/mainwindow.cpp \
     Services/ConfigReader/configparser.cpp \
     Services/ConfigReader/configreader.cpp \
+    Services/ConfigReader/configschema.cpp \
     logger/crashhandler.cpp \
     logger/logger.cpp \
     logger/logging_categories.cpp \
@@ -33,3 +34,6 @@ HEADERS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    Services/ConfigReader/readme.md

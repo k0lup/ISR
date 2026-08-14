@@ -13,7 +13,8 @@ public:
     ConfigReader(QObject* parent = nullptr);
 
 public slots:
-    void onReadFileRequested(const QString& cfg_file_path, const QString& on_file_path);
+    void onReadFileRequested(const QString& cfg_file_path, const QString& on_file_path,
+                             const QString& service_on_file_path);
 signals:
     void failed(const QString& error_message);
     void success(const AppConfig& cfg);

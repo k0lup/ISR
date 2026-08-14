@@ -9,14 +9,15 @@ namespace config_reader {
     enum class ParamType {
         String,
         StringList,
-        Int
+        Int,
+        Empty
     };
 
     struct ParamInfo
     {
-        bool required = false;
-        QVariant default_value;
-        ParamType type = ParamType::String;
+        bool required = false;                  //обязательно ли параметр должен быть предоставлен
+        QVariant default_value;                 //значение по умолчанию (если есть)
+        ParamType type = ParamType::String;     //тип параметра
     };
 
     using ConfigSchema = QMap<QString, ParamInfo>;
