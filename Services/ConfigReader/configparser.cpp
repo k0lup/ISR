@@ -8,7 +8,7 @@ ConfigParser::ConfigParser()
     qCInfo(logCore) << "Создан объект ConfigParser";
 }
 
-QMap<QString, QStringList> parseData(const QStringList& data, QStringList error_messages)
+QMap<QString, QStringList> ConfigParser::parseData(const QStringList& data, QStringList& error_messages)
 {
     qCInfo(logCore) << "Вызван метод parseData";
     QMap<QString, QStringList> result;

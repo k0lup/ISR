@@ -29,7 +29,7 @@ struct AppConfig {
     QString pri_rep;                /*.ON*/                 /*ПРИ_РЭП=*/
 
     int isr_port;                   /*.ON_S284*/            /*ISR_PORT=*/
-    int ip_server;                  /*.ON_S284*/            /*IP_EXCHANGE_SERVER=*/
+    QString ip_server;              /*.ON_S284*/            /*IP_EXCHANGE_SERVER=*/
     int port_server;                /*.ON_S284*/            /*PORT_EXCHANGE_SERVER=*/
 };
 

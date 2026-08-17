@@ -9,7 +9,7 @@ class ConfigParser
 public:
     ConfigParser();
 public:
-    QMap<QString, QStringList> parseData(const QStringList& data, QStringList error_messages);
+    QMap<QString, QStringList> parseData(const QStringList& data, QStringList& error_messages);
 };
 
 #endif // CONFIGPARSER_H
