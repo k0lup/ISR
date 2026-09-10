@@ -10,9 +10,9 @@
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
 
-#include "Services/EncodingDetector/encodingdetector.h"
+#include <EncodingDetector/encodingdetector.h>
 
-#include "logger/logging_categories.h"
+#include "logging_categories.h"
 #include <QLoggingCategory>
 
 ConfigReader::ConfigReader(QObject* parent) : QObject(parent)

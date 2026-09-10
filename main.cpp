@@ -8,8 +8,9 @@
 #include <memory>
 
 
-#include "logger/logger.h"
-#include "logger/logging_categories.h"
+#include <Logger/logger.h>
+#include "logging_categories.h"
+#include "GUI/mainwindow.h"
 
 static QPalette makeLightPalette()
 {
@@ -87,6 +88,9 @@ int main(int argc, char *argv[])
     setupLogging();
 
     qCInfo(logCore) << "Приложение запускается";
+
+    MainWindow mw;
+    mw.show();
 
     const int rc = app.exec();
 

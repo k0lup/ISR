@@ -1,6 +1,6 @@
 #include "configparser.h"
 
-#include "logger/logging_categories.h"
+#include "logging_categories.h"
 #include <QLoggingCategory>
 
 ConfigParser::ConfigParser()
