@@ -6,168 +6,82 @@
 #include <QPointer>
 #include <QSet>
 
-#include "Services/DirectiveExecutor/program.h"
-
-class Direct;
+#include "Services/Programs/programtypes.h"
+#include "Services/DirectiveExecutor/executiontypes.h"
+#include "Services/RequestIDGenerator/requestIDGenerator.h"
+#include "Services/Directives/directive.h"
+#include "Services/Directives/startsectiondirective.h"
 
 class DirectiveExecutor : public QObject
 {
     Q_OBJECT
 public:
-    static const quint64 NO_REQUEST_ID = 0;
-
-    enum class ExecutorState
-    {
-        IDLE,
-        RUNNING,
-        WAITING_GUI,
-        WAITING_NETWORK,
-        WAITING_PROGRAM,
-        ERROR
-    };
-
-    enum class ExecutorMode
-    {
-        STEP,
-        AUTO,
-        NO_MODE
-    };
-
-public:
-    explicit DirectiveExecutor(QObject *parent = nullptr);
-
-signals:
-    void directiveStarted(const SectionForGUI& frame);
-
-    void directiveFinished(const SectionForGUI& frame);
-
-    void requestShowWindow(RequestId request_id/**/);
-    void requestSendDataToPris(RequestId request_id/**/);
-    void requestStartProgram(RequestId request_id/**/);
-
-    void programFinished(bool success); //А НУЖНО ЛИ?
-
-    void failed(const QString& message);
-
-    void sectionSetted(const SectionForGUI& prog_info);
+    explicit DirectiveExecutor(QObject* parent = nullptr);
 
 public slots:
-    void startFrom(const int index, const ExecutorMode mode);
+    void setSection(const SectionStruct& section_struct, const RequestId request_id, StartSectionDirective* caller = nullptr);
+    void startFrom(const ExecutionSnapshot& section_data, const RequestId request_id);
 
-    void continueExecution(); //ДУМАЮ, ЧТО МОЖНО УБРАТЬ
+    void setExecuteMode(const ExecuteMode& execute_mode, const RequestId request_id);
 
-    void onWindowResponse(RequestId request_id/**/);
-    void onPrisResponse(RequestId request_id/**/);
+    void onWindowResponse(const WindowResultData& result, const RequestId source_request_id);
+    void onPRISResponse(const PRISResultData& result, const RequestId source_request_id);
+    void onLoadSectionResponse(const SectionStruct& section_data,  const QStringList& error_messages, const RequestId source_request_id);
 
-    void onProgramReady(RequestId request_id/**/);
+    void onDirectiveFinished(const Direct::ResultDirective& result, Direct* direct);
+    void onDirectiveFailed(const QString& message, Direct* direct);
+signals:
+    void sectionChanged(const ExecutionSnapshot& section);
 
-    void onFailedDetected(RequestId request_id, const QString& message);
+    void requestCompleted(const RequestId source_request_id);
+    void requestFailed(const RequestId source_request_id, const QString& message);
 
-    void closeCurrentProgram();
+    void warning(const QString& message);
+    void failed(const QString& message);
 
-    void setSection(SectionStruct section, const RequestId request_id = 0);
-
+    void requestShowWindow(const WidgetTypes& types, const WidgetInfo& info, const RequestId request_id);
+    void requestSendDataToPris(const PRISMessage& message, const RequestId request_id);
+    void requestLoadSection(const ExecuteParam& params, const RequestId request_id);
 private:
-    enum class RequestType
+    struct ExecuteFrame
     {
-        GUI,
-        PRIS,
-        PROGRAM
-    };
+        SectionStruct section_struct;
+        QMap<ChapterType, QVector<Direct*>> directives_for_execute;
 
-    struct ExecutionPosition
-    {
-        ChapterType active_chapter = ChapterType::STATE;
-        int active_direct_index = -1;;
-        int stack_index = -1;
-        Direct* actitve_direct = nullptr;
-    };
+        ChapterType active_chapter;
+        int current_directive_index;
+        StartSectionDirective* caller = nullptr;
 
-    struct ExecutionFrame
-    {
-        SectionStruct section;
+        int id_program;
 
-        ExecutorMode mode = ExecutorMode::STEP;
+        const ExecutionSnapshot toGUI() {
+            ExecutionSnapshot result;
+            result.active_chpater = active_chapter;
+            result.active_dir_index = current_directive_index;
+            result.section = section_struct;
+            result.exec_frame_id = id_program;
 
-        ExecutionPosition execution_position;
-
-        RequestId caller_request_id = 0;
-
-        SectionForGUI toGUI() {
-            SectionForGUI res;
-            res.active_chpater = execution_position.active_chapter;
-            res.active_dir_index = execution_position.active_direct_index;
-            res.section = section;
-            return res;
+            return result;
         }
     };
 
-    struct PendingRequest
-    {
-        RequestType type;
-
-        ExecutionPosition execution_position;
-    };
-
-    struct InfoAboutRequestedProgram
-    {
-        ChapterType chapter;
-        ExecutorMode mode;
-        QString label_nshs;
-    };
-
 private:
-    void registerDirectives(const QVector<Direct*> directives);
-
-    void startCurrentDirective();
-
-    void onDirectiveFinished(
-            const ExecutionPosition& exec_pos
-            /*const Direct::ResultDirective& result*/);
-    void onFiledDetected();
-
-    void onShowWindowRequested(
-            const ExecutionPosition& exec_pos
-            /*const WidgetTypes& type,*/
-            /*const WidgetInfo& info*/);
-
-    void onPrisRequested(
-            const ExecutionPosition& exec_pos
-            /*const PRISMessage& message*/);
-
-    void onProgramRequested(
-            const ExecutionPosition& exec_pos
-            /*const START_SECTION_PARAMS& params*/);
-
-    RequestId createRequest(
-            RequestType type,
-            const ExecutionPosition& exec_pos);
-
-    Direct* takeRequest(
-            RequestId requestId,
-            RequestType expectedType);
-
-    void cancelRequests(const ExecutionPosition& exec_pos);
-
-    ExecutionFrame* currentFrame();
-    const ExecutionFrame* currentFrame() const;
-
-    Direct* currentDirective() const;
-
-    void finishCurrentProgram(bool success);
-
+    QVector<Direct*> createDirectiveFromChapter(const ChapterStruct& chapter, QStringList& error_messages);
+    Direct* createDirect(const DirectiveStruct& directive);
+    ExecuteParam getParamFromStartDirective(StartSectionDirective* directive);
+    void continueExecute();
+    QPointer<Direct> getCurrentExecuteDirect();
+    int getNextID() {
+        id_last_prog += 1;
+        return id_last_prog;
+    }
 private:
-    QVector<ExecutionFrame> stack_;
+    ExecuteMode execute_mode_ = ExecuteMode::STEP;
+    QVector<ExecuteFrame> sections_;
 
-    QHash<RequestId, PendingRequest> pendingRequests_;
+    QMap<RequestId, QPointer<Direct>> request_directives_;
 
-    QSet<Direct*> registeredDirectives_;
-
-    RequestId nextRequestId_ = 1;
-
-    ExecutorState state_ = ExecutorState::IDLE;
-
-    QHash<RequestId, InfoAboutRequestedProgram> info_about_req_progs_;
+    int id_last_prog = 0;
 };
 
 #endif // DIRECTIVEEXECUTOR_H

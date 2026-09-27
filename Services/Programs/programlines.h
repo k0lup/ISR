@@ -1,12 +1,7 @@
-#ifndef PROGRAM_H
-#define PROGRAM_H
-
+#ifndef PROGRAMLINES_H
+#define PROGRAMLINES_H
 #include <QString>
 #include <QVector>
-#include <QMap>
-
-using RequestId = quint64;
-
 
 enum class LineType
 {
@@ -108,7 +103,7 @@ struct DirectiveLine
         operation_col.clear();
     }
 
-    bool isValid(const QVector<QString> row) {
+    bool isValid(const QVector<QString>& row) const {
         if (row.count() != 4) {
             return false;
         }
@@ -126,84 +121,20 @@ struct DirectiveLine
             operation_col = input_struct.cols_data[3];
         }
     }
-};
 
-enum class DirectType
-{
-
-};
-
-struct DirectiveStruct
-{
-    int number;
-    DirectType type;
-
-    QList<DirectiveLine> lines;
-};
-
-enum class ChapterType
-{
-    STATE,
-    NOT_STATE
-};
-
-struct ChapterStruct
-{
-    ChapterType type;
-    QString name;
-    QMap<QString, int> labels;
-
-    QList<DirectiveStruct> directives;
-};
-
-struct PassportStruct
-{
-    QString checksum;
-    QString doc_type;
-    QString content;
-    QString developer;
-    QString product_type;
-    QString doc_index;
-
-    void clear() {
-        checksum.clear();
-        doc_type.clear();
-        content.clear();
-        developer.clear();
-        product_type.clear();
-        doc_index.clear();
-    }
-};
-
-struct SectionStruct
-{
-    PassportStruct passport;
-
-    QList<ChapterStruct> chapters;
-
-    void clear() {
-        passport.clear();
-        chapters.clear();
-    }
-
-    ChapterStruct get(ChapterType type) {
-        for (const auto& chapter : chapters) {
-            if (chapter.type == type) {
-                return chapter;
-            }
+    bool operator==(const DirectiveLine& directive_line_for_equal) const
+    {
+        if ((num_col == directive_line_for_equal.num_col) &&
+                (type_col == directive_line_for_equal.type_col) &&
+                (command_col == directive_line_for_equal.command_col) &&
+                (operation_col == directive_line_for_equal.operation_col)) {
+            return true;
         }
+        return false;
+    }
 
-        return ChapterStruct();
+    bool operator!=(const DirectiveLine& directive_line_for_equal) const {
+        return !(*this == directive_line_for_equal);
     }
 };
-
-
-struct SectionForGUI
-{
-    SectionStruct section;
-
-    ChapterType active_chpater;
-    int active_dir_index;
-};
-
-#endif // PROGRAM_H
+#endif // PROGRAMLINES_H

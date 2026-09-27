@@ -49,6 +49,12 @@ SOURCES += \
     Services/ConfigReader/configreader.cpp \
     Services/ConfigReader/configschema.cpp \
     Services/DirectiveExecutor/directiveexecutor.cpp \
+    Services/Directives/commanddirective.cpp \
+    Services/Directives/dokladdirective.cpp \
+    Services/Directives/insructionsdirective.cpp \
+    Services/Directives/mainoperdirecitve.cpp \
+    Services/Directives/startsectiondirective.cpp \
+    Services/Directives/variantdirective.cpp \
     logging_categories.cpp \
     main.cpp
 
@@ -59,7 +65,20 @@ HEADERS += \
     Services/ConfigReader/configschema.h \
     Services/ConfigReader/configtypes.h \
     Services/DirectiveExecutor/directiveexecutor.h \
-    Services/DirectiveExecutor/program.h \
+    Services/DirectiveExecutor/executiontypes.h \
+    Services/Directives/commanddirective.h \
+    Services/Directives/directive.h \
+    Services/Directives/directivetypes.h \
+    Services/Directives/dokladdirective.h \
+    Services/Directives/insructionsdirective.h \
+    Services/Directives/mainoperdirecitve.h \
+    Services/Directives/startsectiondirective.h \
+    Services/Directives/variantdirective.h \
+    Services/GUI/guitypes.h \
+    Services/PRIS/pristypes.h \
+    Services/Programs/programlines.h \
+    Services/Programs/programtypes.h \
+    Services/RequestIDGenerator/requestIDGenerator.h \
     logging_categories.h
 
 
