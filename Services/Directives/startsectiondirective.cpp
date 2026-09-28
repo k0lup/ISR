@@ -7,8 +7,8 @@
 
 const QString StartSectionDirective::regular_exp_ = (R"(^[ ]*НАЧРАЗД[ ]+(?<abbr>\S{1,16})(?:[ ]+(?:(?<sec_main>ШТАТ|ПРИ)(?:[ ]+(?<mode_main>АВТ|ШАГ))?|(?<sec_nshs>НШС)(?:[ ]+:(?<label>[^ ]+))?(?:[ ]+(?<mode_nshs>АВТ|ШАГ))?|(?<mode_only>АВТ|ШАГ)))?[ ]*$)");
 const QString StartSectionDirective::state_sec_reg_par_val_ = "ШТАТ";
-const QString StartSectionDirective::not_state_sec_reg_par_val_ = "ПРИ";
-const QString StartSectionDirective::pri_state_sec_reg_par_val_ = "НШС";
+const QString StartSectionDirective::not_state_sec_reg_par_val_ = "НШС";
+const QString StartSectionDirective::pri_state_sec_reg_par_val_ = "ПРИ";
 const QString StartSectionDirective::mode_par_val_auto = "АВТ";
 const QString StartSectionDirective::mode_par_val_step = "ШАГ";
 
@@ -44,36 +44,36 @@ bool StartSectionDirective::isValid()
     if (m_directive_.lines.count() < 1) {
         errors_valid_.append("В директиве нет строк. КРИТИЧЕСКАЯ ОШИБКА В ПАРСЕРЕ ФАЙЛА СТРУКТУРЫ РАЗДЕЛА");
         is_valid = false;
-    }
-
-    if (m_directive_.lines.at(0).operation_col.isEmpty()) {
-        errors_valid_.append("В 1 СТРОКЕ ДИРЕКТИВЫ НЕТ ОПЕРАЦИИ ДЛЯ ВЫПОЛНЕНИЯ!");
-        is_valid = false;
-    }
-
-    if (m_directive_.lines.at(0).type_col.trimmed() != "И") {
-        errors_valid_.append("Неверно указан тип директивы");
-        is_valid = false;
-    }
-
-    QString operation;
-
-    for (int num_line = 0; num_line < m_directive_.lines.count(); ++num_line) {
-        QString cur_operation = m_directive_.lines.at(num_line).operation_col;
-
-        if (!cur_operation.isEmpty()) {
-            operation.append(cur_operation);
+    } else {
+        if (m_directive_.lines.at(0).operation_col.isEmpty()) {
+            errors_valid_.append("В 1 СТРОКЕ ДИРЕКТИВЫ НЕТ ОПЕРАЦИИ ДЛЯ ВЫПОЛНЕНИЯ!");
+            is_valid = false;
         }
-    }
 
-    if (operation.isEmpty()) {
-        errors_valid_.append("ПУСТАЯ СЕКЦИЯ ОПЕРАЦИИ ДИРЕКТИВЫ!");
-        is_valid = false;
-    }
+        if (m_directive_.lines.at(0).type_col.trimmed() != "И") {
+            errors_valid_.append("Неверно указан тип директивы");
+            is_valid = false;
+        }
 
-    if (!checkOperation(operation)) {
-        errors_valid_.append("НЕДОПУСТИМЫЙ ФОРМАТ КОМАНДЫ НАЧРАЗД");
-        is_valid = false;
+        QString operation;
+
+        for (int num_line = 0; num_line < m_directive_.lines.count(); ++num_line) {
+            QString cur_operation = m_directive_.lines.at(num_line).operation_col;
+
+            if (!cur_operation.isEmpty()) {
+                operation.append(cur_operation);
+            }
+        }
+
+        if (operation.isEmpty()) {
+            errors_valid_.append("ПУСТАЯ СЕКЦИЯ ОПЕРАЦИИ ДИРЕКТИВЫ!");
+            is_valid = false;
+        }
+
+        if (!checkOperation(operation)) {
+            errors_valid_.append("НЕДОПУСТИМЫЙ ФОРМАТ КОМАНДЫ НАЧРАЗД");
+            is_valid = false;
+        }
     }
 
 

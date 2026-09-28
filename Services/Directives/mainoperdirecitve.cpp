@@ -37,16 +37,16 @@ bool MainOperDirecitve::isValid()
     if (m_directive_.lines.count() < 1) {
         errors_valid_.append("В директиве нет строк. КРИТИЧЕСКАЯ ОШИБКА В ПАРСЕРЕ ФАЙЛА СТРУКТУРЫ РАЗДЕЛА");
         is_valid = false;
-    }
+    } else {
+        if (m_directive_.lines.at(0).type_col.trimmed() != "О") {
+            errors_valid_.append("Неверно указан тип директивы");
+            is_valid = false;
+        }
 
-    if (m_directive_.lines.at(0).type_col.trimmed() != "О") {
-        errors_valid_.append("Неверно указан тип директивы");
-        is_valid = false;
-    }
-
-    if (m_directive_.lines.at(0).operation_col.trimmed().isEmpty()) {
-        errors_valid_.append("Не указана операция в 1 строке директивы!");
-        is_valid = false;
+        if (m_directive_.lines.at(0).operation_col.trimmed().isEmpty()) {
+            errors_valid_.append("Не указана операция в 1 строке директивы!");
+            is_valid = false;
+        }
     }
 
     if (!is_valid) {

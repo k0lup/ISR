@@ -19,14 +19,14 @@ public:
     explicit DirectiveExecutor(QObject* parent = nullptr);
 
 public slots:
-    void setSection(const SectionStruct& section_struct, const RequestId request_id, StartSectionDirective* caller = nullptr);
+    void setSection(SectionStruct& section_struct, const RequestId request_id, StartSectionDirective* caller = nullptr);
     void startFrom(const ExecutionSnapshot& section_data, const RequestId request_id);
 
     void setExecuteMode(const ExecuteMode& execute_mode, const RequestId request_id);
 
     void onWindowResponse(const WindowResultData& result, const RequestId source_request_id);
     void onPRISResponse(const PRISResultData& result, const RequestId source_request_id);
-    void onLoadSectionResponse(const SectionStruct& section_data,  const QStringList& error_messages, const RequestId source_request_id);
+    void onLoadSectionResponse(SectionStruct& section_data,  const QStringList& error_messages, const RequestId source_request_id);
 
     void onDirectiveFinished(const Direct::ResultDirective& result, Direct* direct);
     void onDirectiveFailed(const QString& message, Direct* direct);
@@ -49,10 +49,10 @@ private:
         QMap<ChapterType, QVector<Direct*>> directives_for_execute;
 
         ChapterType active_chapter;
-        int current_directive_index;
+        int current_directive_index = 0;
         StartSectionDirective* caller = nullptr;
 
-        int id_program;
+        int id_program = 0;
 
         const ExecutionSnapshot toGUI() {
             ExecutionSnapshot result;

@@ -33,28 +33,32 @@ bool VariantDirective::isValid()
         is_valid = false;
     }
 
-    if (!m_directive_.lines.at(0).operation_col.trimmed().isEmpty()) {
-        errors_valid_.append("В 1 СТРОКЕ ДИРЕКТИВЫ ПОЛЕ ОПЕРАЦИИ ДОЛЖНО БЫТЬ ПУСТЫМ");
+    if (m_directive_.lines.count() < 1) {
+        errors_valid_.append("В директиве нет строк. КРИТИЧЕСКАЯ ОШИБКА В ПАРСЕРЕ ФАЙЛА СТРУКТУРЫ РАЗДЕЛА");
         is_valid = false;
-    }
+    } else {
+        if (!m_directive_.lines.at(0).operation_col.trimmed().isEmpty()) {
+            errors_valid_.append("В 1 СТРОКЕ ДИРЕКТИВЫ ПОЛЕ ОПЕРАЦИИ ДОЛЖНО БЫТЬ ПУСТЫМ");
+            is_valid = false;
+        }
 
-    if (m_directive_.lines.at(0).type_col.trimmed() != "В") {
-        errors_valid_.append("Неверно указан тип директивы");
-        is_valid = false;
-    }
+        if (m_directive_.lines.at(0).type_col.trimmed() != "В") {
+            errors_valid_.append("Неверно указан тип директивы");
+            is_valid = false;
+        }
 
-    QStringList errors_parse_variants;
-    QMap<int, VARIANT_DATA_VAR_DIRECTIVE> variants = getVariants(m_directive_.lines, errors_parse_variants);
-    if (!errors_parse_variants.isEmpty()) {
-        errors_valid_.append(errors_parse_variants);
-        is_valid = false;
-    }
+        QStringList errors_parse_variants;
+        QMap<int, VARIANT_DATA_VAR_DIRECTIVE> variants = getVariants(m_directive_.lines, errors_parse_variants);
+        if (!errors_parse_variants.isEmpty()) {
+            errors_valid_.append(errors_parse_variants);
+            is_valid = false;
+        }
 
-    if (variants.keys().count() == 0) {
-        errors_valid_.append("НЕ ДОПУСКАЕТСЯ ОТСУТСТВИЕ ВАРИАНТОВ В ДИРЕКТИВЕ!");
-        is_valid = false;
+        if (variants.keys().count() == 0) {
+            errors_valid_.append("НЕ ДОПУСКАЕТСЯ ОТСУТСТВИЕ ВАРИАНТОВ В ДИРЕКТИВЕ!");
+            is_valid = false;
+        }
     }
-
 
     if (!is_valid) {
         qCWarning(logCore) << "При проверке директивы были выявлены следующие проблемы:\n" + errors_valid_.join("\n");

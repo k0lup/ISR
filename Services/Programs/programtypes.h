@@ -126,14 +126,14 @@ struct SectionStruct
         chapters.clear();
     }
 
-    ChapterStruct get(ChapterType type) const {
-        for (const auto& chapter : chapters) {
+    ChapterStruct& get(ChapterType type) {
+        for (auto& chapter : chapters) {
             if (chapter.type == type) {
                 return chapter;
             }
         }
 
-        return ChapterStruct();
+        //ПРОДУМАТЬ ВОЗВРАТ ОШИБКИ
     }
 
     bool operator==(const SectionStruct& section_for_equal) const {

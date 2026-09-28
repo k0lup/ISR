@@ -16,7 +16,7 @@ DirectiveExecutor::DirectiveExecutor(QObject* parent) :
     qCInfo(logCore) << "Вызван и выполнен коструктор DirectiveExecutor";
 }
 
-void DirectiveExecutor::setSection(const SectionStruct& section_struct, const RequestId request_id, StartSectionDirective* caller)
+void DirectiveExecutor::setSection(SectionStruct& section_struct, const RequestId request_id, StartSectionDirective* caller)
 {
     qCInfo(logCore) << "Вызван метод setSection";
     ExecuteFrame frame;
@@ -330,6 +330,7 @@ void DirectiveExecutor::continueExecute()
 
         qCInfo(logCore) << "Отправляем сигнал failed";
         emit failed(error_message);
+        return;
     }
 
     Direct* directive_for_runned = exec_prog.directives_for_execute[exec_prog.active_chapter][exec_prog.current_directive_index];
@@ -339,6 +340,7 @@ void DirectiveExecutor::continueExecute()
 
         qCInfo(logCore) << "Отправляем сигнал failed";
         emit failed(error_message);
+        return;
     }
 
     exec_prog.section_struct.get(exec_prog.active_chapter).directives[exec_prog.current_directive_index].status = DirectStatus::RUNNING;
@@ -357,6 +359,7 @@ void DirectiveExecutor::onWindowResponse(const WindowResultData& result, const R
     Direct* directive = request_directives_.value(source_request_id);
     if (!directive) {
         emit failed("ДИРЕКТИВА ДЛЯ КОТОРОЙ ПОЛУЧЕН ОТВЕТ УЖЕ УНИЧТОЖЕНА!");
+        return;
     }
     request_directives_.remove(source_request_id);
     directive->onWindowResult(result);
@@ -372,12 +375,13 @@ void DirectiveExecutor::onPRISResponse(const PRISResultData& result, const Reque
     Direct* directive = request_directives_.value(source_request_id);
     if (!directive) {
         emit failed("ДИРЕКТИВА ДЛЯ КОТОРОЙ ПОЛУЧЕН ОТВЕТ УЖЕ УНИЧТОЖЕНА!");
+        return;
     }
     request_directives_.remove(source_request_id);
     directive->onPRISResult(result);
 }
 
-void DirectiveExecutor::onLoadSectionResponse(const SectionStruct& section_data, const QStringList& error_messages, const RequestId source_request_id)
+void DirectiveExecutor::onLoadSectionResponse(SectionStruct& section_data, const QStringList& error_messages, const RequestId source_request_id)
 {
     if (!request_directives_.contains(source_request_id)) {
         emit failed("ДИРЕКТИВА ДЛЯ ОТПРАВКИ ДАННЫХ ИЗ LOAD_SECTION НЕ НАЙДЕНА!");
@@ -387,6 +391,7 @@ void DirectiveExecutor::onLoadSectionResponse(const SectionStruct& section_data,
     StartSectionDirective* directive = dynamic_cast<StartSectionDirective*>(request_directives_.value(source_request_id).data());
     if (!directive) {
         emit failed("ДИРЕКТИВА ДЛЯ КОТОРОЙ ПОЛУЧЕН ОТВЕТ УЖЕ УНИЧТОЖЕНА!");
+        return;
     }
     request_directives_.remove(source_request_id);
     if (!error_messages.isEmpty()) {

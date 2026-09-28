@@ -61,8 +61,12 @@ public slots:
 protected:
     virtual void parseDirective() = 0;
 protected slots:
-    virtual void onFiledDetected(const QString& message);
-    virtual void onFinishedDetected();
+    virtual void onFiledDetected(const QString& message) {
+        Q_UNUSED(message);
+    }
+    virtual void onFinishedDetected() {
+
+    }
 protected:
     enum class DirectiveState
     {

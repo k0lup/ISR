@@ -44,7 +44,9 @@ LIBS += \
 # =========================
 
 SOURCES += \
+    GUI/executorwidget.cpp \
     GUI/mainwindow.cpp \
+    GUI/sectionlistdialog.cpp \
     Services/ConfigReader/configparser.cpp \
     Services/ConfigReader/configreader.cpp \
     Services/ConfigReader/configschema.cpp \
@@ -59,7 +61,9 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
+    GUI/executorwidget.h \
     GUI/mainwindow.h \
+    GUI/sectionlistdialog.h \
     Services/ConfigReader/configparser.h \
     Services/ConfigReader/configreader.h \
     Services/ConfigReader/configschema.h \
