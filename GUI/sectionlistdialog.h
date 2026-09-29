@@ -3,10 +3,8 @@
 #include <QDialog>
 #include <QStringList>
 
-#include <QListWidget>
-#include <QPushButton>
-//class QListWidget;
-//class QPushButton;
+class QListWidget;
+class QPushButton;
 
 class SectionListDialog : public QDialog
 {
@@ -18,13 +16,11 @@ public:
         LOAD
     };
 public:
-    SectionListDialog(QWidget* parent = nullptr);
+    explicit SectionListDialog(QWidget* parent = nullptr);
 
     void setSections(const QStringList& sections_list);
     int exec(const Mode mode);
-signals:
-    void sectionSelected(const QString& sections_name);
-    void loadSectionRequested(const QString& section_name);
+    QString getSelectedSection();
 private slots:
     void onSelectButtonClicked();
     void onLoadButtonClicked();
@@ -36,6 +32,7 @@ private:
     void createWidgets();
     void createLayouts();
     void createConnections();
+    void findAndSelect(const QString& abbrev);
 private:
     QListWidget* section_list_ = nullptr;
 
@@ -44,7 +41,7 @@ private:
     QPushButton* find_button_ = nullptr;
     QPushButton* cancel_button_ = nullptr;
 
-    QStringList sections_list;
+    QString selected_section_;
 };
 
 #endif // SECTIONLISTDIALOG_H

@@ -1,6 +1,11 @@
 #include "sectionlistdialog.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QListWidget>
+#include <QPushButton>
+#include <QMessageBox>
+
+#include "finddialog.h"
 
 #include <Logger/logger.h>
 #include "logging_categories.h"
@@ -79,12 +84,32 @@ void SectionListDialog::onSelectButtonClicked()
 {
     qCInfo(logGUI) << "Вызван обработчик кнопки 'Выбрать'";
 
+    const auto *item = section_list_->currentItem();
+
+    if (!item) {
+        return;
+    }
+
+    selected_section_ = item->text();
+
+    accept();
+
     qCInfo(logGUI) << "Завершен обработчик кнопки 'Выбрать'";
 }
 
 void SectionListDialog::onLoadButtonClicked()
 {
     qCInfo(logGUI) << "Вызван обработчик кнопки 'Загрузить'";
+
+    const auto *item = section_list_->currentItem();
+
+    if (!item) {
+        return;
+    }
+
+    selected_section_ = item->text();
+
+    accept();
 
     qCInfo(logGUI) << "Завершен обработчик кнопки 'Загрузить'";
 }
@@ -94,6 +119,11 @@ void SectionListDialog::onFindButtonClicked()
 {
     qCInfo(logGUI) << "Вызван обработчик кнопки 'Найти'";
 
+    FindDialog find_dialog("Найти раздел", "Аббревиатура:");
+    if (find_dialog.exec() == QDialog::Accepted) {
+        findAndSelect(find_dialog.getTxtForSearch());
+    }
+
     qCInfo(logGUI) << "Завершен обработчик кнопки 'Найти'";
 }
 
@@ -101,12 +131,15 @@ void SectionListDialog::onCancelButtonClicked()
 {
     qCInfo(logGUI) << "Вызван обработчик кнопки 'Отмена'";
 
+    reject();
+
     qCInfo(logGUI) << "Завершен обработчик кнопки 'Отмена'";
 }
 
 int SectionListDialog::exec(const SectionListDialog::Mode mode)
 {
     qCInfo(logGUI) << "Вызван метод exec()";
+    selected_section_.clear();
 
     if (mode == Mode::SELECT) {
         select_button_->setEnabled(true);
@@ -120,4 +153,38 @@ int SectionListDialog::exec(const SectionListDialog::Mode mode)
 
     qCInfo(logGUI) << "Передаем работу в метод QDialog::exec()";
     return QDialog::exec();
+}
+
+void SectionListDialog::findAndSelect(const QString& abbrev)
+{
+    qCInfo(logGUI) << "Вызван метод findAndSelect()";
+
+    const QList<QListWidgetItem*> items = section_list_->findItems(abbrev, Qt::MatchContains);
+
+    if (items.isEmpty()) {
+        QMessageBox::warning(nullptr, "Предупреждение", "Совпадений не найдено!");
+        qCInfo(logGUI) << "Завершен метод findAndSelect() - совпадений нет";
+        return;
+    }
+
+    QListWidgetItem* item = items.first();
+
+    section_list_->setCurrentItem(item);
+    section_list_->scrollToItem(item);
+
+    qCInfo(logGUI) << "Завершен метод findAndSelect()";
+}
+
+void SectionListDialog::setSections(const QStringList& sections_list)
+{
+    section_list_->addItems(sections_list);
+
+    if (section_list_->count() > 0) {
+        section_list_->setCurrentRow(0);
+    }
+}
+
+QString SectionListDialog::getSelectedSection()
+{
+    return selected_section_;
 }

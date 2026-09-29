@@ -44,9 +44,14 @@ LIBS += \
 # =========================
 
 SOURCES += \
+    GUI/controlspodialog.cpp \
     GUI/executorwidget.cpp \
+    GUI/finddialog.cpp \
     GUI/mainwindow.cpp \
     GUI/sectionlistdialog.cpp \
+    GUI/titleofsectiondialog.cpp \
+    GUI/trafaretdialog.cpp \
+    GUI/trafaretlineedit.cpp \
     Services/ConfigReader/configparser.cpp \
     Services/ConfigReader/configreader.cpp \
     Services/ConfigReader/configschema.cpp \
@@ -61,9 +66,14 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
+    GUI/controlspodialog.h \
     GUI/executorwidget.h \
+    GUI/finddialog.h \
     GUI/mainwindow.h \
     GUI/sectionlistdialog.h \
+    GUI/titleofsectiondialog.h \
+    GUI/trafaretdialog.h \
+    GUI/trafaretlineedit.h \
     Services/ConfigReader/configparser.h \
     Services/ConfigReader/configreader.h \
     Services/ConfigReader/configschema.h \
