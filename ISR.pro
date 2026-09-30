@@ -44,14 +44,6 @@ LIBS += \
 # =========================
 
 SOURCES += \
-    GUI/controlspodialog.cpp \
-    GUI/executorwidget.cpp \
-    GUI/finddialog.cpp \
-    GUI/mainwindow.cpp \
-    GUI/sectionlistdialog.cpp \
-    GUI/titleofsectiondialog.cpp \
-    GUI/trafaretdialog.cpp \
-    GUI/trafaretlineedit.cpp \
     Services/ConfigReader/configparser.cpp \
     Services/ConfigReader/configreader.cpp \
     Services/ConfigReader/configschema.cpp \
@@ -62,18 +54,18 @@ SOURCES += \
     Services/Directives/mainoperdirecitve.cpp \
     Services/Directives/startsectiondirective.cpp \
     Services/Directives/variantdirective.cpp \
+    Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretdialog.cpp \
+    Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretlineedit.cpp \
+    Services/GUI/MenuDialogWindow/controlspodialog.cpp \
+    Services/GUI/MenuDialogWindow/finddialog.cpp \
+    Services/GUI/MenuDialogWindow/listofsections.cpp \
+    Services/GUI/MenuDialogWindow/sectionlistdialog.cpp \
+    Services/GUI/MenuDialogWindow/titleofsectiondialog.cpp \
+    Services/GUI/mainwindow.cpp \
     logging_categories.cpp \
     main.cpp
 
 HEADERS += \
-    GUI/controlspodialog.h \
-    GUI/executorwidget.h \
-    GUI/finddialog.h \
-    GUI/mainwindow.h \
-    GUI/sectionlistdialog.h \
-    GUI/titleofsectiondialog.h \
-    GUI/trafaretdialog.h \
-    GUI/trafaretlineedit.h \
     Services/ConfigReader/configparser.h \
     Services/ConfigReader/configreader.h \
     Services/ConfigReader/configschema.h \
@@ -88,7 +80,15 @@ HEADERS += \
     Services/Directives/mainoperdirecitve.h \
     Services/Directives/startsectiondirective.h \
     Services/Directives/variantdirective.h \
+    Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretdialog.h \
+    Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretlineedit.h \
+    Services/GUI/MenuDialogWindow/controlspodialog.h \
+    Services/GUI/MenuDialogWindow/finddialog.h \
+    Services/GUI/MenuDialogWindow/listofsections.h \
+    Services/GUI/MenuDialogWindow/sectionlistdialog.h \
+    Services/GUI/MenuDialogWindow/titleofsectiondialog.h \
     Services/GUI/guitypes.h \
+    Services/GUI/mainwindow.h \
     Services/PRIS/pristypes.h \
     Services/Programs/programlines.h \
     Services/Programs/programtypes.h \

@@ -5,7 +5,7 @@
 class QMenu;
 class QAction;
 
-#include "executorwidget.h"
+class ExecutorWidget; //Убрать
 
 class MainWindow : public QMainWindow
 {
