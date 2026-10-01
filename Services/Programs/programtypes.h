@@ -136,6 +136,16 @@ struct SectionStruct
         //ПРОДУМАТЬ ВОЗВРАТ ОШИБКИ
     }
 
+    const ChapterStruct& get(ChapterType type) const {
+        for (auto& chapter : chapters) {
+            if (chapter.type == type) {
+                return chapter;
+            }
+        }
+
+        //ПРОДУМАТЬ ВОЗВРАТ ОШИБКИ
+    }
+
     bool operator==(const SectionStruct& section_for_equal) const {
         if ((passport == section_for_equal.passport) &&
                 (chapters == section_for_equal.chapters)) {

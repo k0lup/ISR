@@ -61,6 +61,8 @@ SOURCES += \
     Services/GUI/MenuDialogWindow/listofsections.cpp \
     Services/GUI/MenuDialogWindow/sectionlistdialog.cpp \
     Services/GUI/MenuDialogWindow/titleofsectiondialog.cpp \
+    Services/GUI/ProgViewWgt/programtablemodel.cpp \
+    Services/GUI/ProgViewWgt/programviewwidget.cpp \
     Services/GUI/mainwindow.cpp \
     logging_categories.cpp \
     main.cpp
@@ -87,6 +89,8 @@ HEADERS += \
     Services/GUI/MenuDialogWindow/listofsections.h \
     Services/GUI/MenuDialogWindow/sectionlistdialog.h \
     Services/GUI/MenuDialogWindow/titleofsectiondialog.h \
+    Services/GUI/ProgViewWgt/programtablemodel.h \
+    Services/GUI/ProgViewWgt/programviewwidget.h \
     Services/GUI/guitypes.h \
     Services/GUI/mainwindow.h \
     Services/PRIS/pristypes.h \
