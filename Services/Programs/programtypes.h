@@ -53,19 +53,57 @@ struct DirectiveStruct
     }
 };
 
+struct NotStateBlock {
+    QString name;
+    QList<int> num_dirs_for_block;
+
+    bool operator==(const NotStateBlock& block_for_equal) const {
+        if ((name == block_for_equal.name) &&
+                (num_dirs_for_block == block_for_equal.num_dirs_for_block)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool operator!=(const NotStateBlock& block_for_equal) const {
+        return !(*this == block_for_equal);
+    }
+
+    void clear() {
+        name.clear();
+        num_dirs_for_block.clear();
+    }
+};
+
 struct ChapterStruct
 {
     ChapterType type;
-    QString name;
-    QMap<QString, int> labels;
+    QList<NotStateBlock> blocks;
 
     QList<DirectiveStruct> directives;
+
+    bool hasLabel(const QString& label) {
+        for (auto& block : blocks) {
+            if (block.name == label) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    NotStateBlock& blockByLabel(const QString& label) {
+        for (auto& block : blocks) {
+            if (block.name == label) {
+                return block;
+            }
+        }
+    }
 
     bool operator==(const ChapterStruct& chapter_struct_for_equal) const
     {
       if ((type == chapter_struct_for_equal.type) &&
-              (name == chapter_struct_for_equal.name) &&
-              (labels == chapter_struct_for_equal.labels) &&
+              (blocks == chapter_struct_for_equal.blocks) &&
               (directives == chapter_struct_for_equal.directives)) {
           return true;
       }

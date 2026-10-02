@@ -5,7 +5,7 @@
 class QMenu;
 class QAction;
 
-class ExecutorWidget; //Убрать
+class ProgramViewWidget; //Убрать
 
 class MainWindow : public QMainWindow
 {
@@ -104,7 +104,7 @@ private slots:
     void onEndOfRepSectionActTriggered();
     void onExitOfRepSectionActTriggered();
 private:
-    ExecutorWidget* exec_wgt_ = nullptr;
+    ProgramViewWidget* exec_wgt_ = nullptr;
     QStringList loaded_sections_;
 private:
     void createActions();

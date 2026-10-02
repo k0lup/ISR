@@ -10,7 +10,7 @@
 
 #include <Logger/logger.h>
 #include "logging_categories.h"
-#include "GUI/mainwindow.h"
+#include "Services/GUI/mainwindow.h"
 
 static QPalette makeLightPalette()
 {

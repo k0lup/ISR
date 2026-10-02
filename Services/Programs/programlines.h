@@ -30,7 +30,7 @@ struct PassportLine
         val_col.clear();
     }
 
-    bool isValid(const QVector<QString>& row) {
+    static bool isValid(const QVector<QString>& row) {
         if (row.count() != 3 || row[0] != "П") {
             return false;
         }
@@ -58,7 +58,7 @@ struct SectionLine
         section_name_col.clear();
     }
 
-    bool isValid(const QVector<QString>& row) {
+    static bool isValid(const QVector<QString>& row) {
         if (row.count() != 2) {
             return false;
         }
@@ -103,7 +103,7 @@ struct DirectiveLine
         operation_col.clear();
     }
 
-    bool isValid(const QVector<QString>& row) const {
+    static bool isValid(const QVector<QString>& row) {
         if (row.count() != 4) {
             return false;
         }

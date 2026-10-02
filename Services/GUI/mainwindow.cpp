@@ -3,6 +3,7 @@
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
+#include "Services/GUI/ProgViewWgt/programviewwidget.h"
 
 #include <Logger/logger.h>
 #include "logging_categories.h"
@@ -14,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     createMenu();
     setupConnections();
 
-    exec_wgt_ = new ExecutorWidget(this);
+    exec_wgt_ = new ProgramViewWidget(this);
     setCentralWidget(exec_wgt_);
 
     qCInfo(logGUI) << "Завершен конструктор MainWindow";

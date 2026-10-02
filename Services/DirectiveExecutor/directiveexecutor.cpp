@@ -76,7 +76,7 @@ void DirectiveExecutor::setSection(SectionStruct& section_struct, const RequestI
             return;
         }
 
-        if (!section_struct.get(ChapterType::NOT_STATE).labels.contains(execute_param.label)) {
+        if (!section_struct.get(ChapterType::NOT_STATE).hasLabel(execute_param.label)) {
             QString error_message = QString("Заданной метки '%1' не существует").arg(execute_param.label);
             qCWarning(logCore) << "Выявлена ошибка при подготовке раздела к исполнению:\n" + error_message;
 
@@ -90,7 +90,7 @@ void DirectiveExecutor::setSection(SectionStruct& section_struct, const RequestI
 
             return;
         } else {
-            int cur_dir_index = section_struct.get(ChapterType::NOT_STATE).labels.value(execute_param.label);
+            int cur_dir_index = section_struct.get(ChapterType::NOT_STATE).blockByLabel(execute_param.label).num_dirs_for_block.first();
             if (cur_dir_index < 0 || cur_dir_index >= section_struct.get(ChapterType::NOT_STATE).directives.count()) {
                 QString error_message = QString("Индекс директивы '%1' по заданной метке '%2' недопустим!")
                         .arg(execute_param.label).arg(cur_dir_index);

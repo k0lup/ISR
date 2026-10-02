@@ -44,6 +44,7 @@ LIBS += \
 # =========================
 
 SOURCES += \
+    Services/CatalogManager/catalogmanager.cpp \
     Services/ConfigReader/configparser.cpp \
     Services/ConfigReader/configreader.cpp \
     Services/ConfigReader/configschema.cpp \
@@ -54,6 +55,9 @@ SOURCES += \
     Services/Directives/mainoperdirecitve.cpp \
     Services/Directives/startsectiondirective.cpp \
     Services/Directives/variantdirective.cpp \
+    Services/FilesReaders/diireader.cpp \
+    Services/FilesReaders/sectionsloader.cpp \
+    Services/FilesReaders/setfilesreader.cpp \
     Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretdialog.cpp \
     Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretlineedit.cpp \
     Services/GUI/MenuDialogWindow/controlspodialog.cpp \
@@ -68,6 +72,7 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
+    Services/CatalogManager/catalogmanager.h \
     Services/ConfigReader/configparser.h \
     Services/ConfigReader/configreader.h \
     Services/ConfigReader/configschema.h \
@@ -82,6 +87,10 @@ HEADERS += \
     Services/Directives/mainoperdirecitve.h \
     Services/Directives/startsectiondirective.h \
     Services/Directives/variantdirective.h \
+    Services/FilesReaders/ErrorReadFileStruct.h \
+    Services/FilesReaders/diireader.h \
+    Services/FilesReaders/sectionsloader.h \
+    Services/FilesReaders/setfilesreader.h \
     Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretdialog.h \
     Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretlineedit.h \
     Services/GUI/MenuDialogWindow/controlspodialog.h \
