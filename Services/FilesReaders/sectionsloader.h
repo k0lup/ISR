@@ -20,7 +20,9 @@ class SectionsLoader : public QObject
 {
     Q_OBJECT
 public:
-    SectionsLoader(std::shared_ptr<const AppConfig> cfg, QObject *parent = nullptr);
+    SectionsLoader(/*std::shared_ptr<const AppConfig> cfg,*/ QObject *parent = nullptr);
+
+    void setConfig(std::shared_ptr<const AppConfig> cfg);
 
     QSet<QString> getSectionsNames();
 public slots:

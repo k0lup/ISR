@@ -10,7 +10,7 @@
 
 #include <Logger/logger.h>
 #include "logging_categories.h"
-#include "Services/GUI/mainwindow.h"
+#include "Services/Application/application.h"
 
 static QPalette makeLightPalette()
 {
@@ -89,8 +89,7 @@ int main(int argc, char *argv[])
 
     qCInfo(logCore) << "Приложение запускается";
 
-    MainWindow mw;
-    mw.show();
+    Application application;
 
     const int rc = app.exec();
 

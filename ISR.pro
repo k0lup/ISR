@@ -44,10 +44,12 @@ LIBS += \
 # =========================
 
 SOURCES += \
+    Services/Application/application.cpp \
     Services/CatalogManager/catalogmanager.cpp \
     Services/ConfigReader/configparser.cpp \
     Services/ConfigReader/configreader.cpp \
     Services/ConfigReader/configschema.cpp \
+    Services/Controller/controller.cpp \
     Services/DirectiveExecutor/directiveexecutor.cpp \
     Services/Directives/commanddirective.cpp \
     Services/Directives/dokladdirective.cpp \
@@ -72,11 +74,14 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
+    Services/Application/application.h \
     Services/CatalogManager/catalogmanager.h \
     Services/ConfigReader/configparser.h \
     Services/ConfigReader/configreader.h \
     Services/ConfigReader/configschema.h \
     Services/ConfigReader/configtypes.h \
+    Services/Controller/appstate.h \
+    Services/Controller/controller.h \
     Services/DirectiveExecutor/directiveexecutor.h \
     Services/DirectiveExecutor/executiontypes.h \
     Services/Directives/commanddirective.h \

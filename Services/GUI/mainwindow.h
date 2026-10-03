@@ -12,6 +12,9 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = nullptr);
+    ProgramViewWidget* getProgViewWgt();
+signals:
+    void loadSectionRequested(const QString& section_name);
 private:
     QMenu* preparaion_menu_ = nullptr;                      //Подготовка
         QAction* list_of_sections_act_ = nullptr;               //->Список разделов...
