@@ -44,17 +44,8 @@ void ProgramViewWidget::onDoubleClicked(const QModelIndex& index)
         return;
     }
 
-    emit directiveDoubleClicked(directive_index);
-}
-
-void ProgramViewWidget::setActiveDirective(int directive_index)
-{
-    model_->setActiveDirective(directive_index);
-}
-
-void ProgramViewWidget::setCompletedDirective(int directive_index)
-{
-    model_->setCompletedDirective(directive_index);
+    current_program_.active_dir_index = directive_index;
+    emit directiveDoubleClicked(current_program_, RequestIdGenerator::NO_REQUEST_ID);
 }
 
 void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
@@ -92,6 +83,15 @@ void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
         case DirectStatus::LOAD : continue;
         }
     }
+
+    current_program_ = exec_snapshot;
+}
+
+void ProgramViewWidget::onChapterChanged(const ChapterType &chapter)
+{
+    current_program_.active_chpater = chapter;
+    current_program_.active_dir_index = 0;
+    setSection(current_program_);
 }
 
 void ProgramViewWidget::clear()

@@ -19,7 +19,7 @@ static QString expandUserPath(const QString &path)
     return QDir::cleanPath(path);
 }
 
-SectionsLoader::SectionsLoader(std::shared_ptr<const AppConfig> cfg, QObject *parent) :
+SectionsLoader::SectionsLoader(const AppConfig& cfg, QObject *parent) :
     QObject(parent),
     cfg_(cfg)
 {
@@ -29,7 +29,7 @@ SectionsLoader::SectionsLoader(std::shared_ptr<const AppConfig> cfg, QObject *pa
     QObject::connect(this, &SectionsLoader::requestDiiFileRead, &dii_reader_, &DiiReader::onReadFileRequested);
     QObject::connect(&dii_reader_, &DiiReader::fileReaded, this, &SectionsLoader::onDiiFileReaded);
     QObject::connect(&dii_reader_, &DiiReader::failed, this, [this](const quint64, const QString& message) {
-        emit failed(message);
+        emit failed(message, current_load_request_id);
     });
 }
 
@@ -45,17 +45,17 @@ void SectionsLoader::start() {
     qCInfo(logCore) << "Читаем основные set файлы разделов (из файла настройки)";
     ErrorReadFile error;
 
-    QString folder = cfg_->sections_folder_path;
+    QString folder = cfg_.sections_folder_path;
     QDir dir(expandUserPath(folder));
 
-    QStringList sections = cfg_->sections_paths;
+    QStringList sections = cfg_.sections_paths;
     //QSet<QString> down_sections;
     for (auto& section : sections) {
         section = dir.filePath(section + QString(".SET"));
     }
 
     if (sections.isEmpty()) {
-        emit failed("Список разделов пуст");
+        emit failed("Список разделов пуст", current_load_request_id);
         return;
     }
 
@@ -72,13 +72,13 @@ void SectionsLoader::start() {
         emit progress(percent_progress);
         QSet<QString> new_sections = readMasterSectionsFile(file_name, error);
         if (!error.message.isEmpty()) {
-            emit failed(error.toString());
+            emit failed(error.toString(), current_load_request_id);
             return;
         }
         sections_names_.unite(new_sections);
     }
 
-    folder = cfg_->spo_path;
+    folder = cfg_.spo_path;
 
     dir = QDir(folder);
     for (const auto& section : sections_names_) {
@@ -121,9 +121,16 @@ QSet<QString> SectionsLoader::getSectionsNames() {
     return sections_names_;
 }
 
-void SectionsLoader::onLoadSectionRequested(const QString &section_name) {
+void SectionsLoader::onExecutorRequestLoadSection(const ExecuteParam& params, const RequestId request_id)
+{
+    need_send_failed_to_executor_ = true;
+    onLoadSectionRequested(params.section_name, request_id);
+}
+
+void SectionsLoader::onLoadSectionRequested(const QString &section_name, const RequestId source_request_id) {
+    current_load_request_id = source_request_id;
     if (!sections_names_.contains(section_name)) {
-        emit failed("Запрошена загрузка несуществующего раздела!");
+        emit failed("Запрошена загрузка несуществующего раздела!", current_load_request_id);
         return;
     }
 
@@ -135,14 +142,14 @@ void SectionsLoader::onLoadSectionRequested(const QString &section_name) {
 void SectionsLoader::onStatusSectionReceived(bool is_load, RequestId source_request_id)
 {
     if (!request_section_.contains(source_request_id)) {
-        emit failed("Получен результат, но по request_id отстуствует секция");
+        emit failed("Получен результат, но по request_id отстуствует секция", current_load_request_id);
         return;
     }
 
     QString section_name = request_section_.value(source_request_id);
     request_section_.remove(source_request_id);
     if (section_name.isEmpty()) {
-        emit failed("Пустое название секции по source_id!");
+        emit failed("Пустое название секции по source_id!", current_load_request_id);
         return;
     }
 
@@ -151,7 +158,7 @@ void SectionsLoader::onStatusSectionReceived(bool is_load, RequestId source_requ
         return;
     }
 
-    QString folder = cfg_->spo_path;
+    QString folder = cfg_.spo_path;
     QDir dir(expandUserPath(folder));
     dir = dir.filePath(section_name);
 
@@ -163,13 +170,13 @@ void SectionsLoader::onStatusSectionReceived(bool is_load, RequestId source_requ
     error.message = "";
 
     if (!set_reader_.readFile(section_set_filepath, error)) {
-        emit failed(error.toString());
+        emit failed(error.toString(), current_load_request_id);
         return;
     }
 
     SetFileData data = set_reader_.getFileData();
     if (!data.abbreviation.contains(section_name)) {
-        emit failed("в файле структуры раздела нет аббревиатуры этого раздела. Файл '" + section_set_filepath + "'");
+        emit failed("в файле структуры раздела нет аббревиатуры этого раздела. Файл '" + section_set_filepath + "'", current_load_request_id);
         return;
     }
 
@@ -207,20 +214,32 @@ void SectionsLoader::onDiiFileReaded(const quint64 &source_request_id, const Sec
     if (!request_dii_.contains(source_request_id)) {
         QString error_message = "Ошибка в номере ответа на запрос при чтении dii файла";
         qCCritical(logCore) << error_message;
-        emit failed(error_message);
+        emit failed(error_message, current_load_request_id);
     }
     QString section_name = request_dii_.value(source_request_id);
     request_dii_.remove(source_request_id);
     if (section_name.isEmpty()) {
         QString error_message = "Пустое имя секции по source_request_id";
         qCCritical(logCore) << error_message;
-        emit failed(error_message);
+        emit failed(error_message, current_load_request_id);
     }
     //loaded_section_.dii_file = data;
     //loaded_section_.active_chapter_type = ChapterType::STATE;
     //loaded_section_.num_command = {0, 0, 0};
 
     //sections_.append(loaded_section_);
-    emit sectionLoaded(section_name, data);
+    emit sectionLoaded(section_name, data, current_load_request_id);
+    current_load_request_id = RequestIdGenerator::NO_REQUEST_ID;
+    need_send_failed_to_executor_ = false;
     //loaded_section_.clear();
+}
+
+void SectionsLoader::onFailedDetected(const QString& message, const RequestId source_request_id)
+{
+    if (need_send_failed_to_executor_) {
+        emit sendAnswerToExecutor(message, source_request_id);
+    }
+
+    need_send_failed_to_executor_ = false;
+    current_load_request_id = RequestIdGenerator::NO_REQUEST_ID;
 }

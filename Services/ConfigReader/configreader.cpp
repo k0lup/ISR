@@ -15,12 +15,12 @@
 #include "logging_categories.h"
 #include <QLoggingCategory>
 
-ConfigReader::ConfigReader(QObject* parent) : QObject(parent)
+ConfigReader::ConfigReader()
 {
     qCInfo(logCore) << "Вызван конструктор ConfigReader";
 }
 
-void ConfigReader::onReadFileRequested(const QString& cfg_file_path, const QString& on_file_path,
+bool ConfigReader::readConfig(const QString& cfg_file_path, const QString& on_file_path,
                                        const QString& service_on_file_path)
 {
     qCInfo(logCore) << QString("Получил запрос на чтение входных файлов конфигурации:\n"
@@ -39,9 +39,8 @@ void ConfigReader::onReadFileRequested(const QString& cfg_file_path, const QStri
         if (!cur_file_error_messages.isEmpty()) {
             QString error_message = QString("Возникли ошибки при чтении файла '%1':\n%2").arg(file_path).arg(cur_file_error_messages.join("\n"));
             qCWarning(logCore) << error_message;
-            qCWarning(logCore) << "Отправляем сигнал failed";
-            emit failed(error_message);
-            return;
+            errors_ = error_message;
+            return false;
         }
         qCDebug(logCore) << QString("Прочитали строки из файла '%1'").arg(file_path);
 
@@ -49,9 +48,8 @@ void ConfigReader::onReadFileRequested(const QString& cfg_file_path, const QStri
         if (!cur_file_error_messages.isEmpty()) {
             QString error_message = QString("Возникли ошибки при чтении файла '%1':\n%2").arg(file_path).arg(cur_file_error_messages.join("\n"));
             qCWarning(logCore) << error_message;
-            qCWarning(logCore) << "Отправляем сигнал failed";
-            emit failed(error_message);
-            return;
+            errors_ = error_message;
+            return false;
         }
 
         qCDebug(logCore) << QString("Распрасили файл '%1'").arg(file_path);
@@ -68,9 +66,8 @@ void ConfigReader::onReadFileRequested(const QString& cfg_file_path, const QStri
         if (schema[key].required && !params.keys().contains(key)) {
             QString error_message = QString("Нет обязательного параметра '%1' во входных файлах").arg(key);
             qCWarning(logCore) << error_message;
-            qCWarning(logCore) << "Отправляем сигнал failed";
-            emit failed(error_message);
-            return;
+            errors_ = error_message;
+            return false;
         }
     }
     qCDebug(logCore) << "Проверка обязательных параметров завершена";
@@ -81,16 +78,24 @@ void ConfigReader::onReadFileRequested(const QString& cfg_file_path, const QStri
         QString message = QString("При чтении значений параметров из входных файлов возникли ошибки:\n%1")
                 .arg(error_messages.join("\n"));
         qCWarning(logCore) << error_messages;
-        qCWarning(logCore) << "Отправляем сигнал failed";
-        emit failed(message);
-        return;
+        errors_ = message;
+        return false;
     }
 
 
-    qCInfo(logCore) << QString("Успещно закончили чтение входных файлов конфигурации");
-    qCInfo(logCore) << QString("Отправляем сигнал succes");
-    emit success(cfg);
-    return;
+    qCInfo(logCore) << QString("Успешно закончили чтение входных файлов конфигурации");
+    app_config_ = cfg;
+    return true;
+}
+
+QString ConfigReader::getErrors() const
+{
+    return errors_;
+}
+
+AppConfig ConfigReader::getConfig() const
+{
+    return app_config_;
 }
 
 QStringList ConfigReader::readFile(const QString& file_path, QStringList& error_messages) const

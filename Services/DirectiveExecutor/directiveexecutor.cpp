@@ -10,16 +10,27 @@
 #include <Logger/logger.h>
 #include "logging_categories.h"
 
-DirectiveExecutor::DirectiveExecutor(QObject* parent) :
-    QObject(parent)
+DirectiveExecutor::DirectiveExecutor(const AppConfig& cfg, QObject* parent) :
+    QObject(parent), cfg_(cfg)
 {
     qCInfo(logCore) << "Вызван и выполнен коструктор DirectiveExecutor";
 }
 
-void DirectiveExecutor::setSection(SectionStruct& section_struct, const RequestId request_id, StartSectionDirective* caller)
+void DirectiveExecutor::setSection(const QString& section_name, const SectionStruct& section_struct, const RequestId request_id)
 {
+    StartSectionDirective* caller = nullptr;
+
+    if (request_directives_.contains(request_id)) {
+        caller = dynamic_cast<StartSectionDirective*>(request_directives_.value(request_id).data());
+        request_directives_.remove(request_id);
+        if (!caller) {
+            emit failed("ДИРЕКТИВА ДЛЯ КОТОРОЙ ПОЛУЧЕН ОТВЕТ УЖЕ УНИЧТОЖЕНА!");
+        }
+    }
+
     qCInfo(logCore) << "Вызван метод setSection";
     ExecuteFrame frame;
+    frame.section_name = section_name;
 
     const QVector<ChapterType> chapter_types = {
         ChapterType::STATE,
@@ -381,7 +392,7 @@ void DirectiveExecutor::onPRISResponse(const PRISResultData& result, const Reque
     directive->onPRISResult(result);
 }
 
-void DirectiveExecutor::onLoadSectionResponse(SectionStruct& section_data, const QStringList& error_messages, const RequestId source_request_id)
+void DirectiveExecutor::onLoadSectionFailed(const QString& error_messages, RequestId source_request_id)
 {
     if (!request_directives_.contains(source_request_id)) {
         emit failed("ДИРЕКТИВА ДЛЯ ОТПРАВКИ ДАННЫХ ИЗ LOAD_SECTION НЕ НАЙДЕНА!");
@@ -389,13 +400,14 @@ void DirectiveExecutor::onLoadSectionResponse(SectionStruct& section_data, const
     }
 
     StartSectionDirective* directive = dynamic_cast<StartSectionDirective*>(request_directives_.value(source_request_id).data());
+    request_directives_.remove(source_request_id);
     if (!directive) {
         emit failed("ДИРЕКТИВА ДЛЯ КОТОРОЙ ПОЛУЧЕН ОТВЕТ УЖЕ УНИЧТОЖЕНА!");
         return;
     }
-    request_directives_.remove(source_request_id);
+    //request_directives_.remove(source_request_id);
     if (!error_messages.isEmpty()) {
-        QString message = "Не удалось загрузить раздел:\n" + error_messages.join("\n");
+        QString message = "Не удалось загрузить раздел:\n" + error_messages;
         qCWarning(logCore) << message;
         qCInfo(logCore) << "Отправляем сигнал warning()";
         emit warning(message);
@@ -403,8 +415,6 @@ void DirectiveExecutor::onLoadSectionResponse(SectionStruct& section_data, const
         directive->onReqStartProgResult(false);
         return;
     }
-
-    setSection(section_data, RequestIdGenerator::NO_REQUEST_ID, directive);
 }
 
 void DirectiveExecutor::onDirectiveFinished(const Direct::ResultDirective& result, Direct* direct)
@@ -476,4 +486,28 @@ QPointer<Direct> DirectiveExecutor::getCurrentExecuteDirect()
     }
 
     return result;
+}
+
+void DirectiveExecutor::onSetLoadedSectionRequested(const QString& section_name, const RequestId source_request_id)
+{
+    for (int i = 0; i < sections_.size(); ++i) {
+        if (sections_[i].section_name == section_name) {
+            emit sendSectionForView(sections_[i].toGUI());
+            return;
+        }
+    }
+
+    emit requestFailed(source_request_id, "Искомой секции не найдено!");
+}
+
+void DirectiveExecutor::onStatusSectionsRequested(const QString& section_name, const RequestId request_id)
+{
+    for (int i = 0; i < sections_.size(); ++i) {
+        if (sections_[i].section_name == section_name) {
+            emit sendStatusSection(true, request_id);
+            return;
+        }
+    }
+
+    emit sendStatusSection(false, request_id);
 }

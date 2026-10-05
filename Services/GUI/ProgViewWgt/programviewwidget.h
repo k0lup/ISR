@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "Services/DirectiveExecutor/executiontypes.h"
+#include "Services/RequestIDGenerator/requestIDGenerator.h"
 
 class QTableView;
 class ProgramTableModel;
@@ -16,17 +17,17 @@ public:
     void setSection(const ExecutionSnapshot& exec_snapshot);
 
     void clear();
-    void setActiveDirective(int directive_index);
-    void setCompletedDirective(int directive_index);
+
+    void onChapterChanged(const ChapterType& chapter);
 signals:
-    void directiveDoubleClicked(int directive_index);
+    void directiveDoubleClicked(const ExecutionSnapshot& snapshot, RequestId request_id);
 private slots:
     void onDoubleClicked(const QModelIndex& index);
-
 private:
     QTableView* table_ = nullptr;
     ProgramTableModel* model_ = nullptr;
 
+    ExecutionSnapshot current_program_;
 };
 
 #endif // PROGRAMVIEWWIDGET_H

@@ -3,12 +3,15 @@
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
+#include <QMessageBox>
+#include <QInputDialog>
 #include "Services/GUI/ProgViewWgt/programviewwidget.h"
+#include "Services/GUI/MenuDialogWindow/sectionlistdialog.h"
 
 #include <Logger/logger.h>
 #include "logging_categories.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
+MainWindow::MainWindow(const AppConfig& cfg, QWidget *parent) : QMainWindow(parent), cfg_(cfg)
 {
     qCInfo(logGUI) << "Вызван конструктор MainWindow";
     createActions();
@@ -110,6 +113,13 @@ void MainWindow::createMenu()
         chapters_menu_->addAction(state_chapter_act_);
         chapters_menu_->addAction(not_state_chapter_act_);
         chapters_menu_->addAction(pri_chapter_act_);
+
+        state_chapter_act_->setCheckable(true);
+        state_chapter_act_->setChecked(false);
+        not_state_chapter_act_->setCheckable(true);
+        not_state_chapter_act_->setChecked(false);
+        pri_chapter_act_->setCheckable(true);
+        pri_chapter_act_->setChecked(false);
     }
     work_menu_ = new QMenu("Работа", this);
     {
@@ -168,12 +178,35 @@ void MainWindow::createMenu()
     qCInfo(logGUI) << "Завершен метод createMenu()";
 }
 
+void MainWindow::setActiveSectionInMenu(const QString& section_name)
+{
+    for (int i = 0; i < sections_act_list_.count(); ++i) {
+        sections_act_list_[i]->setChecked(false);
+    }
+
+    if (!loaded_sections_.contains(section_name)) {
+        loaded_sections_.append(section_name);
+        rebuildSectionsMenu();
+    }
+
+    if (loaded_sections_.contains(section_name)) {
+        for (int i = 0; i < sections_act_list_.count(); ++i) {
+            if (sections_act_list_[i]->text() == section_name) {
+                sections_act_list_[i]->setChecked(true);
+                break;
+            }
+        }
+    }
+}
+
 void MainWindow::rebuildSectionsMenu()
 {
     qCInfo(logGUI) << "Вызван метод rebuildSectionsMenu()";
     if (loaded_sections_.isEmpty()) {
         clearSectionsMenu();
-        sections_menu_->addAction(new QAction("< Разделов нет >", this));
+        QAction* no_section_act = new QAction("< Разделов нет >", this);
+        sections_menu_->addAction(no_section_act);
+        no_section_act->setCheckable(false);
         qCInfo(logGUI) << "Завершен метод createActions() - активных разделов нет";
         return;
     }
@@ -275,6 +308,14 @@ void MainWindow::onListOfSectionsActTriggered()
 {
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Подготовка'->'Список разделов...'";
 
+    SectionListDialog section_list_dialog;
+    section_list_dialog.setSections(all_sections_);
+    if (section_list_dialog.exec(SectionListDialog::Mode::LOAD) == QDialog::Accepted) {
+        QString section_name = section_list_dialog.getSelectedSection();
+        emit loadSectionRequested(section_name, RequestIdGenerator::NO_REQUEST_ID);
+    }
+
+
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Подготовка'->'Список разделов...'";
 }
 
@@ -346,12 +387,16 @@ void MainWindow::onSectionsActListItemTriggered(QAction* act_triggered)
     QString section_name = act_triggered->text();
     qCInfo(logGUI) << QString("Вызван обработчик пункта меню 'Разделы'->'%1'").arg(section_name);
 
+    emit requestChangeSection(section_name, RequestIdGenerator::NO_REQUEST_ID);
+
     qCInfo(logGUI) << QString("Завершен обработчик пункта меню 'Разделы'->'%1'").arg(section_name);
 }
 
 void MainWindow::onStateChapterActTriggered()
 {
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Секции'->'Штатное проведение раздела'";
+
+    exec_wgt_->onChapterChanged(ChapterType::STATE);
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Секции'->'Штатное проведение раздела'";
 }
@@ -360,12 +405,16 @@ void MainWindow::onNotStateChapterActTriggered()
 {
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Секции'->'НШС раздела'";
 
+    exec_wgt_->onChapterChanged(ChapterType::NOT_STATE);
+
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Секции'->'НШС раздела'";
 }
 
 void MainWindow::onPriChapterActTriggered()
 {
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Секции'->'ПРИ раздела'";
+
+    exec_wgt_->onChapterChanged(ChapterType::PRI);
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Секции'->'ПРИ раздела'";
 }
@@ -552,3 +601,99 @@ void MainWindow::onExitOfRepSectionActTriggered()
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Секции РЭП'->'Выход из разделов'";
 }
 
+void MainWindow::onShowWarningRequested(const QString& warning_message)
+{
+    QMessageBox::warning(this, "Предупреждение", warning_message);
+}
+
+void MainWindow::onShowCriticalRequested(const QString& critical_message)
+{
+    QMessageBox::critical(this, "Ошибка", critical_message);
+}
+
+void MainWindow::onShowInfoRequested(const QString& info_message)
+{
+    QMessageBox::information(this, "Информация", info_message);
+}
+
+void MainWindow::onSectionChanged(const ExecutionSnapshot& section)
+{
+    setActiveSectionInMenu(section.section_name);
+    setActiveChapterInMenu(section.active_chpater);
+    exec_wgt_->setSection(section);
+}
+
+void MainWindow::setActiveChapterInMenu(const ChapterType& chapter)
+{
+    state_chapter_act_->setChecked(false);
+    not_state_chapter_act_->setChecked(false);
+    pri_chapter_act_->setChecked(false);
+    switch (chapter) {
+    case ChapterType::STATE : state_chapter_act_->setChecked(true); return;
+    case ChapterType::NOT_STATE : not_state_chapter_act_->setChecked(true); return;
+    case ChapterType::PRI : pri_chapter_act_->setChecked(true); return;
+    }
+}
+
+ProgramViewWidget* MainWindow::getProgViewWgt() {
+    return exec_wgt_;
+}
+
+void MainWindow::onRequestShowWindow(const WidgetTypes& wgt_type, const WidgetInfo& wgt_info, RequestId source_request_id)
+{
+    WindowResultData result_data;
+    switch (wgt_type) {
+    case WidgetTypes::WARNING : onShowWarningRequested(wgt_info.information.join("\n")); result_data.status = true; break;
+    case WidgetTypes::INFO : result_data = showInfoWgt(wgt_info.title, wgt_info.information.join("\n")); break;
+    case WidgetTypes::VARIANT : result_data = showVarWgt(wgt_info.title, wgt_info.information); break;
+    }
+
+    emit sendWindowResponse(result_data, source_request_id);
+}
+
+WindowResultData MainWindow::showInfoWgt(const QString& window_title, const QString& info)
+{
+    WindowResultData result_data;
+
+    QMessageBox::StandardButton result = QMessageBox::question(
+                this, window_title, info, QMessageBox::Ok | QMessageBox::Cancel,
+                QMessageBox::Cancel
+                );
+
+    if (result == QMessageBox::Ok) {
+        result_data.status = true;
+    } else {
+        result_data.status = false;
+    }
+
+    return result_data;
+}
+
+WindowResultData MainWindow::showVarWgt(const QString& window_title, const QStringList& variants)
+{
+    bool ok = false;
+
+    QString selected = QInputDialog::getItem(
+                this,
+                window_title,
+                "Выберите вариант:",
+                variants,
+                0,
+                false,
+                &ok
+                );
+    WindowResultData result_data;
+    result_data.status = ok;
+    if (!ok) {
+        return result_data;
+    }
+
+    result_data.data = selected;
+    return result_data;
+}
+
+void MainWindow::onListSectionLoaded(const QSet<QString>& section_list)
+{
+    all_sections_.clear();
+    all_sections_ = section_list.toList();
+}

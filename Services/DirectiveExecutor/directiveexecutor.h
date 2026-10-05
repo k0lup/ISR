@@ -5,31 +5,37 @@
 #include <QVector>
 #include <QPointer>
 #include <QSet>
+#include <memory>
 
 #include "Services/Programs/programtypes.h"
 #include "Services/DirectiveExecutor/executiontypes.h"
 #include "Services/RequestIDGenerator/requestIDGenerator.h"
 #include "Services/Directives/directive.h"
 #include "Services/Directives/startsectiondirective.h"
+#include "Services/ConfigReader/configtypes.h"
 
 class DirectiveExecutor : public QObject
 {
     Q_OBJECT
 public:
-    explicit DirectiveExecutor(QObject* parent = nullptr);
+    explicit DirectiveExecutor(const AppConfig& cfg, QObject* parent = nullptr);
 
 public slots:
-    void setSection(SectionStruct& section_struct, const RequestId request_id, StartSectionDirective* caller = nullptr);
+    void setSection(const QString& section_name, const SectionStruct& section_struct, const RequestId request_id);
     void startFrom(const ExecutionSnapshot& section_data, const RequestId request_id);
 
     void setExecuteMode(const ExecuteMode& execute_mode, const RequestId request_id);
 
     void onWindowResponse(const WindowResultData& result, const RequestId source_request_id);
     void onPRISResponse(const PRISResultData& result, const RequestId source_request_id);
-    void onLoadSectionResponse(SectionStruct& section_data,  const QStringList& error_messages, const RequestId source_request_id);
+    void onLoadSectionFailed(const QString& error_messages, const RequestId source_request_id); //Отправка инфы о программе в директиву, которая вызвала эту программу, если loader не смог загрузить
 
     void onDirectiveFinished(const Direct::ResultDirective& result, Direct* direct);
     void onDirectiveFailed(const QString& message, Direct* direct);
+
+    void onStatusSectionsRequested(const QString& section_name, const RequestId request_id);
+
+    void onSetLoadedSectionRequested(const QString& section_name, const RequestId source_request_id);
 signals:
     void sectionChanged(const ExecutionSnapshot& section);
 
@@ -42,9 +48,14 @@ signals:
     void requestShowWindow(const WidgetTypes& types, const WidgetInfo& info, const RequestId request_id);
     void requestSendDataToPris(const PRISMessage& message, const RequestId request_id);
     void requestLoadSection(const ExecuteParam& params, const RequestId request_id);
+
+    void sendStatusSection(bool is_load, const RequestId source_request_id);
+
+    void sendSectionForView(const ExecutionSnapshot& section);          //отправляем секции по запросу GUI. Сделано так, чтобы в будущем поставить ограничение на выполнение директив в секциях, которые не лежат сверху стека
 private:
     struct ExecuteFrame
     {
+        QString section_name;
         SectionStruct section_struct;
         QMap<ChapterType, QVector<Direct*>> directives_for_execute;
 
@@ -56,6 +67,7 @@ private:
 
         const ExecutionSnapshot toGUI() {
             ExecutionSnapshot result;
+            result.section_name = section_name;
             result.active_chpater = active_chapter;
             result.active_dir_index = current_directive_index;
             result.section = section_struct;
@@ -82,6 +94,8 @@ private:
     QMap<RequestId, QPointer<Direct>> request_directives_;
 
     int id_last_prog = 0;
+
+    const AppConfig& cfg_;
 };
 
 #endif // DIRECTIVEEXECUTOR_H

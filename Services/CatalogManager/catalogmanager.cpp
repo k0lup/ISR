@@ -1,8 +1,8 @@
 #include "catalogmanager.h"
 #include <QSet>
 
-CatalogManager::CatalogManager(QObject *parent)
-    : QObject{parent}
+CatalogManager::CatalogManager(const AppConfig& cfg, QObject *parent)
+    : QObject{parent}, cfg_(cfg)
 {
 
 }
@@ -25,26 +25,26 @@ CatalogManager::CatalogManager(QObject *parent)
 void CatalogManager::addCatalog(const quint64 request_id, const QString &section, const QStringList &paths) {
     QString error_message;
     bool res{false};
-    DirectType direct_type{DirectType::SPO_SECTION};
+    SectionType direct_type{SectionType::SPO_SECTION};
 
     for (QString path : paths) {
         if (path.isEmpty()) {
             continue;
         }
         if (path.at(0) == "*") {
-            direct_type = DirectType::PUBLIC_PRIORITY_SECTION;
+            direct_type = SectionType::PUBLIC_PRIORITY_SECTION;
             path = path.remove(0, 1);
         } else if (path.at(0) == "#") {
-            direct_type = DirectType::PRIVATE_SECTION;
+            direct_type = SectionType::PRIVATE_SECTION;
             path = path.remove(0, 1);
         } else {
-            direct_type = DirectType::SPO_SECTION;
+            direct_type = SectionType::SPO_SECTION;
         }
 
         switch (direct_type) {
-        case (DirectType::SPO_SECTION):                 res = addSpoPath(section, path, error_message);                      break;
-        case (DirectType::PUBLIC_PRIORITY_SECTION):     res = addPublicPrioritySection(section, path, error_message);        break;
-        case (DirectType::PRIVATE_SECTION):             res = addPrivateSection(section, path, error_message);               break;
+        case (SectionType::SPO_SECTION):                 res = addSpoPath(section, path, error_message);                      break;
+        case (SectionType::PUBLIC_PRIORITY_SECTION):     res = addPublicPrioritySection(section, path, error_message);        break;
+        case (SectionType::PRIVATE_SECTION):             res = addPrivateSection(section, path, error_message);               break;
         }
 
         if (!res) {

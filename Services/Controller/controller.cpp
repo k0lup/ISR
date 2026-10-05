@@ -1,8 +1,8 @@
 #include "controller.h"
 
-Controller::Controller(QObject* parent) : QObject(parent)
+Controller::Controller(const AppConfig& cfg, QObject* parent) : QObject(parent), cfg_(cfg)
 {
-    setState(AppState::Loading);
+    app_state_ = AppState::Loading;
 }
 
 void Controller::setState(const AppState app_state)
@@ -13,6 +13,9 @@ void Controller::setState(const AppState app_state)
 
 void Controller::start()
 {
+    setState(AppState::Loading);
+
+
 
     setState(AppState::Idle);
 }

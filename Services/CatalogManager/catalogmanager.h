@@ -4,12 +4,7 @@
 #include <QObject>
 #include <QMap>
 #include <QStringList>
-
-enum class DirectType {
-    SPO_SECTION,
-    PUBLIC_PRIORITY_SECTION,
-    PRIVATE_SECTION
-};
+#include "Services/ConfigReader/configtypes.h"
 
 
 
@@ -17,7 +12,7 @@ class CatalogManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit CatalogManager(QObject *parent = nullptr);
+    explicit CatalogManager(const AppConfig& cfg, QObject *parent = nullptr);
 
 public slots:
     //void addCatalog(const quint64 request_id, const QString& section, const QString& path, DirectType direct_type);
@@ -30,6 +25,13 @@ signals:
     void requestFailed(quint64 request_id, const QString& error);
 
 private:
+    enum class SectionType {
+        SPO_SECTION,
+        PUBLIC_PRIORITY_SECTION,
+        PRIVATE_SECTION
+    };
+
+private:
     bool addSpoPath(const QString& section, const QString& path, QString& error_message);
     bool addPrivateSection(const QString& section, const QString& path, QString& error_message);
     bool addPublicPrioritySection(const QString& section, const QString& path, QString& error_message);
@@ -38,6 +40,8 @@ private:
     QMap<QString, QStringList> spo_sections_;
     QMap<QString, QStringList> public_priority_sections_;
     QMap<QString, QStringList> private_sections_;
+
+    const AppConfig& cfg_;
 };
 
 #endif // CATALOGMANAGER_H

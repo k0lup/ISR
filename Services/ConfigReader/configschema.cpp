@@ -11,17 +11,17 @@ config_reader::ConfigSchema config_reader::createConfigShema() {
     config_reader::ConfigSchema config_schema = {
         /*Название параметра*/                          /*required*/   /*default_value*/                       /*type_def*/
         /*РАЗМЕЩЕНИЕ_СПО*/
-        {app_config_names::spo_path_name,               {true,          QVariant(),                             ParamType::String,          "FOLDER"}},
+        {app_config_names::spo_path_name,               {true,          QVariant(),                             ParamType::String,          /*"FOLDER"*/""}},
         /*РАЗМЕЩЕНИЕ_НАСТРОЕК*/
-        {app_config_names::settings_path_name,          {true,          QVariant(),                             ParamType::String,          "FOLDER"}},
+        {app_config_names::settings_path_name,          {true,          QVariant(),                             ParamType::String,          /*"FOLDER"*/""}},
         /*РАЗМЕЩЕНИЕ_ФАЙЛОВ*/
-        {app_config_names::files_paths_name,            {true,          QVariant(),                             ParamType::String,          "FOLDER"}},
+        {app_config_names::files_paths_name,            {true,          QVariant(),                             ParamType::String,          /*"FOLDER"*/""}},
         /*РАЗМЕЩЕНИЕ_РАЗДЕЛОВ*/
-        {app_config_names::sections_folder_path_name,   {true,          QVariant(),                             ParamType::String,          "FOLDER"}},
+        {app_config_names::sections_folder_path_name,   {true,          QVariant(),                             ParamType::String,          /*"FOLDER"*/""}},
         /*ПРОТОКОЛ*/
-        {app_config_names::prot_path_name,              {true,          QVariant(),                             ParamType::String,          "FOLDER"}},
+        {app_config_names::prot_path_name,              {true,          QVariant(),                             ParamType::String,          /*"FOLDER"*/""}},
         /*ПРОГРАММЫ*/
-        {app_config_names::programs_paths_name,         {true,          QVariant(),                             ParamType::StringList,      "FOLDER"}},
+        {app_config_names::programs_paths_name,         {true,          QVariant(),                             ParamType::StringList,      /*"FOLDER"*/""}},
         /*РАЗДЕЛЫ*/
         {app_config_names::sections_paths_name,         {true,          QVariant(),                             ParamType::StringList,      ""}},
         /*НШС_ИЗД*/
@@ -37,11 +37,11 @@ config_reader::ConfigSchema config_reader::createConfigShema() {
         /*ПРИ_РЭП*/
         {app_config_names::pri_rep_name,                {true,          QVariant(),                             ParamType::String,          ""}},
         /*ISR_PORT*/
-        {app_config_names::isr_port_name,               {false,         QVariant(1),                            ParamType::String,          reg_exp_port}},
+        {app_config_names::isr_port_name,               {false,         QVariant(1),                            ParamType::String,          /*reg_exp_port*/""}},
         /*IP_EXCHANGE_SERVER*/
-        {app_config_names::ip_server_name,              {false,         QVariant(QString("127.0.0.1")),         ParamType::String,          reg_exp_ip}},
+        {app_config_names::ip_server_name,              {false,         QVariant(QString("127.0.0.1")),         ParamType::String,          /*reg_exp_ip*/""}},
         /*PORT_EXCHANGE_SERVER*/
-        {app_config_names::port_server_name,            {false,         QVariant(1),                            ParamType::String,          reg_exp_port}}
+        {app_config_names::port_server_name,            {false,         QVariant(1),                            ParamType::String,          /*reg_exp_port*/""}}
     };
 
     return config_schema;

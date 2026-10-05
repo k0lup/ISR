@@ -49,7 +49,7 @@ namespace app_config_names {
     const QString avar_isd_name                 =   "АВАР_ИЗД";
     const QString pri_isd_name                  =   "ПРИ_ИЗД";
 
-    const QString nshc_rep_name                 =   "НСШС_РЭП";
+    const QString nshc_rep_name                 =   "НШС_РЭП";
     const QString avar_rep_name                 =   "АВАР_РЭП";
     const QString pri_rep_name                  =   "ПРИ_РЭП";
 

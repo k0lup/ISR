@@ -41,7 +41,7 @@ QMap<QString, QStringList> ConfigParser::parseData(const QStringList& data, QStr
         }
 
         QString param_name = line.left(separator_index).trimmed();
-        QString all_param_values = line.right(separator_index + 1).trimmed();
+        QString all_param_values = line.mid(separator_index + 1).trimmed();
 
         QStringList list_param_values = all_param_values.split(";");
         for (int num_param_value = 0; num_param_value < list_param_values.count(); ++num_param_value) {

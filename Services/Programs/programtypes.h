@@ -83,7 +83,7 @@ struct ChapterStruct
 
     QList<DirectiveStruct> directives;
 
-    bool hasLabel(const QString& label) {
+    bool hasLabel(const QString& label) const {
         for (auto& block : blocks) {
             if (block.name == label) {
                 return true;
@@ -93,6 +93,14 @@ struct ChapterStruct
     }
 
     NotStateBlock& blockByLabel(const QString& label) {
+        for (auto& block : blocks) {
+            if (block.name == label) {
+                return block;
+            }
+        }
+    }
+
+    const NotStateBlock& blockByLabel(const QString& label) const {
         for (auto& block : blocks) {
             if (block.name == label) {
                 return block;

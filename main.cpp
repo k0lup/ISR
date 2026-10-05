@@ -90,10 +90,14 @@ int main(int argc, char *argv[])
     qCInfo(logCore) << "Приложение запускается";
 
     Application application;
-
-    const int rc = app.exec();
-
-    qCInfo(logCore) << "Приложение завершается, код завершения=" << rc;
+    int rc {-1};
+    if (!application.isInicialized()) {
+        qCCritical(logCore) << "Проблема при инициализации приложения";
+        rc = -1;
+    } else {
+        rc = app.exec();
+        qCInfo(logCore) << "Приложение завершается, код завершения=" << rc;
+    }
 
     // Корректное завершение логгера
     Logger::uninstallQtHandler();

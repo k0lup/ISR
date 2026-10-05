@@ -2,6 +2,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "Services/ConfigReader/configtypes.h"
+#include "Services/DirectiveExecutor/executiontypes.h"
+#include "Services/GUI/guitypes.h"
+#include "Services/RequestIDGenerator/requestIDGenerator.h"
+
 class QMenu;
 class QAction;
 
@@ -11,10 +16,22 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(const AppConfig& cfg, QWidget *parent = nullptr);
     ProgramViewWidget* getProgViewWgt();
 signals:
-    void loadSectionRequested(const QString& section_name);
+    void loadSectionRequested(const QString& section_name, const RequestId request_id);
+    void sendWindowResponse(const WindowResultData& result, const RequestId source_request_id);
+    void requestChangeSection(const QString& section_name, const RequestId request_id);
+public slots:
+    void onShowWarningRequested(const QString& warning_message);
+    void onShowCriticalRequested(const QString& critical_message);
+    void onShowInfoRequested(const QString& info_message);
+
+    void onSectionChanged(const ExecutionSnapshot& section);
+
+    void onRequestShowWindow(const WidgetTypes& types, const WidgetInfo& info, const RequestId request_id);
+
+    void onListSectionLoaded(const QSet<QString>& section_list);
 private:
     QMenu* preparaion_menu_ = nullptr;                      //Подготовка
         QAction* list_of_sections_act_ = nullptr;               //->Список разделов...
@@ -106,18 +123,26 @@ private slots:
     void onThirdSectionRepActTriggered();
     void onEndOfRepSectionActTriggered();
     void onExitOfRepSectionActTriggered();
-private:
-    ProgramViewWidget* exec_wgt_ = nullptr;
-    QStringList loaded_sections_;
+
 private:
     void createActions();
     void createMenu();
     void setupConnections();
 
+    void setActiveSectionInMenu(const QString& section_name);
+    void setActiveChapterInMenu(const ChapterType& chapter);
     void rebuildSectionsMenu();
     void clearSectionsMenu();
-signals:
 
+    WindowResultData showInfoWgt(const QString& title, const QString& data);
+    WindowResultData showVarWgt(const QString& title, const QStringList& variants);
+
+private:
+    ProgramViewWidget* exec_wgt_ = nullptr;
+    QStringList loaded_sections_;
+    QStringList all_sections_;
+
+    const AppConfig& cfg_;
 };
 
 #endif // MAINWINDOW_H

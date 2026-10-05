@@ -64,7 +64,6 @@ SOURCES += \
     Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretlineedit.cpp \
     Services/GUI/MenuDialogWindow/controlspodialog.cpp \
     Services/GUI/MenuDialogWindow/finddialog.cpp \
-    Services/GUI/MenuDialogWindow/listofsections.cpp \
     Services/GUI/MenuDialogWindow/sectionlistdialog.cpp \
     Services/GUI/MenuDialogWindow/titleofsectiondialog.cpp \
     Services/GUI/ProgViewWgt/programtablemodel.cpp \
@@ -100,7 +99,6 @@ HEADERS += \
     Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretlineedit.h \
     Services/GUI/MenuDialogWindow/controlspodialog.h \
     Services/GUI/MenuDialogWindow/finddialog.h \
-    Services/GUI/MenuDialogWindow/listofsections.h \
     Services/GUI/MenuDialogWindow/sectionlistdialog.h \
     Services/GUI/MenuDialogWindow/titleofsectiondialog.h \
     Services/GUI/ProgViewWgt/programtablemodel.h \

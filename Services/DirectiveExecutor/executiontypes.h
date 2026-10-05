@@ -26,6 +26,7 @@ struct ExecuteParam
 
 struct ExecutionSnapshot
 {
+    QString section_name;
     SectionStruct section;
 
     ChapterType active_chpater;
