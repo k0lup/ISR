@@ -177,7 +177,9 @@ void SectionListDialog::findAndSelect(const QString& abbrev)
 
 void SectionListDialog::setSections(const QStringList& sections_list)
 {
-    section_list_->addItems(sections_list);
+    QStringList sorted_section_list = sections_list;
+    sorted_section_list.sort();
+    section_list_->addItems(sorted_section_list);
 
     if (section_list_->count() > 0) {
         section_list_->setCurrentRow(0);

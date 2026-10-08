@@ -96,6 +96,7 @@ void Application::setupConnections()
     //PRIS пока затычка
     QObject::connect(directive_executor_, &DirectiveExecutor::requestSendDataToPris, this, [this](const PRISMessage& message, const RequestId request_id){
         Q_UNUSED(message);
+
         PRISResultData result;
         result.status = true;
         directive_executor_->onPRISResponse(result, request_id);
@@ -107,6 +108,9 @@ void Application::setupConnections()
         QSet<QString> section_names = section_loader_->getSectionsNames();
         gui_window_->onListSectionLoaded(section_names);
     });
+
+
+    QObject::connect(gui_window_, &MainWindow::destroyed, this, &Application::deleteLater);
 }
 
 Application::~Application()

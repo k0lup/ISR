@@ -30,7 +30,7 @@ struct ExecutionSnapshot
     SectionStruct section;
 
     ChapterType active_chpater;
-    int active_dir_index;
+    QMap<ChapterType, int> active_dir_index;
 
     int exec_frame_id;
 };

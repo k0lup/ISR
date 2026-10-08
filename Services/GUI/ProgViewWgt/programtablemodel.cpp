@@ -2,6 +2,7 @@
 #include <QBrush>
 #include <QColor>
 
+
 ProgramTableModel::ProgramTableModel(QObject* parent) : QAbstractTableModel(parent)
 {
 
@@ -57,6 +58,9 @@ QVariant ProgramTableModel::data(const QModelIndex &index, int role) const
         if (row.directive_index == ProgramRow::NoDirectiveIndex) {
             return QBrush(QColor(75, 75, 80));
         }
+        if (failed_directives_.contains(row.directive_index)) {
+            return QBrush(Qt::red);
+        }
 
         return QBrush(QColor(255, 255, 255));
     }
@@ -64,6 +68,9 @@ QVariant ProgramTableModel::data(const QModelIndex &index, int role) const
     if (role == Qt::ForegroundRole) {
         if (row.directive_index == runned_directive_) {
             return QBrush(QColor(255, 255, 0));
+        }
+        if (failed_directives_.contains(row.directive_index)) {
+            return QBrush(Qt::white);
         }
 
         return QBrush(Qt::black);
@@ -111,6 +118,9 @@ void ProgramTableModel::setRows(const QVector<ProgramRow>& rows)
 
     rows_ = std::move(rows);
     completed_directives_.clear();
+    failed_directives_.clear();
+    active_directive_ = ProgramRow::NoDirectiveIndex;
+    runned_directive_ = ProgramRow::NoDirectiveIndex;
 
     endResetModel();
 }

@@ -148,7 +148,7 @@ QMap<int, VARIANT_DATA_VAR_DIRECTIVE> VariantDirective::getVariants(const QList<
 void VariantDirective::parseDirective()
 {
     if (directive_state_ != DirectiveState::Created) {
-        QString error_message ="Парсер директивы вызван в недопустимом состоянии директивы";
+        QString error_message ="Парсер директивы вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -164,8 +164,9 @@ void VariantDirective::parseDirective()
 }
 
 void VariantDirective::run() {
-    if (directive_state_ != DirectiveState::Ready) {
-        QString error_message = "run() вызван в недопустимом состоянии директивы";
+    if (directive_state_ != DirectiveState::Ready &&
+            directive_state_ != DirectiveState::Finished) {
+        QString error_message = "run() вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -192,7 +193,7 @@ void VariantDirective::run() {
 
 void VariantDirective::onWindowResult(const WindowResultData& result) {
     if (directive_state_ != DirectiveState::WaitingForGui) {
-        QString error_message ="onWindowResult() вызван в недопустимом состоянии директивы";
+        QString error_message ="onWindowResult() вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -264,7 +265,7 @@ void VariantDirective::onWindowResult(const WindowResultData& result) {
 void VariantDirective::onPRISResult(const PRISResultData& result)
 {
     if (directive_state_ != DirectiveState::WaitingForPris) {
-        QString error_message = "onPRISResult() вызван в недопустимом состоянии директивы";
+        QString error_message = "onPRISResult() вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -298,11 +299,20 @@ void VariantDirective::onFiledDetected(const QString& message)
     directive_state_ = DirectiveState::Failed;
 }
 
-void VariantDirective::onFinishedDetected()
+void VariantDirective::onFinishedDetected(const ResultDirective& result)
 {
     qCInfo(logCore) << "Выполнение директивы завершено!";
-    qCInfo(logCore) << "Устанавливаем состояние директивы в Finished";
-    directive_state_ = DirectiveState::Finished;
+
+    QString log_message = "Устанавливаем состояние директивы в ";
+
+    switch (result.type) {
+    case RESULT_DIRECTIVE_TYPES::OK : directive_state_ = DirectiveState::Finished; break;
+    case RESULT_DIRECTIVE_TYPES::NOT_COMPLETED : directive_state_ = DirectiveState::Ready; break;
+    case RESULT_DIRECTIVE_TYPES::ERROR : directive_state_ = DirectiveState::Failed; break;
+    }
+
+    log_message.append(directStateToString());
+    qCInfo(logCore) << log_message;
 }
 
 VariantDirective::~VariantDirective() {

@@ -5,8 +5,12 @@
 #include "programtablemodel.h"
 #include <QList>
 
+#include <Logger/logger.h>
+#include "logging_categories.h"
+
 ProgramViewWidget::ProgramViewWidget(QWidget *parent) : QWidget(parent)
 {
+    qCInfo(logGUI) << "Вызван конструктор ProgramViewWidget";
     table_ = new QTableView(this);
     model_ = new ProgramTableModel(this);
 
@@ -34,22 +38,28 @@ ProgramViewWidget::ProgramViewWidget(QWidget *parent) : QWidget(parent)
     hbox_layout->addWidget(table_);
 
     setLayout(hbox_layout);
+
+    qCInfo(logGUI) << "Завершен конструктор ProgramViewWidget";
 }
 
 void ProgramViewWidget::onDoubleClicked(const QModelIndex& index)
 {
+    qCInfo(logGUI) << "Вызван обработчик двойного нажатия на директиву";
     const int directive_index = model_->directiveIndex(index);
 
     if (directive_index < 0) {
         return;
     }
 
-    current_program_.active_dir_index = directive_index;
+    current_program_.active_dir_index[current_program_.active_chpater] = directive_index;
+    qCInfo(logGUI) << "Отправляем сигнал directiveDoubleClicked()";
     emit directiveDoubleClicked(current_program_, RequestIdGenerator::NO_REQUEST_ID);
+    qCInfo(logGUI) << "Завершен обработчик двойного нажатия на директиву";
 }
 
 void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
 {
+    qCInfo(logGUI) << "Вызван метод setSection()";
     const QList<DirectiveStruct>& directives = exec_snapshot.section.get(exec_snapshot.active_chpater).directives;
     QVector<ProgramTableModel::ProgramRow> table_rows;
 
@@ -65,6 +75,7 @@ void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
             current_row.command = line.command_col;
             current_row.operation = line.operation_col;
             current_row.directive_index = current_directive_index;
+            current_directive_rows.append(current_row);
         }
 
         table_rows.append(current_directive_rows);
@@ -84,17 +95,26 @@ void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
         }
     }
 
+    repaint();
+
     current_program_ = exec_snapshot;
+
+    qCInfo(logGUI) << "Завершен метод setSection()";
 }
 
 void ProgramViewWidget::onChapterChanged(const ChapterType &chapter)
 {
+    qCInfo(logGUI) << "Вызван метод onChapterChanged()";
+
     current_program_.active_chpater = chapter;
-    current_program_.active_dir_index = 0;
     setSection(current_program_);
+
+    qCInfo(logGUI) << "Завершен метод onChapterChanged()";
 }
 
 void ProgramViewWidget::clear()
 {
+    qCInfo(logGUI) << "Вызван метод clear()";
     model_->clear();
+    qCInfo(logGUI) << "Завершен метод clear()";
 }

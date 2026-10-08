@@ -18,7 +18,7 @@ private:
     void parseDirective() override;
 private slots:
     void onFiledDetected(const QString& message) override;
-    void onFinishedDetected() override;
+    void onFinishedDetected(const ResultDirective& result) override;
 private:
     QString command_;
 };

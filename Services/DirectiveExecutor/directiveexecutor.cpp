@@ -16,7 +16,7 @@ DirectiveExecutor::DirectiveExecutor(const AppConfig& cfg, QObject* parent) :
     qCInfo(logCore) << "Вызван и выполнен коструктор DirectiveExecutor";
 }
 
-void DirectiveExecutor::setSection(const QString& section_name, const SectionStruct& section_struct, const RequestId request_id)
+void DirectiveExecutor::setSection(const QString& section_name, SectionStruct section_struct, const RequestId request_id)
 {
     StartSectionDirective* caller = nullptr;
 
@@ -55,24 +55,21 @@ void DirectiveExecutor::setSection(const QString& section_name, const SectionStr
                 caller->onReqStartProgResult(false);
             }
 
-            ChapterStruct chapter = section_struct.get(chapter_type);
-            for (auto& directive : chapter.directives) {
-                directive.status = DirectStatus::LOAD;
-            }
-
             return;
+        }
+
+        for (auto& direct : section_struct.get(chapter_type).directives) {
+            direct.status = DirectStatus::LOAD;
         }
 
         frame.directives_for_execute[chapter_type] = std::move(directives);
     }
 
-    ExecuteParam execute_param = getParamFromStartDirective(caller);
-    frame.active_chapter = execute_param.active_chapter;
-
-    if (!execute_param.label.isEmpty()) {
-        if (frame.active_chapter != ChapterType::NOT_STATE) {
-            QString error_message = "Недопустимо использование метки раздела в разделах отличных от НШС!";
-            qCCritical(logCore) << "Выявлена ошибка при подготовке раздела к исполнению:\n" + error_message;
+    if (caller) {
+        ExecuteParam execute_param = getParamFromStartDirective(caller);
+        if (execute_param.section_name.isEmpty()) {
+            QString error_message = "Не удалось получить параметры запуска из директивы";
+            qCCritical(logCore) << error_message;
 
             qCInfo(logCore) << "Отправляем сигнал requestFailed";
             emit requestFailed(request_id, error_message);
@@ -82,30 +79,30 @@ void DirectiveExecutor::setSection(const QString& section_name, const SectionStr
                 caller->onReqStartProgResult(false);
             }
 
-            qCInfo(logCore) << "Отправляем сигнал failed";
-            emit failed(error_message);
             return;
         }
+        frame.active_chapter = execute_param.active_chapter;
 
-        if (!section_struct.get(ChapterType::NOT_STATE).hasLabel(execute_param.label)) {
-            QString error_message = QString("Заданной метки '%1' не существует").arg(execute_param.label);
-            qCWarning(logCore) << "Выявлена ошибка при подготовке раздела к исполнению:\n" + error_message;
+        if (!execute_param.label.isEmpty()) {
+            if (frame.active_chapter != ChapterType::NOT_STATE) {
+                QString error_message = "Недопустимо использование метки раздела в разделах отличных от НШС!";
+                qCCritical(logCore) << "Выявлена ошибка при подготовке раздела к исполнению:\n" + error_message;
 
-            qCInfo(logCore) << "Отправляем сигнал requestFailed";
-            emit requestFailed(request_id, error_message);
+                qCInfo(logCore) << "Отправляем сигнал requestFailed";
+                emit requestFailed(request_id, error_message);
 
-            if (caller) {
-                qCInfo(logCore) << "Уведомляем вызывающую директиву о закрытии вызванной программы";
-                caller->onReqStartProgResult(false);
+                if (caller) {
+                    qCInfo(logCore) << "Уведомляем вызывающую директиву о закрытии вызванной программы";
+                    caller->onReqStartProgResult(false);
+                }
+
+                qCInfo(logCore) << "Отправляем сигнал failed";
+                emit failed(error_message);
+                return;
             }
 
-            return;
-        } else {
-            int cur_dir_index = section_struct.get(ChapterType::NOT_STATE).blockByLabel(execute_param.label).num_dirs_for_block.first();
-            if (cur_dir_index < 0 || cur_dir_index >= section_struct.get(ChapterType::NOT_STATE).directives.count()) {
-                QString error_message = QString("Индекс директивы '%1' по заданной метке '%2' недопустим!")
-                        .arg(execute_param.label).arg(cur_dir_index);
-
+            if (!section_struct.get(ChapterType::NOT_STATE).hasLabel(execute_param.label)) {
+                QString error_message = QString("Заданной метки '%1' не существует").arg(execute_param.label);
                 qCWarning(logCore) << "Выявлена ошибка при подготовке раздела к исполнению:\n" + error_message;
 
                 qCInfo(logCore) << "Отправляем сигнал requestFailed";
@@ -117,16 +114,49 @@ void DirectiveExecutor::setSection(const QString& section_name, const SectionStr
                 }
 
                 return;
+            } else {
+                int cur_dir_index = section_struct.get(ChapterType::NOT_STATE).blockByLabel(execute_param.label).num_dirs_for_block.first();
+                if (cur_dir_index < 0 || cur_dir_index >= section_struct.get(ChapterType::NOT_STATE).directives.count()) {
+                    QString error_message = QString("Индекс директивы '%1' по заданной метке '%2' недопустим!")
+                            .arg(execute_param.label).arg(cur_dir_index);
 
+                    qCWarning(logCore) << "Выявлена ошибка при подготовке раздела к исполнению:\n" + error_message;
+
+                    qCInfo(logCore) << "Отправляем сигнал requestFailed";
+                    emit requestFailed(request_id, error_message);
+
+                    if (caller) {
+                        qCInfo(logCore) << "Уведомляем вызывающую директиву о закрытии вызванной программы";
+                        caller->onReqStartProgResult(false);
+                    }
+
+                    return;
+
+                }
+
+                frame.current_directive_index[frame.active_chapter] = cur_dir_index;
             }
-
-            frame.current_directive_index = cur_dir_index;
+        } else {
+            frame.current_directive_index[frame.active_chapter] = 0;
         }
+    } else {
+        frame.active_chapter = ChapterType::STATE;
+        frame.current_directive_index[frame.active_chapter] = 0;
     }
 
     frame.caller = caller;
     frame.section_struct = section_struct;
     frame.id_program = getNextID();
+
+    frame.section_struct.get(frame.active_chapter).directives[frame.current_directive_index[frame.active_chapter]].status = DirectStatus::CURRENT;
+
+    for (const auto& chapter : frame.section_struct.chapters) {
+        if (chapter.type == frame.active_chapter) {
+            continue;
+        }
+
+        frame.current_directive_index[chapter.type] = 0;
+    }
 
     sections_.append(frame);
     qCInfo(logCore) << "Добавили раздел в стек вызовов";
@@ -156,15 +186,12 @@ void DirectiveExecutor::startFrom(const ExecutionSnapshot& section_data, const R
     }
 
     if (sections_.last().id_program != section_data.exec_frame_id) {
-        Direct* current_directive = sections_.last().directives_for_execute[sections_.last().active_chapter].at(sections_.last().current_directive_index);
-        if (current_directive->isRunned()) {
-            QString error_message = "Невозможно запустить новую директиву, пока выполняется другая";
+            QString error_message = "Невозможно запустить директиву из раздела, который не является последним вызванным";
             qCWarning(logCore) << error_message;
 
             qCInfo(logCore) << "Отправлен сиганл requestFailed";
             emit requestFailed(request_id, error_message);
             return;
-        }
     }
 
     int section_index = sections_.count() - 1;
@@ -193,10 +220,19 @@ void DirectiveExecutor::startFrom(const ExecutionSnapshot& section_data, const R
         sections_.append(frame);
     }
 
+    QPointer<Direct> current_active_direct = getCurrentExecuteDirect();
+    if (current_active_direct) {
+        QString error_message = "В данном разделе уже есть запущенная директива!";
+        qCWarning(logCore) << error_message;
+
+        qCInfo(logCore) << "Отправлен сиганл requestFailed";
+        emit requestFailed(request_id, error_message);
+        return;
+    }
     sections_.last().active_chapter = section_data.active_chpater;
 
-    if ((sections_.last().directives_for_execute[section_data.active_chpater].count() <= section_data.active_dir_index) ||
-            section_data.active_dir_index < 0) {
+    if ((sections_.last().directives_for_execute[section_data.active_chpater].count() <= section_data.active_dir_index[section_data.active_chpater]) ||
+            section_data.active_dir_index[section_data.active_chpater] < 0) {
         QString error_message = "Индекс директивы для запуска недопустим";
         qCWarning(logCore) << error_message;
 
@@ -205,7 +241,16 @@ void DirectiveExecutor::startFrom(const ExecutionSnapshot& section_data, const R
         return;
     }
 
-    sections_.last().current_directive_index = section_data.active_dir_index;
+    if (!cfg_.manual_start_direct_mode && sections_.last().current_directive_index[sections_.last().active_chapter] != section_data.active_dir_index[section_data.active_chpater]) {
+        QString error_message = "Вызов директив не по порядку возможен только при задании соотвествующего режима в настройках!";
+        qCWarning(logCore) << error_message;
+
+        qCInfo(logCore) << "Отправлен сигнал requestFailed";
+        emit requestFailed(request_id, error_message);
+        return;
+    }
+
+    sections_.last().current_directive_index[sections_.last().active_chapter] = section_data.active_dir_index[section_data.active_chpater];
 
     qCInfo(logCore) << "Отправляем сигнал requestCompleted";
     emit requestCompleted(request_id);  //Отправляем сигнал тут, чтобы не было необходимости ждать завершения директивы, т.к. она может потянуть за собой вызов новой программы и т.д.
@@ -325,6 +370,13 @@ ExecuteParam DirectiveExecutor::getParamFromStartDirective(StartSectionDirective
     qCInfo(logCore) << "Вызван метод getParamFromStartDirective";
     ExecuteParam exec_param;
 
+    if (!directive) {
+        emit failed("Запрошено чтение параметров запуска из nullptr StartSectionDirective");
+        return exec_param;
+    }
+
+    exec_param = directive->getExecuteParam();
+
     qCInfo(logCore) << "Завершен метод getParamFromStartDirective";
     return exec_param;
 }
@@ -334,8 +386,8 @@ void DirectiveExecutor::continueExecute()
     qCInfo(logCore) << "Вызван метод continueExecute";
     ExecuteFrame& exec_prog = sections_.last();
 
-    if (exec_prog.current_directive_index >= exec_prog.directives_for_execute[exec_prog.active_chapter].count()
-            || exec_prog.current_directive_index < 0) {
+    if (exec_prog.current_directive_index[exec_prog.active_chapter] >= exec_prog.directives_for_execute[exec_prog.active_chapter].count()
+            || exec_prog.current_directive_index[exec_prog.active_chapter] < 0) {
         QString error_message = "Недопустимый индекс для запуска директивы";
         qCCritical(logCore) << error_message;
 
@@ -344,7 +396,7 @@ void DirectiveExecutor::continueExecute()
         return;
     }
 
-    Direct* directive_for_runned = exec_prog.directives_for_execute[exec_prog.active_chapter][exec_prog.current_directive_index];
+    Direct* directive_for_runned = exec_prog.directives_for_execute[exec_prog.active_chapter][exec_prog.current_directive_index[exec_prog.active_chapter]];
     if (directive_for_runned->isRunned()) {
         QString error_message = "Невозможно запустить уже запущенную директиву";
         qCCritical(logCore) << error_message;
@@ -354,7 +406,10 @@ void DirectiveExecutor::continueExecute()
         return;
     }
 
-    exec_prog.section_struct.get(exec_prog.active_chapter).directives[exec_prog.current_directive_index].status = DirectStatus::RUNNING;
+    setCurrentDirective(exec_prog.section_struct.get(exec_prog.active_chapter).directives, exec_prog.current_directive_index[exec_prog.active_chapter]);          //для сброса текущей директивы, если была указана другая
+    exec_prog.section_struct.get(exec_prog.active_chapter).directives[exec_prog.current_directive_index[exec_prog.active_chapter]].status = DirectStatus::RUNNING;
+    qCInfo(logCore) << "Установили текущую директиву в состояние RUNNING и отправили сигнал sectionChanged()";
+    emit sectionChanged(exec_prog.toGUI());
     directive_for_runned->run();
 
     qCInfo(logCore) << "Завершен метод continueExecute";
@@ -423,26 +478,27 @@ void DirectiveExecutor::onDirectiveFinished(const Direct::ResultDirective& resul
         QString message = "Не удалось сопоставить директиву отправившую сигнал о завершении с текущей выполняемой директивой!";
         qCCritical(logCore) << message;
         qCInfo(logCore) << "Отправляем сигнал failed";
+        emit failed(message);
         return;
     }
 
     ExecuteFrame& active_section = sections_.last();
-    const bool has_next_directive = active_section.current_directive_index + 1 < active_section.directives_for_execute[active_section.active_chapter].count();
+    const bool has_next_directive = active_section.current_directive_index[active_section.active_chapter] + 1 < active_section.directives_for_execute[active_section.active_chapter].count();
 
     if (result.type == Direct::RESULT_DIRECTIVE_TYPES::NOT_COMPLETED) {
-        active_section.section_struct.get(active_section.active_chapter).directives[active_section.current_directive_index].status = DirectStatus::CURRENT;
+        setCurrentDirective(active_section.section_struct.get(active_section.active_chapter).directives, active_section.current_directive_index[active_section.active_chapter]);
     } else if (result.type == Direct::RESULT_DIRECTIVE_TYPES::ERROR) {
         QString message = "При выполнении директивы возникла ошибка:\n" + result.message;
         qCWarning(logCore) << message;
         qCInfo(logCore) << "Отправляем сигнал warning()";
         emit warning(message);
-        active_section.section_struct.get(active_section.active_chapter).directives[active_section.current_directive_index].status = DirectStatus::FAILED;
+        active_section.section_struct.get(active_section.active_chapter).directives[active_section.current_directive_index[active_section.active_chapter]].status = DirectStatus::FAILED;
     } else if (result.type == Direct::RESULT_DIRECTIVE_TYPES::OK) {
-        active_section.section_struct.get(active_section.active_chapter).directives[active_section.current_directive_index].status = DirectStatus::FINISHED;
+        active_section.section_struct.get(active_section.active_chapter).directives[active_section.current_directive_index[active_section.active_chapter]].status = DirectStatus::FINISHED;
 
-        if (has_next_directive) {
-            active_section.section_struct.get(active_section.active_chapter).directives[active_section.current_directive_index + 1].status = DirectStatus::CURRENT;
-            active_section.current_directive_index += 1;
+        if (has_next_directive && !cfg_.manual_start_direct_mode) {
+            setCurrentDirective(active_section.section_struct.get(active_section.active_chapter).directives, active_section.current_directive_index[active_section.active_chapter] + 1);
+            active_section.current_directive_index[active_section.active_chapter] += 1;
             if (execute_mode_ == ExecuteMode::AUTO) {
                 continueExecute();
             }
@@ -454,6 +510,18 @@ void DirectiveExecutor::onDirectiveFinished(const Direct::ResultDirective& resul
     emit this->sectionChanged(active_section.toGUI());
     return;
 }
+
+void DirectiveExecutor::setCurrentDirective(QList<DirectiveStruct>& directives, int directive_index)
+{
+    for (auto& directive : directives) {
+        if (directive.status == DirectStatus::CURRENT) {
+            directive.status = DirectStatus::LOAD;
+        }
+    }
+
+    directives[directive_index].status = DirectStatus::CURRENT;
+}
+
 void DirectiveExecutor::onDirectiveFailed(const QString& message, Direct* direct)
 {
     if (direct != getCurrentExecuteDirect().data()) {
@@ -464,7 +532,7 @@ void DirectiveExecutor::onDirectiveFailed(const QString& message, Direct* direct
     }
 
     ExecuteFrame& active_section = sections_.last();
-    active_section.section_struct.get(active_section.active_chapter).directives[active_section.current_directive_index].status = DirectStatus::FAILED;
+    active_section.section_struct.get(active_section.active_chapter).directives[active_section.current_directive_index[active_section.active_chapter]].status = DirectStatus::FAILED;
     emit this->sectionChanged(active_section.toGUI());
     emit failed(message);
 }
@@ -476,19 +544,20 @@ QPointer<Direct> DirectiveExecutor::getCurrentExecuteDirect()
         return result;
     }
 
-    if (sections_.last().current_directive_index < 0 || sections_.last().current_directive_index >= sections_.last().directives_for_execute[sections_.last().active_chapter].count()) {
+    if (sections_.last().current_directive_index[sections_.last().active_chapter] < 0 ||
+            sections_.last().current_directive_index[sections_.last().active_chapter] >= sections_.last().directives_for_execute[sections_.last().active_chapter].count()) {
         emit failed("Недопустимый индекс директивы для исполнения!");
         return result;
     }
 
-    if (sections_.last().section_struct.get(sections_.last().active_chapter).directives[sections_.last().current_directive_index].status == DirectStatus::RUNNING) {
-        result = sections_.last().directives_for_execute[sections_.last().active_chapter][sections_.last().current_directive_index];
+    if (sections_.last().section_struct.get(sections_.last().active_chapter).directives[sections_.last().current_directive_index[sections_.last().active_chapter]].status == DirectStatus::RUNNING) {
+        result = sections_.last().directives_for_execute[sections_.last().active_chapter][sections_.last().current_directive_index[sections_.last().active_chapter]];
     }
 
     return result;
 }
 
-void DirectiveExecutor::onSetLoadedSectionRequested(const QString& section_name, const RequestId source_request_id)
+void DirectiveExecutor::onSetLoadedSectionRequested(const QString& section_name,  const RequestId source_request_id)
 {
     for (int i = 0; i < sections_.size(); ++i) {
         if (sections_[i].section_name == section_name) {

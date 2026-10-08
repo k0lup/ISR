@@ -483,6 +483,9 @@ SectionStruct DiiReader::convertDii(const dii_struct::DiiFile& dii_file, QString
     }
 
     for (const auto& chapter : dii_file.chapters) {
+        if (chapter.type == dii_struct::ChapterType::PRILOSHENIE) {
+            continue;
+        }
         section_struct.chapters.append(getChapter(chapter, current_errors));
         if (!current_errors.isEmpty()) {
             errors.append(current_errors);
@@ -496,7 +499,7 @@ SectionStruct DiiReader::convertDii(const dii_struct::DiiFile& dii_file, QString
 
     return section_struct;
 }
-
+#include <QDebug>
 PassportStruct DiiReader::getPassport(const QList<dii_struct::Command> passport, QString& errors)
 {
     errors.clear();
@@ -508,7 +511,7 @@ PassportStruct DiiReader::getPassport(const QList<dii_struct::Command> passport,
                 errors.append("В паспорте обнаружена строка не являющаяся паспортом\n");
                 continue;
             }
-            QStringList passport_line = line.type.split("=");
+            QStringList passport_line = line.command.split("=");
             if (passport_line.count() != 2) {
                 errors.append(QString("В паспорте обнаружена строка, которую не удалось разделить по символу '=': %1\n").arg(line.type));
                 continue;
@@ -606,12 +609,12 @@ ChapterStruct DiiReader::getChapter(const dii_struct::Chapter chapter, QString& 
         directive.status = DirectStatus::NOT_LOAD;
         directive.number = command.number;
         switch (command.command_lines[0].command_type) {
-        case dii_struct::CommandType::COMMAND : directive.type = DirectType::COMMAND;
-        case dii_struct::CommandType::INSTRUCTIONS : directive.type = DirectType::INSTRUCTIONS;
-        case dii_struct::CommandType::MAIN_OPERATION : directive.type = DirectType::MAIN_OPERATION;
-        case dii_struct::CommandType::OPTION : directive.type = DirectType::VARIANT;
-        case dii_struct::CommandType::REPORT : directive.type = DirectType::DOKLAD;
-        case dii_struct::CommandType::SECTION_START : directive.type = DirectType::START_SECTION;
+        case dii_struct::CommandType::COMMAND : directive.type = DirectType::COMMAND; break;
+        case dii_struct::CommandType::INSTRUCTIONS : directive.type = DirectType::INSTRUCTIONS; break;
+        case dii_struct::CommandType::MAIN_OPERATION : directive.type = DirectType::MAIN_OPERATION; break;
+        case dii_struct::CommandType::OPTION : directive.type = DirectType::VARIANT; break;
+        case dii_struct::CommandType::REPORT : directive.type = DirectType::DOKLAD; break;
+        case dii_struct::CommandType::SECTION_START : directive.type = DirectType::START_SECTION; break;
         default: errors.append(QString("Обнаружена неопознонная директива %1\n").arg(i + 1)); continue;
         }
 

@@ -39,7 +39,7 @@ void MainWindow::createActions()
     traf_act_ = new QAction("Трафарет...", this);
 
     exit_act_ = new QAction("Выход", this);
-    QList<QAction*> sections_act_list_;
+    no_section_act_ = new QAction("< Разделов нет >", this);
 
     state_chapter_act_ = new QAction("Штатное проведение раздела", this);
     not_state_chapter_act_ = new QAction("НШС раздела", this);
@@ -204,11 +204,12 @@ void MainWindow::rebuildSectionsMenu()
     qCInfo(logGUI) << "Вызван метод rebuildSectionsMenu()";
     if (loaded_sections_.isEmpty()) {
         clearSectionsMenu();
-        QAction* no_section_act = new QAction("< Разделов нет >", this);
-        sections_menu_->addAction(no_section_act);
-        no_section_act->setCheckable(false);
+        sections_menu_->addAction(no_section_act_);
+        no_section_act_->setCheckable(false);
         qCInfo(logGUI) << "Завершен метод createActions() - активных разделов нет";
         return;
+    } else {
+        sections_menu_->removeAction(no_section_act_);
     }
 
     QStringList sections_in_menu;
@@ -397,6 +398,7 @@ void MainWindow::onStateChapterActTriggered()
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Секции'->'Штатное проведение раздела'";
 
     exec_wgt_->onChapterChanged(ChapterType::STATE);
+    setActiveChapterInMenu(ChapterType::STATE);
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Секции'->'Штатное проведение раздела'";
 }
@@ -406,6 +408,7 @@ void MainWindow::onNotStateChapterActTriggered()
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Секции'->'НШС раздела'";
 
     exec_wgt_->onChapterChanged(ChapterType::NOT_STATE);
+    setActiveChapterInMenu(ChapterType::NOT_STATE);
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Секции'->'НШС раздела'";
 }
@@ -415,6 +418,7 @@ void MainWindow::onPriChapterActTriggered()
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Секции'->'ПРИ раздела'";
 
     exec_wgt_->onChapterChanged(ChapterType::PRI);
+    setActiveChapterInMenu(ChapterType::PRI);
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Секции'->'ПРИ раздела'";
 }

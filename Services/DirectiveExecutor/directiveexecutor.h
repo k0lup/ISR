@@ -21,7 +21,7 @@ public:
     explicit DirectiveExecutor(const AppConfig& cfg, QObject* parent = nullptr);
 
 public slots:
-    void setSection(const QString& section_name, const SectionStruct& section_struct, const RequestId request_id);
+    void setSection(const QString& section_name, SectionStruct section_struct, const RequestId request_id);
     void startFrom(const ExecutionSnapshot& section_data, const RequestId request_id);
 
     void setExecuteMode(const ExecuteMode& execute_mode, const RequestId request_id);
@@ -60,7 +60,7 @@ private:
         QMap<ChapterType, QVector<Direct*>> directives_for_execute;
 
         ChapterType active_chapter;
-        int current_directive_index = 0;
+        QMap<ChapterType, int> current_directive_index;
         StartSectionDirective* caller = nullptr;
 
         int id_program = 0;
@@ -87,6 +87,8 @@ private:
         id_last_prog += 1;
         return id_last_prog;
     }
+
+    void setCurrentDirective(QList<DirectiveStruct>& directives, int directive_index);
 private:
     ExecuteMode execute_mode_ = ExecuteMode::STEP;
     QVector<ExecuteFrame> sections_;

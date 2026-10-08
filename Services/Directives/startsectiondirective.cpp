@@ -88,7 +88,7 @@ bool StartSectionDirective::isValid()
 void StartSectionDirective::parseDirective()
 {
     if (directive_state_ != DirectiveState::Created) {
-        QString error_message ="Парсер директивы вызван в недопустимом состоянии директивы";
+        QString error_message ="Парсер директивы вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -120,11 +120,11 @@ void StartSectionDirective::parseDirective()
     qCInfo(logCore) << "Завершен метод parseDirective()";
 }
 
-
 void StartSectionDirective::run()
 {
-    if (directive_state_ != DirectiveState::Ready) {
-        QString error_message = "run() вызван в недопустимом состоянии директивы";
+    if (directive_state_ != DirectiveState::Ready &&
+            directive_state_ != DirectiveState::Finished) {
+        QString error_message = "run() вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -158,7 +158,7 @@ void StartSectionDirective::run()
 void StartSectionDirective::onWindowResult(const WindowResultData& result)
 {
     if (directive_state_ != DirectiveState::WaitingForGui) {
-        QString error_message ="onWindowResult() вызван в недопустимом состоянии директивы";
+        QString error_message ="onWindowResult() вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -196,7 +196,7 @@ void StartSectionDirective::onWindowResult(const WindowResultData& result)
 void StartSectionDirective::onReqStartProgResult(const bool result)
 {
     if (directive_state_ != DirectiveState::WaitingForProgram) {
-        QString error_message = "onReqStartProgResult() вызван в недопустимом состоянии директивы";
+        QString error_message = "onReqStartProgResult() вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -304,11 +304,25 @@ void StartSectionDirective::onFiledDetected(const QString& message)
     directive_state_ = DirectiveState::Failed;
 }
 
-void StartSectionDirective::onFinishedDetected()
+void StartSectionDirective::onFinishedDetected(const ResultDirective& result)
 {
     qCInfo(logCore) << "Выполнение директивы завершено!";
-    qCInfo(logCore) << "Устанавливаем состояние директивы в Finished";
-    directive_state_ = DirectiveState::Finished;
+
+    QString log_message = "Устанавливаем состояние директивы в ";
+
+    switch (result.type) {
+    case RESULT_DIRECTIVE_TYPES::OK : directive_state_ = DirectiveState::Finished; break;
+    case RESULT_DIRECTIVE_TYPES::NOT_COMPLETED : directive_state_ = DirectiveState::Ready; break;
+    case RESULT_DIRECTIVE_TYPES::ERROR : directive_state_ = DirectiveState::Failed; break;
+    }
+
+    log_message.append(directStateToString());
+    qCInfo(logCore) << log_message;
+}
+
+ExecuteParam StartSectionDirective::getExecuteParam() const
+{
+    return params_;
 }
 
 StartSectionDirective::~StartSectionDirective()

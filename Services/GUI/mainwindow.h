@@ -47,6 +47,7 @@ private:
             QAction* exit_act_ = nullptr;                               //->Выход
     QMenu* sections_menu_ = nullptr;                         //Разделы
         QList<QAction*> sections_act_list_;                     //->Список доступных разделов
+        QAction* no_section_act_ = nullptr;                     //Пункт "< Разделов нет >"
     QMenu* chapters_menu_ = nullptr;                        //Секции
         QAction* state_chapter_act_ = nullptr;                  //->Штатное проведение раздела
         QAction* not_state_chapter_act_ = nullptr;              //->НШС раздела

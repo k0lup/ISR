@@ -64,8 +64,21 @@ protected slots:
     virtual void onFiledDetected(const QString& message) {
         Q_UNUSED(message);
     }
-    virtual void onFinishedDetected() {
+    virtual void onFinishedDetected(const ResultDirective& result) {
+        Q_UNUSED(result);
+    }
 
+    QString directStateToString() const {
+        switch (directive_state_) {
+        case (DirectiveState::Created) : return "Created";
+        case (DirectiveState::Ready) : return "Ready";
+        case (DirectiveState::Running) : return "Running";
+        case (DirectiveState::WaitingForGui) : return "WaitingForGui";
+        case (DirectiveState::WaitingForPris) : return "WaitingForPris";
+        case (DirectiveState::WaitingForProgram) : return "WaitingForProgram";
+        case (DirectiveState::Finished) : return "Finished";
+        case (DirectiveState::Failed) : return "Failed";
+        }
     }
 protected:
     enum class DirectiveState

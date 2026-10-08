@@ -37,6 +37,10 @@ public:
                     command.isEmpty() &&
                     operation.isEmpty();
         }
+
+        QString toString() const {
+            return QString("|%1|%2|%3|%4|").arg(number).arg(type).arg(command).arg(operation);
+        }
     };
 
     /*struct Program {

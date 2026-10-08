@@ -31,6 +31,8 @@ struct AppConfig {
     int isr_port;                   /*.ON_S284*/            /*ISR_PORT=*/
     QString ip_server;              /*.ON_S284*/            /*IP_EXCHANGE_SERVER=*/
     int port_server;                /*.ON_S284*/            /*PORT_EXCHANGE_SERVER=*/
+
+    bool manual_start_direct_mode = false;  /*Задается настройкой в приложении*/ /*Определяет возможность запуска директив не по порядку*/
 };
 
 //Названия используемых параметров

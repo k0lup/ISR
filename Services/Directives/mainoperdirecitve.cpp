@@ -60,7 +60,7 @@ bool MainOperDirecitve::isValid()
 void MainOperDirecitve::parseDirective()
 {
     if (directive_state_ != DirectiveState::Created) {
-        QString error_message ="Парсер директивы вызван в недопустимом состоянии директивы";
+        QString error_message ="Парсер директивы вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -80,8 +80,9 @@ void MainOperDirecitve::parseDirective()
 
 void MainOperDirecitve::run()
 {
-    if (directive_state_ != DirectiveState::Ready) {
-        QString error_message ="Парсер директивы вызван в недопустимом состоянии директивы";
+    if (directive_state_ != DirectiveState::Ready &&
+            directive_state_ != DirectiveState::Finished) {
+        QString error_message ="Парсер директивы вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -124,7 +125,7 @@ void MainOperDirecitve::run()
 void MainOperDirecitve::onWindowResult(const WindowResultData& result)
 {
     if (directive_state_ != DirectiveState::WaitingForGui) {
-        QString error_message ="onWindowResult() вызван в недопустимом состоянии директивы";
+        QString error_message ="onWindowResult() вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -162,7 +163,7 @@ void MainOperDirecitve::onWindowResult(const WindowResultData& result)
 void MainOperDirecitve::onPRISResult(const PRISResultData& result)
 {
     if (directive_state_ != DirectiveState::WaitingForPris) {
-        QString error_message ="onPRISResult() вызван в недопустимом состоянии директивы";
+        QString error_message ="onPRISResult() вызван в недопустимом состоянии директивы: " + directStateToString();
         qCCritical(logCore) << error_message;
         qCInfo(logCore) << "Отправляем сигнал failed()";
         emit failed(error_message);
@@ -194,11 +195,20 @@ void MainOperDirecitve::onFiledDetected(const QString& message)
     directive_state_ = DirectiveState::Failed;
 }
 
-void MainOperDirecitve::onFinishedDetected()
+void MainOperDirecitve::onFinishedDetected(const ResultDirective& result)
 {
     qCInfo(logCore) << "Выполнение директивы завершено!";
-    qCInfo(logCore) << "Устанавливаем состояние директивы в Finished";
-    directive_state_ = DirectiveState::Finished;
+
+    QString log_message = "Устанавливаем состояние директивы в ";
+
+    switch (result.type) {
+    case RESULT_DIRECTIVE_TYPES::OK : directive_state_ = DirectiveState::Finished; break;
+    case RESULT_DIRECTIVE_TYPES::NOT_COMPLETED : directive_state_ = DirectiveState::Ready; break;
+    case RESULT_DIRECTIVE_TYPES::ERROR : directive_state_ = DirectiveState::Failed; break;
+    }
+
+    log_message.append(directStateToString());
+    qCInfo(logCore) << log_message;
 }
 
 MainOperDirecitve::~MainOperDirecitve()
