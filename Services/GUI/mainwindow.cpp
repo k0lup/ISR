@@ -7,9 +7,78 @@
 #include <QInputDialog>
 #include "Services/GUI/ProgViewWgt/programviewwidget.h"
 #include "Services/GUI/MenuDialogWindow/sectionlistdialog.h"
+#include "Services/GUI/MenuDialogWindow/controlspodialog.h"
+#include "Services/GUI/MenuDialogWindow/titleofsectiondialog.h"
 
 #include <Logger/logger.h>
 #include "logging_categories.h"
+
+
+struct enabledMap {
+                                                        /*Initializing*/    /*NoSection*/    /*SectionSelected*/    /*TitleReady*/    /*SectionLoaded*/    /*Failed*/
+    const QList<bool> window                            {false,                 true,               true,               true,               true,           false};
+    const QList<bool> preparaion_menu                   {false,                 true,               true,               true,               true,           false};
+    const QList<bool> list_of_sections_act              {false,                 true,               true,               true,               true,           false};
+    const QList<bool> title_of_secion_act               {false,                 false,              true,               false,              false,          false};
+    const QList<bool> pfks_act                          {false,                 false,              false,              true,               false,          false};
+    const QList<bool> control_spo_act                   {false,                 false,              false,              true,               false,          false};
+    const QList<bool> load_struct_act                   {false,                 false,              false,              true,               false,          false};
+    const QList<bool> debug_section_act                 {false,                 true,               true,               false,              false,          false};
+    const QList<bool> add_sections_on_list_act          {false,                 true,               true,               false,              false,          false};
+    const QList<bool> rebuild_list_sections_act         {false,                 true,               true,               false,              false,          false};
+    const QList<bool> traf_act                          {false,                 true,               true,               false,              false,          false};
+    const QList<bool> not_state_menu                    {false,                 true,               true,               true,               true,           false};
+    const QList<bool> exit_act                          {false,                 true,               true,               true,               true,           false};
+    const QList<bool> sections_menu                     {false,                 true,               true,               true,               true,           false};
+    const QList<bool> sections_list                     {false,                 false,              false,              false,              true,           false};
+    const QList<bool> chapters_menu                     {false,                 true,               true,               true,               true,           false};
+    const QList<bool> state_chapter_act                 {false,                 false,              false,              false,              true,           false};
+    const QList<bool> not_state_chapter_act             {false,                 false,              false,              false,              true,           false};
+    const QList<bool> pri_chapter_act                   {false,                 false,              false,              false,              true,           false};
+    const QList<bool> work_menu                         {false,                 true,               true,               true,               true,           false};
+    const QList<bool> run_operations_act                {false,                 false,              false,              false,              true,           false};
+    const QList<bool> cancel_variant_act                {false,                 false,              false,              false,              false,          false};
+    const QList<bool> save_prot_act                     {false,                 false,              false,              true,               true,           false};
+    const QList<bool> go_to_active_chapter_act          {false,                 false,              false,              false,              false,          false};
+    const QList<bool> imit_answer_pris_act              {false,                 false,              false,              false,              true,           false};
+    const QList<bool> time_of_head_section_act          {false,                 false,              false,              true,               true,           false};
+    const QList<bool> set_start_pos_window_act          {false,                 true,               true,               true,               true,           false};
+    const QList<bool> end_of_section_act                {false,                 false,              false,              true,               true,           false};
+    const QList<bool> exit_of_sections_act              {false,                 false,              false,              true,               true,           false};
+    const QList<bool> settings_act                      {false,                 true,               true,               true,               true,           false};
+    const QList<bool> auto_menu                         {false,                 true,               true,               true,               true,           false};
+    const QList<bool> start_or_end_auto_block_act       {false,                 false,              false,              false,              true,           false};
+    const QList<bool> remove_auto_mark_act              {false,                 false,              false,              false,              false,          false};
+    const QList<bool> run_auto_block_act                {false,                 false,              false,              false,              false,          false};
+    const QList<bool> stop_auto_block_act               {false,                 false,              false,              false,              false,          false};
+    const QList<bool> ed_menu                           {false,                 true,               true,               true,               true,           false};
+    const QList<bool> nshs_isd_act                      {false,                 true,               true,               true,               true,           false};
+    const QList<bool> avar_isd_act                      {false,                 true,               true,               true,               true,           false};
+    const QList<bool> pri_isd_act                       {false,                 true,               true,               true,               true,           false};
+    const QList<bool> nshs_rep_act                      {false,                 true,               true,               true,               true,           false};
+    const QList<bool> avar_rep_act                      {false,                 true,               true,               true,               true,           false};
+    const QList<bool> pri_rep_act                       {false,                 true,               true,               true,               true,           false};
+    const QList<bool> sections_rep_menu                 {false,                 true,               true,               true,               true,           false};
+    const QList<bool> sections_rep_list                 {false,                 true,               true,               true,               true,           false};
+    const QList<bool> chapters_rep_menu                 {false,                 true,               true,               true,               true,           false};
+    const QList<bool> sections_rep_act                  {false,                 true,               true,               true,               true,           false};
+    const QList<bool> second_section_rep_act            {false,                 true,               true,               true,               true,           false};
+    const QList<bool> third_section_rep_act             {false,                 true,               true,               true,               true,           false};
+    const QList<bool> end_of_rep_section_act            {false,                 true,               true,               true,               true,           false};
+    const QList<bool> exit_of_rep_section_act           {false,                 true,               true,               true,               true,           false};
+    const QList<bool> exec_wgt                          {false,                 false,              false,              false,              true,           false};
+};
+
+const static enabledMap ENABLED_MAP;
+
+static QString getChapterName(const ChapterType chapter)
+{
+    switch (chapter) {
+    case ChapterType::STATE         : return QString("ШТАТ");
+    case ChapterType::NOT_STATE     : return QString("НШС");
+    case ChapterType::PRI           : return QString("ПРИ");
+    }
+}
 
 MainWindow::MainWindow(const AppConfig& cfg, QWidget *parent) : QMainWindow(parent), cfg_(cfg)
 {
@@ -19,6 +88,8 @@ MainWindow::MainWindow(const AppConfig& cfg, QWidget *parent) : QMainWindow(pare
     setupConnections();
 
     exec_wgt_ = new ProgramViewWidget(this);
+    state_ = State::Initializing;
+    rebuildWindowForState();
     setCentralWidget(exec_wgt_);
 
     qCInfo(logGUI) << "Завершен конструктор MainWindow";
@@ -301,6 +372,7 @@ void MainWindow::setupConnections()
     QObject::connect(third_section_rep_act_,        &QAction::triggered, this, &MainWindow::onThirdSectionRepActTriggered);
     QObject::connect(end_of_rep_section_act_,       &QAction::triggered, this, &MainWindow::onEndOfRepSectionActTriggered);
     QObject::connect(exit_of_rep_section_act_,      &QAction::triggered, this, &MainWindow::onExitOfRepSectionActTriggered);
+    QObject::connect(this,                          &MainWindow::failed, this, &MainWindow::onFailedDetected);
 
     qCInfo(logGUI) << "Завершен метод setupConnections()";
 }
@@ -311,9 +383,22 @@ void MainWindow::onListOfSectionsActTriggered()
 
     SectionListDialog section_list_dialog;
     section_list_dialog.setSections(all_sections_);
-    if (section_list_dialog.exec(SectionListDialog::Mode::LOAD) == QDialog::Accepted) {
+    SectionListDialog::Mode section_list_dialog_mode;
+    if (state_ == State::SectionLoaded) {
+        section_list_dialog_mode = SectionListDialog::Mode::LOAD;
+    } else {
+        section_list_dialog_mode = SectionListDialog::Mode::SELECT;
+    }
+    if (section_list_dialog.exec(section_list_dialog_mode) == QDialog::Accepted) {
         QString section_name = section_list_dialog.getSelectedSection();
-        emit loadSectionRequested(section_name, RequestIdGenerator::NO_REQUEST_ID);
+
+        if (section_list_dialog_mode == SectionListDialog::Mode::LOAD) {
+            emit loadSectionRequested(section_name, RequestIdGenerator::NO_REQUEST_ID);
+            setState(State::SectionLoaded);
+        } else {
+            current_selected_section_ = section_name;
+            setState(State::SectionSelected);
+        }
     }
 
 
@@ -323,6 +408,13 @@ void MainWindow::onListOfSectionsActTriggered()
 void MainWindow::onTitleOfSecionActTriggered()
 {
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Подготовка'->'Заголовок раздела...'";
+
+    TitleOfSectionDialog dialog;
+    if (dialog.exec(current_selected_section_, cfg_.traf) == QDialog::Accepted) {
+        title_description_ = dialog.getDescription();
+        emit setTitleDescriptions(title_description_);
+        setState(State::TitleReady);
+    }
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Подготовка'->'Заголовок раздела...'";
 }
@@ -344,6 +436,8 @@ void MainWindow::onControlSpoActTriggered()
 void MainWindow::onLoadStructActTriggered()
 {
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Подготовка'->'Загрузка структуры'";
+
+    emit loadSectionRequested(current_selected_section_, RequestIdGenerator::NO_REQUEST_ID);
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Подготовка'->'Загрузка структуры'";
 }
@@ -622,6 +716,8 @@ void MainWindow::onShowInfoRequested(const QString& info_message)
 
 void MainWindow::onSectionChanged(const ExecutionSnapshot& section)
 {
+    setState(State::SectionLoaded);
+
     setActiveSectionInMenu(section.section_name);
     setActiveChapterInMenu(section.active_chpater);
     exec_wgt_->setSection(section);
@@ -629,6 +725,21 @@ void MainWindow::onSectionChanged(const ExecutionSnapshot& section)
 
 void MainWindow::setActiveChapterInMenu(const ChapterType& chapter)
 {
+    QString section_name;
+    for (const auto& sections_act : sections_act_list_) {
+        if (sections_act->isEnabled()) {
+            section_name = sections_act->text();
+        }
+    }
+
+    if (section_name.isEmpty()) {
+        QString error_message = "Не удалось распознать активную секцию при установке активного раздела!";
+        emit failed(error_message);
+        return;
+    }
+    QString chapter_name = getChapterName(chapter);
+    setWindowTitle(QString("ИСР - [%1 - %2]").arg(section_name).arg(chapter_name));
+
     state_chapter_act_->setChecked(false);
     not_state_chapter_act_->setChecked(false);
     pri_chapter_act_->setChecked(false);
@@ -698,6 +809,215 @@ WindowResultData MainWindow::showVarWgt(const QString& window_title, const QStri
 
 void MainWindow::onListSectionLoaded(const QSet<QString>& section_list)
 {
+    if (state_ == State::Initializing) {
+        setState(State::NoSection);
+    }
     all_sections_.clear();
     all_sections_ = section_list.toList();
+}
+
+void MainWindow::setState(const State new_state)
+{
+    qCInfo(logGUI) << "Вызван метод setState()";
+
+    qCInfo(logGUI) << "Запрошен переход из состояния '" + getNameOfState(state_) + "' в '" + getNameOfState(new_state) + "'";
+
+    if (state_ == State::Initializing) {
+        if (new_state != State::NoSection &&
+                new_state != State::Failed) {
+            qCCritical(logGUI) << "Запрошен недопустимый переход!";
+            setState(State::Failed);
+            return;
+        }
+    } else if (state_ == State::NoSection) {
+        if (new_state != State::SectionSelected &&
+                new_state != State::Failed) {
+            qCCritical(logGUI) << "Запрошен недопустимый переход!";
+            setState(State::Failed);
+            return;
+        }
+    } else if (state_ == State::SectionSelected) {
+        if (new_state != State::SectionSelected &&
+                new_state != State::TitleReady &&
+                new_state != State::Failed) {
+            qCCritical(logGUI) << "Запрошен недопустимый переход!";
+            setState(State::Failed);
+            return;
+        }
+    } else if (state_ == State::TitleReady) {
+        if (new_state != State::SectionSelected &&
+                new_state != State::TitleReady &&
+                new_state != State::SectionLoaded &&
+                new_state != State::Failed) {
+            qCCritical(logGUI) << "Запрошен недопустимый переход!";
+            setState(State::Failed);
+            return;
+        }
+    } else if (state_ == State::SectionLoaded) {
+        if (new_state != State::NoSection &&
+                new_state != State::SectionLoaded &&
+                new_state != State::Failed) {
+            qCCritical(logGUI) << "Запрошен недопустимый переход!";
+            setState(State::Failed);
+            return;
+        }
+    }
+
+    state_ = new_state;
+    rebuildWindowForState();
+    qCInfo(logGUI) << "Завершен метод setState()";
+}
+
+QString MainWindow::getNameOfState(const State state) const
+{
+    switch (state) {
+    case State::Initializing    : return QString("Initializing");
+    case State::NoSection       : return QString("NoSection");
+    case State::SectionSelected : return QString("SectionSelected");
+    case State::TitleReady      : return QString("TitleReady");
+    case State::SectionLoaded   : return QString("SectionLoaded");
+    case State::Failed          : return QString("Failed");
+    }
+}
+
+int MainWindow::getNumOfState(const State state) const
+{
+    return static_cast<int>(state);
+}
+
+void MainWindow::rebuildWindowForState()
+{
+    qCInfo(logGUI) << "Вызван метод rebuildWindowForState()";
+
+    int state = getNumOfState(state_);
+
+    this->setEnabled(ENABLED_MAP.window[state]);
+    preparaion_menu_->setEnabled(ENABLED_MAP.preparaion_menu[state]);
+    list_of_sections_act_->setEnabled(ENABLED_MAP.list_of_sections_act[state]);
+    title_of_secion_act_->setEnabled(ENABLED_MAP.title_of_secion_act[state]);
+    pfks_act_->setEnabled(ENABLED_MAP.pfks_act[state]);
+    control_spo_act_->setEnabled(ENABLED_MAP.control_spo_act[state]);
+    load_struct_act_->setEnabled(ENABLED_MAP.load_struct_act[state]);
+    debug_section_act_->setEnabled(ENABLED_MAP.debug_section_act[state]);
+    add_sections_on_list_act_->setEnabled(ENABLED_MAP.add_sections_on_list_act[state]);
+    rebuild_list_sections_act_->setEnabled(ENABLED_MAP.rebuild_list_sections_act[state]);
+    traf_act_->setEnabled(ENABLED_MAP.traf_act[state]);
+    not_state_menu_->setEnabled(ENABLED_MAP.not_state_menu[state]);
+    exit_act_->setEnabled(ENABLED_MAP.exit_act[state]);
+    sections_menu_->setEnabled(ENABLED_MAP.sections_menu[state]);
+    for (auto& act : sections_act_list_) {
+        act->setEnabled(ENABLED_MAP.sections_list[state]);
+    }
+    no_section_act_->setEnabled(ENABLED_MAP.sections_list[state]);
+    chapters_menu_->setEnabled(ENABLED_MAP.chapters_menu[state]);
+    state_chapter_act_->setEnabled(ENABLED_MAP.state_chapter_act[state]);
+    not_state_chapter_act_->setEnabled(ENABLED_MAP.not_state_chapter_act[state]);
+    pri_chapter_act_->setEnabled(ENABLED_MAP.pri_chapter_act[state]);
+    work_menu_->setEnabled(ENABLED_MAP.work_menu[state]);
+    run_operations_act_->setEnabled(ENABLED_MAP.run_operations_act[state]);
+    cancel_variant_act_->setEnabled(ENABLED_MAP.cancel_variant_act[state]);
+    save_prot_act_->setEnabled(ENABLED_MAP.save_prot_act[state]);
+    go_to_active_chapter_act_->setEnabled(ENABLED_MAP.go_to_active_chapter_act[state]);
+    imit_answer_pris_act_->setEnabled(ENABLED_MAP.imit_answer_pris_act[state]);
+    time_of_head_section_act_->setEnabled(ENABLED_MAP.time_of_head_section_act[state]);
+    set_start_pos_window_act_->setEnabled(ENABLED_MAP.set_start_pos_window_act[state]);
+    end_of_section_act_->setEnabled(ENABLED_MAP.end_of_section_act[state]);
+    exit_of_sections_act_->setEnabled(ENABLED_MAP.exit_of_sections_act[state]);
+    settings_act_->setEnabled(ENABLED_MAP.settings_act[state]);
+    auto_menu_->setEnabled(ENABLED_MAP.auto_menu[state]);
+    start_or_end_auto_block_act_->setEnabled(ENABLED_MAP.start_or_end_auto_block_act[state]);
+    remove_auto_mark_act_->setEnabled(ENABLED_MAP.remove_auto_mark_act[state]);
+    run_auto_block_act_->setEnabled(ENABLED_MAP.run_auto_block_act[state]);
+    stop_auto_block_act_->setEnabled(ENABLED_MAP.stop_auto_block_act[state]);
+    ed_menu_->setEnabled(ENABLED_MAP.ed_menu[state]);
+    nshs_isd_act_->setEnabled(ENABLED_MAP.nshs_isd_act[state]);
+    avar_isd_act_->setEnabled(ENABLED_MAP.avar_isd_act[state]);
+    pri_isd_act_->setEnabled(ENABLED_MAP.pri_isd_act[state]);
+    nshs_rep_act_->setEnabled(ENABLED_MAP.nshs_rep_act[state]);
+    avar_rep_act_->setEnabled(ENABLED_MAP.avar_rep_act[state]);
+    pri_rep_act_->setEnabled(ENABLED_MAP.pri_rep_act[state]);
+    sections_rep_menu_->setEnabled(ENABLED_MAP.sections_rep_menu[state]);
+    list_of_sections_rep_act_->setEnabled(ENABLED_MAP.sections_rep_list[state]);
+    for (auto& act : sections_rep_list_) {
+        act->setEnabled(ENABLED_MAP.sections_rep_list[state]);
+    }
+    chapters_rep_menu_->setEnabled(ENABLED_MAP.chapters_rep_menu[state]);
+    sections_rep_act_->setEnabled(ENABLED_MAP.sections_rep_act[state]);
+    second_section_rep_act_->setEnabled(ENABLED_MAP.second_section_rep_act[state]);
+    third_section_rep_act_->setEnabled(ENABLED_MAP.third_section_rep_act[state]);
+    end_of_rep_section_act_->setEnabled(ENABLED_MAP.end_of_rep_section_act[state]);
+    exit_of_rep_section_act_->setEnabled(ENABLED_MAP.exit_of_rep_section_act[state]);
+    exec_wgt_->setEnabled(ENABLED_MAP.exec_wgt[state]);
+
+    switch (state_) {
+    case State::NoSection           : rebuildWindowForNoSectionState();         return;
+    case State::SectionSelected     : rebuildWindowForSectionSelectedState();   return;
+    case State::TitleReady          : rebuildWindowForTitleReadyState();        return;
+    case State::SectionLoaded       : rebuildWindowForSectionLoadedState();     return;
+    case State::Failed              : rebuildWindowForFailedState();              return;
+    case State::Initializing        : rebuildWindowForInitState();              return;
+    }
+}
+
+void MainWindow::rebuildWindowForInitState()
+{
+    qCInfo(logGUI) << "Вызван метод rebuildWindowForInitState()";
+
+    setWindowTitle("ИСР - [ЗАГРУЗКА]");
+
+    qCInfo(logGUI) << "Завершен метод rebuildWindowForInitState()";
+}
+
+void MainWindow::rebuildWindowForFailedState()
+{
+    qCInfo(logGUI) << "Вызван метод rebuildWindowForFailedState()";
+
+    setWindowTitle("ИСР - [КРИТИЧЕСКАЯ ОШИБКА]");
+
+    qCInfo(logGUI) << "Завершен метод rebuildWindowForFailedState()";
+}
+
+void MainWindow::rebuildWindowForNoSectionState()
+{
+    qCInfo(logGUI) << "Вызван метод rebuildWindowForNoSectionState()";
+
+    setWindowTitle("ИСР - [раздел не выбран]");
+
+    qCInfo(logGUI) << "Завершен метод rebuildWindowForNoSectionState()";
+}
+
+void MainWindow::rebuildWindowForSectionSelectedState()
+{
+    qCInfo(logGUI) << "Вызван метод rebuildWindowForSectionSelectedState()";
+
+    setWindowTitle(QString("ИСР - [выбран раздел: %1]").arg(current_selected_section_));
+
+    qCInfo(logGUI) << "Завершен метод rebuildWindowForSectionSelectedState()";
+}
+
+void MainWindow::rebuildWindowForTitleReadyState()
+{
+    qCInfo(logGUI) << "Вызван метод rebuildWindowForTitleReadyState()";
+
+    setWindowTitle(QString("ИСР - [%1, файл структуры не загружен]").arg(current_selected_section_));
+
+    qCInfo(logGUI) << "Завершен метод rebuildWindowForTitleReadyState()";
+}
+
+void MainWindow::rebuildWindowForSectionLoadedState()
+{
+    qCInfo(logGUI) << "Вызван метод rebuildWindowForSectionLoadedState()";
+
+
+    qCInfo(logGUI) << "Завершен метод rebuildWindowForSectionLoadedState()";
+}
+
+void MainWindow::onFailedDetected(const QString& message)
+{
+    qCInfo(logGUI) << "Вызван метод onFailedDetected()";
+
+    qCCritical(logGUI) << "Обнаружена критическая ошибка:\n" + message;
+    setState(State::Failed);
+
+    qCInfo(logGUI) << "Завершен метод onFailedDetected()";
 }

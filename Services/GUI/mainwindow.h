@@ -6,6 +6,7 @@
 #include "Services/DirectiveExecutor/executiontypes.h"
 #include "Services/GUI/guitypes.h"
 #include "Services/RequestIDGenerator/requestIDGenerator.h"
+#include <QList>
 
 class QMenu;
 class QAction;
@@ -22,6 +23,9 @@ signals:
     void loadSectionRequested(const QString& section_name, const RequestId request_id);
     void sendWindowResponse(const WindowResultData& result, const RequestId source_request_id);
     void requestChangeSection(const QString& section_name, const RequestId request_id);
+    void failed(const QString message);
+
+    void setTitleDescriptions(const TitleOfSectionDescription& desc);
 public slots:
     void onShowWarningRequested(const QString& warning_message);
     void onShowCriticalRequested(const QString& critical_message);
@@ -77,6 +81,7 @@ private:
         QAction* pri_rep_act_ = nullptr;                        //->ПРИ РЭП
     QMenu* sections_rep_menu_ = nullptr;                     //Разделы РЭП
         QAction* list_of_sections_rep_act_ = nullptr;           //->Список разделов РЭП
+        QList<QAction*> sections_rep_list_;                 //->Список доступных разделов РЭП
     QMenu* chapters_rep_menu_ = nullptr;                    //Секции РЭП
         QAction* sections_rep_act_ = nullptr;                   //->Раздел РЭП
         QAction* second_section_rep_act_ = nullptr;             //->Второй раздел
@@ -125,6 +130,16 @@ private slots:
     void onEndOfRepSectionActTriggered();
     void onExitOfRepSectionActTriggered();
 
+    void onFailedDetected(const QString& message);
+private:
+    enum class State {
+        Initializing = 0,
+        NoSection,
+        SectionSelected,
+        TitleReady,
+        SectionLoaded,
+        Failed
+    };
 private:
     void createActions();
     void createMenu();
@@ -138,10 +153,25 @@ private:
     WindowResultData showInfoWgt(const QString& title, const QString& data);
     WindowResultData showVarWgt(const QString& title, const QStringList& variants);
 
+    void setState(const State new_state);
+    QString getNameOfState(const State state) const;
+    int getNumOfState(const State state) const;
+    void rebuildWindowForState();
+    void rebuildWindowForInitState();
+    void rebuildWindowForFailedState();
+    void rebuildWindowForNoSectionState();
+    void rebuildWindowForSectionSelectedState();
+    void rebuildWindowForTitleReadyState();
+    void rebuildWindowForSectionLoadedState();
 private:
     ProgramViewWidget* exec_wgt_ = nullptr;
     QStringList loaded_sections_;
     QStringList all_sections_;
+
+    QString current_selected_section_;
+    TitleOfSectionDescription title_description_;
+
+    State state_ = State::Initializing;
 
     const AppConfig& cfg_;
 };

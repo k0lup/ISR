@@ -33,6 +33,8 @@ struct AppConfig {
     int port_server;                /*.ON_S284*/            /*PORT_EXCHANGE_SERVER=*/
 
     bool manual_start_direct_mode = false;  /*Задается настройкой в приложении*/ /*Определяет возможность запуска директив не по порядку*/
+
+    QString traf;                   /*Читается Application*/                    /*Возможно вынести в отдельную структуру - AppSettings*/
 };
 
 //Названия используемых параметров
