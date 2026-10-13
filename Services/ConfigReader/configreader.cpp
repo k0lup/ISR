@@ -15,6 +15,17 @@
 #include "logging_categories.h"
 #include <QLoggingCategory>
 
+static QString expandHomePath(const QString& path)
+{
+    if (path == "~")
+        return QDir::homePath();
+
+    if (path.startsWith("~/"))
+        return QDir::homePath() + path.mid(1);
+
+    return path;
+}
+
 ConfigReader::ConfigReader()
 {
     qCInfo(logCore) << "Вызван конструктор ConfigReader";
@@ -30,6 +41,9 @@ bool ConfigReader::readConfig(const QString& cfg_file_path, const QString& on_fi
 
 
     QStringList files_paths = {cfg_file_path, on_file_path, service_on_file_path};
+    if (service_on_file_path.isEmpty()) {
+        files_paths.removeLast();
+    }
     QMap<QString, QStringList> params;
 
     for (const auto& file_path : files_paths) {
@@ -105,7 +119,7 @@ QStringList ConfigReader::readFile(const QString& file_path, QStringList& error_
     error_messages.clear();
     QStringList result;
 
-    QFile file(file_path);
+    QFile file(expandHomePath(file_path));
 
     if (!file.open(QIODevice::Text | QIODevice::ReadOnly)) {
         QString message = QString("Не удалось открыть файл '%1' - %2").arg(file_path).arg(file.errorString());
@@ -188,6 +202,13 @@ AppConfig ConfigReader::createConfig(QMap<QString, QStringList> readed_params, Q
        return AppConfig();
    }
 
+   QString traf = readTrafFile(readed_params.value(app_config_names::traf_path_name)[0], error_messages);
+   if (!error_messages.isEmpty()) {
+       qCWarning(logCore) << QString("Не удалось распознать трафарет:\n%1").arg(error_messages.join("\n"));
+       //Мы можем продолжить работу без трафарета, поэтому тут нет return
+       error_messages.clear();
+   }
+
    AppConfig cfg;
    cfg.spo_path = readed_params[app_config_names::spo_path_name][0];
    cfg.settings_path = readed_params[app_config_names::settings_path_name][0];
@@ -209,11 +230,41 @@ AppConfig ConfigReader::createConfig(QMap<QString, QStringList> readed_params, Q
    cfg.isr_port = readed_params[app_config_names::isr_port_name][0].toInt();
    cfg.ip_server = readed_params[app_config_names::ip_server_name][0];
    cfg.port_server = readed_params[app_config_names::port_server_name][0].toInt();
+   cfg.traf = traf;
 
    qCInfo(logCore) << "Метод createConfig завершен успешно";
    return cfg;
 }
 
+QString ConfigReader::readTrafFile(const QString& file_path, QStringList& error_messages) const
+{
+    error_messages.clear();
+    QFile file(file_path);
+    QStringList readed_lines = readFile(file_path, error_messages);
+    if (!error_messages.isEmpty()) {
+        return QString();
+    }
+
+    QString traf;
+    for (const auto& line : readed_lines) {
+        if (line.isEmpty()) {
+            continue;
+        }
+        traf = line;
+        break;
+    }
+
+    static const QRegularExpression regex(
+            R"(^[А-Яа-яЁёA-Za-z0-9]{1,12}-[0-9]{4}$)"
+        );
+
+    if (!regex.match(traf).hasMatch()) {
+        error_messages.append("Трафарет не соответствует шаблону");
+        return QString();
+    }
+
+    return traf;
+}
 
 bool ConfigReader::validateParams(const QMap<QString, QStringList> &readed_params, QStringList &error_messages) const
 {

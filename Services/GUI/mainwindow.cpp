@@ -727,7 +727,7 @@ void MainWindow::setActiveChapterInMenu(const ChapterType& chapter)
 {
     QString section_name;
     for (const auto& sections_act : sections_act_list_) {
-        if (sections_act->isEnabled()) {
+        if (sections_act->isChecked()) {
             section_name = sections_act->text();
         }
     }

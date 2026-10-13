@@ -60,6 +60,7 @@ namespace app_config_names {
     const QString isr_port_name                 =   "ISR_PORT";
     const QString ip_server_name                =   "IP_EXCHANGE_SERVER";
     const QString port_server_name              =   "PORT_EXCHANGE_SERVER";
+    const QString traf_path_name                =   "TRAF_FILE_PATH";
 }
 
 #endif // CONFIGTYPES_H

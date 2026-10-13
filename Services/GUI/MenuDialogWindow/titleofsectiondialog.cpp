@@ -96,6 +96,8 @@ void TitleOfSectionDialog::createWindow()
     wgt_layout->addLayout(grid_layout);
     wgt_layout->addLayout(btn_layout);
 
+    setLayout(wgt_layout);
+
     QObject::connect(cancel_btn, &QPushButton::clicked, this, &TitleOfSectionDialog::onCancelBtnClicked);
     QObject::connect(ok_btn_, &QPushButton::clicked, this, &TitleOfSectionDialog::onOkBtnClicked);
 

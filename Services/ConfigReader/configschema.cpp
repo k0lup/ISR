@@ -1,11 +1,14 @@
 #include "Services/ConfigReader/configschema.h"
 #include "Services/ConfigReader/configtypes.h"
 #include <QString>
+#include <QDir>
+#include <QCoreApplication>
 
 
 //ПРОВЕРИТЬ РЕГУЛЯРКИ
 static const QString reg_exp_ip = QString(R"((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))");
 static const QString reg_exp_port = QString(R"(^(?:[0-9]+|0x[0-9A-Fa-f]+)$)");
+static const QString traf_path = QDir(QCoreApplication::applicationDirPath()).filePath("Stencil.dat");
 
 config_reader::ConfigSchema config_reader::createConfigShema() {
     config_reader::ConfigSchema config_schema = {
@@ -41,7 +44,9 @@ config_reader::ConfigSchema config_reader::createConfigShema() {
         /*IP_EXCHANGE_SERVER*/
         {app_config_names::ip_server_name,              {false,         QVariant(QString("127.0.0.1")),         ParamType::String,          /*reg_exp_ip*/""}},
         /*PORT_EXCHANGE_SERVER*/
-        {app_config_names::port_server_name,            {false,         QVariant(1),                            ParamType::String,          /*reg_exp_port*/""}}
+        {app_config_names::port_server_name,            {false,         QVariant(1),                            ParamType::String,          /*reg_exp_port*/""}},
+        /*TRAF_FILE_PATH*/
+        {app_config_names::traf_path_name,              {false,         QVariant(traf_path),                    ParamType::String,          ""}}
     };
 
     return config_schema;

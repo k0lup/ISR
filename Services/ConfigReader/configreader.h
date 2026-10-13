@@ -18,6 +18,7 @@ public:
 
 private:
     QStringList readFile(const QString& file_path, QStringList& error_messages) const;
+    QString readTrafFile(const QString& file_path, QStringList& error_messages) const;
 
     AppConfig createConfig(QMap<QString, QStringList> readed_params, QStringList& error_messages) const;
     bool validateParams(const QMap<QString, QStringList>& readed_params, QStringList& error_messages) const;
