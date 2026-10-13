@@ -41,7 +41,7 @@ void TrafaretDialog::createWindow()
 
 QString TrafaretDialog::getTrafText() const
 {
-    return traf_;
+    return QString(traf_).replace(".", "");;
 }
 
 int TrafaretDialog::exec(const QString &traf)

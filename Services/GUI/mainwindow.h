@@ -26,6 +26,7 @@ signals:
     void failed(const QString message);
 
     void setTitleDescriptions(const TitleOfSectionDescription& desc);
+    void setNewTraf(const QString& traf);
 public slots:
     void onShowWarningRequested(const QString& warning_message);
     void onShowCriticalRequested(const QString& critical_message);

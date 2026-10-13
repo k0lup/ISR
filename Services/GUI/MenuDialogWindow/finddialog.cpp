@@ -43,6 +43,8 @@ void FindDialog::createWindow()
     layout->addLayout(search_lines_layout);
     layout->addLayout(btn_layout);
 
+    setLayout(layout);
+
     QObject::connect(ok_btn_, &QPushButton::clicked, this, &FindDialog::onOkBtnClicked);
     QObject::connect(cancel_button_, &QPushButton::clicked, this, &FindDialog::onCancelBtnClicked);
     QObject::connect(line_edit_, &QLineEdit::textChanged, this, &FindDialog::onTxtInLineEditChanged);

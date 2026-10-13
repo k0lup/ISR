@@ -9,6 +9,7 @@
 #include "Services/GUI/MenuDialogWindow/sectionlistdialog.h"
 #include "Services/GUI/MenuDialogWindow/controlspodialog.h"
 #include "Services/GUI/MenuDialogWindow/titleofsectiondialog.h"
+#include "Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretdialog.h"
 
 #include <Logger/logger.h>
 #include "logging_categories.h"
@@ -466,6 +467,13 @@ void MainWindow::onRebuildListSectionsActTriggered()
 void MainWindow::onTrafActTriggered()
 {
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Подготовка'->'Трафарет...'";
+
+    TrafaretDialog dialog;
+    if (dialog.exec(cfg_.traf) == QDialog::Accepted) {
+        QString traf = dialog.getTrafText();
+        qCInfo(logGUI) << QString("Отправляем сигнал setNewTraf(%1)").arg(traf);
+        emit setNewTraf(traf);
+    }
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Подготовка'->'Трафарет...'";
 }

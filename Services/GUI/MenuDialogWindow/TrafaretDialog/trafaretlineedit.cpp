@@ -2,6 +2,10 @@
 
 TrafaretLineEdit::TrafaretLineEdit(QWidget* parent) : QLineEdit(parent)
 {
+    QFont font = this->font();
+    font.setPointSize(20);
+    setFont(font);
+
     QLineEdit::setText("............-....");
 
     setCursorPosition(0);
@@ -68,10 +72,6 @@ int TrafaretLineEdit::previousEditablePosition(int pos) const
 void TrafaretLineEdit::replaceCharacter(int pos, QChar ch)
 {
     if (!isEditablePosition(pos)) {
-        return;
-    }
-
-    if (!isAllowedCharacter(pos, ch)) {
         return;
     }
 
@@ -215,7 +215,7 @@ void TrafaretLineEdit::setTrafaretTextText(QString text_for_set)
             continue;
         }
 
-        if (!isAllowedCharacter(pos, text_for_set[pos])) {
+        if (!isAllowedCharacter(pos, text_for_set[pos]) && text_for_set[pos] != '.') {
             return;
         }
     }

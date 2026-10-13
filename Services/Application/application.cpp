@@ -71,6 +71,9 @@ void Application::setupConnections()
     QObject::connect(gui_window_, &MainWindow::loadSectionRequested, section_loader_, &SectionsLoader::onLoadSectionRequested);
     QObject::connect(gui_window_, &MainWindow::sendWindowResponse, directive_executor_, &DirectiveExecutor::onWindowResponse);
     QObject::connect(gui_window_, &MainWindow::requestChangeSection, directive_executor_, &DirectiveExecutor::onSetLoadedSectionRequested);
+    QObject::connect(gui_window_, &MainWindow::setNewTraf, this, [this](const QString& traf){
+       app_cfg_.traf = traf;
+    });
 
     QObject::connect(prog_view_widget_, &ProgramViewWidget::directiveDoubleClicked, directive_executor_, &DirectiveExecutor::startFrom);
 
