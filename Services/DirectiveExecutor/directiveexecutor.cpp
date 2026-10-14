@@ -292,6 +292,7 @@ QVector<Direct*> DirectiveExecutor::createDirectiveFromChapter(const ChapterStru
         if (!current_directive) {
             QString error_message = QString("Ошибка при создании директивы №%1 - Не удалось распознать тип!").arg(index + 1);
             qCWarning(logCore) << error_message;
+            error_messages.append(error_message);
             continue;
         }
         if (!current_directive->isValid()) {
