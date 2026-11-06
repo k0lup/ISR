@@ -28,9 +28,9 @@ struct AppConfig {
     QString avar_rep;               /*.ON*/                 /*АВАР_РЭП=*/
     QString pri_rep;                /*.ON*/                 /*ПРИ_РЭП=*/
 
-    int isr_port;                   /*.ON_S284*/            /*ISR_PORT=*/
+    int pris_port;                   /*.ON_S284*/            /*ISR_PORT=*/
+    int prot_port;
     QString ip_server;              /*.ON_S284*/            /*IP_EXCHANGE_SERVER=*/
-    int port_server;                /*.ON_S284*/            /*PORT_EXCHANGE_SERVER=*/
 
     bool manual_start_direct_mode = false;  /*Задается настройкой в приложении*/ /*Определяет возможность запуска директив не по порядку*/
 
@@ -57,9 +57,9 @@ namespace app_config_names {
     const QString avar_rep_name                 =   "АВАР_РЭП";
     const QString pri_rep_name                  =   "ПРИ_РЭП";
 
-    const QString isr_port_name                 =   "ISR_PORT";
+    const QString pris_port_name                =   "PRIS_PORT";
     const QString ip_server_name                =   "IP_EXCHANGE_SERVER";
-    const QString port_server_name              =   "PORT_EXCHANGE_SERVER";
+    const QString prot_port_name                =   "PROT_PORT";
     const QString traf_path_name                =   "TRAF_FILE_PATH";
 }
 

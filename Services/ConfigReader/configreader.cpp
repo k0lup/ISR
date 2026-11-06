@@ -227,9 +227,9 @@ AppConfig ConfigReader::createConfig(QMap<QString, QStringList> readed_params, Q
    cfg.avar_rep = readed_params[app_config_names::avar_rep_name][0];
    cfg.pri_rep = readed_params[app_config_names::pri_rep_name][0];
 
-   cfg.isr_port = readed_params[app_config_names::isr_port_name][0].toInt();
+   cfg.pris_port = readed_params[app_config_names::pris_port_name][0].toInt();
    cfg.ip_server = readed_params[app_config_names::ip_server_name][0];
-   cfg.port_server = readed_params[app_config_names::port_server_name][0].toInt();
+   cfg.prot_port = readed_params[app_config_names::prot_port_name][0].toInt();
    cfg.traf = traf;
 
    qCInfo(logCore) << "Метод createConfig завершен успешно";

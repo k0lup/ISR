@@ -1,4 +1,4 @@
-QT += core gui
+QT += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -69,6 +69,7 @@ SOURCES += \
     Services/GUI/ProgViewWgt/programtablemodel.cpp \
     Services/GUI/ProgViewWgt/programviewwidget.cpp \
     Services/GUI/mainwindow.cpp \
+    Services/NETManager/netmanager.cpp \
     logging_categories.cpp \
     main.cpp
 
@@ -105,6 +106,8 @@ HEADERS += \
     Services/GUI/ProgViewWgt/programviewwidget.h \
     Services/GUI/guitypes.h \
     Services/GUI/mainwindow.h \
+    Services/NETManager/netStruct.h \
+    Services/NETManager/netmanager.h \
     Services/PRIS/pristypes.h \
     Services/Programs/programlines.h \
     Services/Programs/programtypes.h \
