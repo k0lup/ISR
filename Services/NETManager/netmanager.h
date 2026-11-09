@@ -40,7 +40,7 @@ private:
     void setState(const State new_state);
     QString getStateName(const State state) const;
 private slots:
-    void onFailedDetected();
+    void onFailedDetected(const QString& message);
 private:
     QTcpSocket* pris_socket_ = nullptr;
     QTcpSocket* prot_socket_ = nullptr;

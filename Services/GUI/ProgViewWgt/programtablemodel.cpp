@@ -36,6 +36,7 @@ QVariant ProgramTableModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::DisplayRole) {
         switch (index.column()) {
+        case Column::AutoModeColumn     : return (row.auto_mode ? "А" : "");
         case Column::NumberColumn       : return row.number;
         case Column::TypeColumn         : return row.type;
         case Column::CommandColumn      : return row.command;
@@ -45,10 +46,12 @@ QVariant ProgramTableModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::BackgroundRole) {
+        if (row.directive_index == selected_directive_) {
+            return QBrush(QColor(255, 255, 0));
+        }
         if (row.directive_index == active_directive_) {
             return QBrush(QColor(170, 230, 170));
         }
-
         if (completed_directives_.contains(row.directive_index)) {
             return QBrush(QColor(190, 220, 245));
         }
@@ -151,9 +154,9 @@ int ProgramTableModel::directiveIndex(const QModelIndex &index) const
 
 void ProgramTableModel::setActiveDirective(int directive_index)
 {
-    const int old = active_directive_;
+    const int old_active_directive = active_directive_;
 
-    if (old == directive_index) {
+    if (old_active_directive == directive_index) {
         return;
     }
 
@@ -161,8 +164,34 @@ void ProgramTableModel::setActiveDirective(int directive_index)
 
     active_directive_ = directive_index;
 
-    updateDirective(old);
+    const int old_selected_directive = selected_directive_;
+    selected_directive_ = ProgramRow::NoDirectiveIndex;
+
+    updateDirective(old_active_directive);
+    updateDirective(old_selected_directive);
     updateDirective(directive_index);
+}
+
+void ProgramTableModel::setSelectedDirective(Direction direction)
+{
+    int new_index = selected_directive_;
+
+    switch (direction) {
+    case Direction::Up      : new_index -= 1; break;
+    case Direction::Down    : new_index += 1; break;
+    }
+
+    if (selected_directive_ == ProgramRow::NoDirectiveIndex) {
+        new_index = 0;
+    }
+
+    if (new_index < 0 || new_index > getLastDirectiveIndex()) {
+        return;
+    }
+
+    updateDirective(selected_directive_);
+    selected_directive_ = new_index;
+    updateDirective(selected_directive_);
 }
 
 void ProgramTableModel::setCompletedDirective(int directive_index)
@@ -241,6 +270,10 @@ void ProgramTableModel::resetStatusDirective(int directive_index)
         active_directive_ = ProgramRow::NoDirectiveIndex;
     }
 
+    if (selected_directive_ == directive_index) {
+        selected_directive_ = ProgramRow::NoDirectiveIndex;
+    }
+
     if (runned_directive_ == directive_index) {
         runned_directive_ = ProgramRow::NoDirectiveIndex;
     }
@@ -252,4 +285,15 @@ void ProgramTableModel::resetStatusDirective(int directive_index)
     if (failed_directives_.contains(directive_index)) {
         failed_directives_.remove(directive_index);
     }
+}
+
+int ProgramTableModel::getLastDirectiveIndex() const
+{
+    for (int i = rows_.count() - 1; i >= 0; --i) {
+        if (rows_[i].directive_index != ProgramRow::NoDirectiveIndex) {
+            return rows_[i].directive_index;
+        }
+    }
+
+    return ProgramRow::NoDirectiveIndex;
 }

@@ -1,4 +1,6 @@
 #include "mainwindow.h"
+#include <QApplication>
+#include <QTimer>
 #include <QMap>
 #include <QMenuBar>
 #include <QMenu>
@@ -92,6 +94,10 @@ MainWindow::MainWindow(const AppConfig& cfg, QWidget *parent) : QMainWindow(pare
     state_ = State::Initializing;
     rebuildWindowForState();
     setCentralWidget(exec_wgt_);
+    setFocusProxy(exec_wgt_);
+    exec_wgt_->setFocus();
+
+    setObjectName("MainWindow");
 
     qCInfo(logGUI) << "Завершен конструктор MainWindow";
 }
@@ -374,6 +380,7 @@ void MainWindow::setupConnections()
     QObject::connect(end_of_rep_section_act_,       &QAction::triggered, this, &MainWindow::onEndOfRepSectionActTriggered);
     QObject::connect(exit_of_rep_section_act_,      &QAction::triggered, this, &MainWindow::onExitOfRepSectionActTriggered);
     QObject::connect(this,                          &MainWindow::failed, this, &MainWindow::onFailedDetected);
+    QObject::connect(qApp, &QApplication::focusChanged, this, &MainWindow::returnFocusToMainWindow);
 
     qCInfo(logGUI) << "Завершен метод setupConnections()";
 }
@@ -598,6 +605,9 @@ void MainWindow::onSettingsActTriggered()
 void MainWindow::onStartOrEndAutoBlockActTriggered()
 {
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Авто'->'Начать/окончить отметку блока 'Авто''";
+
+    //Отправляем сигнал о старте или окончании блока авто в execWgt для его внутренней обработки
+    //От него отправляем сигнал в DirectiveExecutor о том, что у нас надо поставить блок авто новый
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Авто'->'Начать/окончить отметку блока 'Авто''";
 }
@@ -1028,4 +1038,22 @@ void MainWindow::onFailedDetected(const QString& message)
     setState(State::Failed);
 
     qCInfo(logGUI) << "Завершен метод onFailedDetected()";
+}
+
+void MainWindow::returnFocusToMainWindow(QWidget* old, QWidget* now)
+{
+    Q_UNUSED(old);
+    qCDebug(logGUI) << "Вызван метод returnFocusToMainWindow()";
+
+    if (now != nullptr) {
+        qCDebug(logGUI) << "У фокуса есть назначение, не восстанавливаем его на MainWIndow";
+        return;
+    }
+
+    QTimer::singleShot(0, this, [this]() {
+        qCDebug(logGUI) << "Восстановили фокус на MainWindow";
+        this->setFocus(Qt::OtherFocusReason);
+    });
+
+    qCDebug(logGUI) << "Вызван метод returnFocusToMainWindow()";
 }

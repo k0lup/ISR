@@ -21,6 +21,8 @@ public:
     void onChapterChanged(const ChapterType& chapter);
 signals:
     void directiveDoubleClicked(const ExecutionSnapshot& snapshot, RequestId request_id);
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
 private slots:
     void onDoubleClicked(const QModelIndex& index);
 private:

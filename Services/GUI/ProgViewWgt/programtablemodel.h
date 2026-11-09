@@ -10,8 +10,13 @@ class ProgramTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
+    enum class Direction {
+        Up,
+        Down
+    };
     enum Column {
-        NumberColumn = 0,
+        AutoModeColumn = 0,
+        NumberColumn,
         TypeColumn,
         CommandColumn,
         OperationColumn,
@@ -23,6 +28,7 @@ public:
     {
         int directive_index = -1;
 
+        bool auto_mode;
         QString number;
         QString type;
         QString command;
@@ -39,7 +45,7 @@ public:
         }
 
         QString toString() const {
-            return QString("|%1|%2|%3|%4|").arg(number).arg(type).arg(command).arg(operation);
+            return QString("|%1|%2|%3|%4|%5|").arg(auto_mode ? "A" : "").arg(number).arg(type).arg(command).arg(operation);
         }
     };
 
@@ -67,6 +73,7 @@ public:
     void clear();
 
     void setActiveDirective(int directive_index);
+    void setSelectedDirective(Direction direction);
     void setRunnedDirective(int directive_index);
     void setCompletedDirective(int directive_index);
     void setFailedDirective(int directive_index);
@@ -76,6 +83,8 @@ public:
 private:
     void updateDirective(int directive_index);
     void resetStatusDirective(int directive_index);
+
+    int getLastDirectiveIndex() const;
 private:
     /*struct ProgInfo {
         SectionStruct section_struct;
@@ -92,7 +101,8 @@ private:
     QVector<ProgramRow> rows_;
     //ProgInfo prog_info_;
 
-    int active_directive_;
+    int selected_directive_ = -1;
+    int active_directive_ = -1;
     int runned_directive_ = -1;
     QSet<int> completed_directives_;
     QSet<int> failed_directives_;

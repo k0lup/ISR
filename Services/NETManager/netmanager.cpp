@@ -107,7 +107,26 @@ QString NETManager::getStateName(const State state) const
     }
 }
 
-void NETManager::onFailedDetected()
+void NETManager::onFailedDetected(const QString& message)
 {
+    qCCritical(logNet) << "Критическая ошибка: " + message;
     setState(State::Error);
+}
+
+void NETManager::sendMessageToPris(const NETPrisMessage& message)
+{
+
+}
+
+void NETManager::sendMessageToProt(const NETProtMessage& message)
+{
+
+}
+
+void NETManager::onPrisAnwer()
+{
+    NETPrisAnswer pris_answer;
+    //получение ответа от ПРИС
+    emit sendMessageFromPris(pris_answer);
+
 }

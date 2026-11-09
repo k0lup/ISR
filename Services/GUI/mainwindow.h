@@ -132,6 +132,8 @@ private slots:
     void onExitOfRepSectionActTriggered();
 
     void onFailedDetected(const QString& message);
+
+    void returnFocusToMainWindow(QWidget* old, QWidget* now);
 private:
     enum class State {
         Initializing = 0,

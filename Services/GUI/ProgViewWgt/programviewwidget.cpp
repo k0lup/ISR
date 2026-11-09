@@ -10,15 +10,20 @@
 
 ProgramViewWidget::ProgramViewWidget(QWidget *parent) : QWidget(parent)
 {
+    setObjectName("ProgramView");
+    setFocusPolicy(Qt::StrongFocus);
     qCInfo(logGUI) << "Вызван конструктор ProgramViewWidget";
     table_ = new QTableView(this);
     model_ = new ProgramTableModel(this);
 
     table_->setModel(model_);
 
-    table_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    //table_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    table_->setSelectionMode(QAbstractItemView::NoSelection);
+    table_->setFocusPolicy(Qt::NoFocus);
+    setFocusPolicy(Qt::StrongFocus);
 
-    table_->setSelectionMode(QAbstractItemView::SingleSelection);
+    //table_->setSelectionMode(QAbstractItemView::SingleSelection);
 
     table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
@@ -67,9 +72,15 @@ void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
     for (int current_directive_index = 0; current_directive_index < directives.count(); ++current_directive_index) {
         const QList<DirectiveLine>& lines = directives[current_directive_index].lines;
         QVector<ProgramTableModel::ProgramRow> current_directive_rows;
+        bool is_auto_mode_directive {false};
+        if (current_directive_index >= exec_snapshot.auto_blocks[exec_snapshot.active_chpater].start_index &&
+                current_directive_index <= exec_snapshot.auto_blocks[exec_snapshot.active_chpater].end_index) {
+            is_auto_mode_directive = true;
+        }
         for (int current_line_index = 0; current_line_index < lines.count(); ++current_line_index) {
             const DirectiveLine& line = lines[current_line_index];
             ProgramTableModel::ProgramRow current_row;
+            current_row.auto_mode = is_auto_mode_directive;
             current_row.number = line.num_col;
             current_row.type = line.type_col;
             current_row.command = line.command_col;
@@ -117,4 +128,16 @@ void ProgramViewWidget::clear()
     qCInfo(logGUI) << "Вызван метод clear()";
     model_->clear();
     qCInfo(logGUI) << "Завершен метод clear()";
+}
+
+void ProgramViewWidget::keyPressEvent(QKeyEvent *event)
+{
+    qDebug() << "Key Press Event";
+    switch (event->key()) {
+    case Qt::Key_Up : model_->setSelectedDirective(ProgramTableModel::Direction::Up); qDebug() << "UP EVENT"; event->accept(); break;
+    case Qt::Key_Down : model_->setSelectedDirective(ProgramTableModel::Direction::Down); qDebug() << "DOWN EVENT"; event->accept(); break;
+    default: break;
+    }
+
+    QWidget::keyPressEvent(event);
 }

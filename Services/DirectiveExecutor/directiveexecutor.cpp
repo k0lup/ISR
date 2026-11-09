@@ -170,6 +170,70 @@ void DirectiveExecutor::setSection(const QString& section_name, SectionStruct se
     return;
 }
 
+void DirectiveExecutor::setAutoBlocks(const ExecutionSnapshot& snapshot, const RequestId request_id)
+{
+    qCInfo(logCore) << "Вызван метод setAutoBlocks";
+
+    if (sections_.isEmpty()) {
+        QString error_message = "Нет открытых разделов, задача авто блока невозможна";
+        qCCritical(logCore) << error_message;
+
+        qCInfo(logCore) << "Отправлен сиганл requestFailed";
+        emit requestFailed(request_id, error_message);
+        qCInfo(logCore) << "Отправлен сиганл failed";
+        emit failed(error_message);
+        return;
+    }
+
+    if (sections_.last().id_program != snapshot.exec_frame_id) {
+            QString error_message = "Невозможно задать авто блок в разделе, который не является последним";
+            qCWarning(logCore) << error_message;
+
+            qCInfo(logCore) << "Отправлен сиганл requestFailed";
+            emit requestFailed(request_id, error_message);
+            return;
+    }
+
+    const int max_index_in_chapter = sections_.last().section_struct.get(snapshot.active_chpater).directives.count() - 1;
+    if (
+            snapshot.auto_blocks[snapshot.active_chpater].start_index < 0 ||
+            snapshot.auto_blocks[snapshot.active_chpater].start_index > max_index_in_chapter ||
+            snapshot.auto_blocks[snapshot.active_chpater].end_index < 0 ||
+            snapshot.auto_blocks[snapshot.active_chpater].end_index > max_index_in_chapter) {
+
+        QString error_message = QString("Индексы директив блока авто выходят за пределы допустимых значений:\n"
+                                 "Индекс старта блока авто: %1\n"
+                                 "Индекс конца блока авто: %2\n"
+                                 "Допустимый диапазон: [0;%3]")
+                .arg(snapshot.auto_blocks[snapshot.active_chpater].start_index)
+                .arg(snapshot.auto_blocks[snapshot.active_chpater].end_index)
+                .arg(max_index_in_chapter);
+
+        qCCritical(logCore) << error_message;
+
+        qCInfo(logCore) << "Отправляем сигнал failed()";
+        emit failed(error_message);
+        return;
+    }
+
+    for (int i = snapshot.auto_blocks[snapshot.active_chpater].start_index; i <= snapshot.auto_blocks[snapshot.active_chpater].end_index; ++i) {
+        if (!canSetAuto(sections_.last().section_struct.get(snapshot.active_chpater).directives[i])) {
+            QString message = QString("Блок авто не выделен (проблема в директиве №%1)! В блоке авто допустимы тольки директивы 'О' и 'И'!").arg(i + 1);
+            qCWarning(logCore) << message;
+
+            emit requestFailed(request_id, message);
+            return;
+        }
+    }
+
+    sections_.last().active_chapter = snapshot.active_chpater;
+    sections_.last().auto_blocks_directives[sections_.last().active_chapter] = snapshot.auto_blocks[snapshot.active_chpater];
+
+    emit requestCompleted(request_id);
+
+    qCInfo(logCore) << "Завершен метод setAutoBlocks";
+}
+
 void DirectiveExecutor::startFrom(const ExecutionSnapshot& section_data, const RequestId request_id)
 {
     qCInfo(logCore) << "Вызван метод startFrom";
@@ -580,4 +644,12 @@ void DirectiveExecutor::onStatusSectionsRequested(const QString& section_name, c
     }
 
     emit sendStatusSection(false, request_id);
+}
+
+bool DirectiveExecutor::canSetAuto(const DirectiveStruct& directive) const {
+    if (directive.lines[0].type_col == "О" || directive.lines[0].type_col == "И") {
+        return true;
+    } else {
+        return false;
+    }
 }

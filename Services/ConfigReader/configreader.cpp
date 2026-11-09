@@ -187,6 +187,8 @@ AppConfig ConfigReader::createConfig(QMap<QString, QStringList> readed_params, Q
            } else {
                value = QStringList(schema[key].default_value.toString());
            }
+
+           readed_params[key] = value;
        }
    }
 

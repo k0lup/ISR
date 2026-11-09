@@ -40,11 +40,11 @@ config_reader::ConfigSchema config_reader::createConfigShema() {
         /*ПРИ_РЭП*/
         {app_config_names::pri_rep_name,                {true,          QVariant(),                             ParamType::String,          ""}},
         /*ISR_PORT*/
-        {app_config_names::isr_port_name,               {false,         QVariant(1),                            ParamType::String,          /*reg_exp_port*/""}},
+        {app_config_names::pris_port_name,              {false,         QVariant(1),                            ParamType::String,          /*reg_exp_port*/""}},
         /*IP_EXCHANGE_SERVER*/
         {app_config_names::ip_server_name,              {false,         QVariant(QString("127.0.0.1")),         ParamType::String,          /*reg_exp_ip*/""}},
         /*PORT_EXCHANGE_SERVER*/
-        {app_config_names::port_server_name,            {false,         QVariant(1),                            ParamType::String,          /*reg_exp_port*/""}},
+        {app_config_names::prot_port_name,              {false,         QVariant(1),                            ParamType::String,          /*reg_exp_port*/""}},
         /*TRAF_FILE_PATH*/
         {app_config_names::traf_path_name,              {false,         QVariant(traf_path),                    ParamType::String,          ""}}
     };
