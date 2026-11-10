@@ -107,7 +107,7 @@ private:
     bool setState(State new_state);
     QString getStateName(State state) const;
 private:
-    State state_ = State::Idle;
+    State state_ = State::Initialization;
     ExecuteMode execute_mode_ = ExecuteMode::STEP;
     QVector<ExecuteFrame> sections_;
 

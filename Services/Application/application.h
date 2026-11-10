@@ -2,6 +2,7 @@
 #define APPLICATION_H
 
 #include <QObject>
+#include <QThread>
 
 
 #include "Services/GUI/mainwindow.h"
@@ -33,6 +34,7 @@ private:
     DirectiveExecutor* directive_executor_ = nullptr;
     SectionsLoader* section_loader_ = nullptr;
     CatalogManager* catalog_manager_ = nullptr;
+    QThread* dir_exec_thread_ = nullptr;
 
     AppConfig app_cfg_;
 

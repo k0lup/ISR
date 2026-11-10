@@ -21,7 +21,7 @@ public:
     void onChapterChanged(const ChapterType& chapter);
 signals:
     void directiveDoubleClicked(const ExecutionSnapshot& snapshot, RequestId request_id);
-    void autoModeSet(ExecuteMode mode);
+    void autoModeSet(ExecuteMode mode, RequestId request_id);
     void autoBlockUpdate(const ExecutionSnapshot& snapshot, RequestId request_id);
 
     void autoBlockSwitched(bool contains);                                                      //Если есть блок авто в активном разделе - true. Нет - false;

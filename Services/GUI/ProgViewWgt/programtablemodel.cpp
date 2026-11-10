@@ -145,9 +145,9 @@ int ProgramTableModel::directiveIndex(const QModelIndex &index) const
         return ProgramRow::NoDirectiveIndex;
     }
 
-    if (rows_.at(index.row()).isEmpty()) {
+    /*if (rows_.at(index.row()).isEmpty()) {
         return ProgramRow::NoDirectiveIndex;
-    }
+    }*/
 
     return rows_.at(index.row()).directive_index;
 }
@@ -174,22 +174,26 @@ void ProgramTableModel::setActiveDirective(int directive_index)
 
 void ProgramTableModel::setSelectedDirective(Direction direction)
 {
-    int new_index = selected_directive_;
+    int new_index = (selected_directive_ == -1 ? active_directive_ : selected_directive_);
 
     switch (direction) {
     case Direction::Up      : new_index -= 1; break;
     case Direction::Down    : new_index += 1; break;
     }
 
-    if (selected_directive_ == ProgramRow::NoDirectiveIndex) {
+    /*if (selected_directive_ == ProgramRow::NoDirectiveIndex) {
         new_index = 0;
-    }
+    }*/
 
     setSelectedDirective(new_index);
 }
 
 void ProgramTableModel::setSelectedDirective(int index)
 {
+    if (runned_directive_ != ProgramRow::NoDirectiveIndex) {
+        return;
+    }
+
     if (index < 0 || index > getLastDirectiveIndex()) {
         return;
     }
@@ -309,3 +313,7 @@ int ProgramTableModel::getCurrentSelectDirectiveIndex() const
     return selected_directive_;
 }
 
+int ProgramTableModel::getCurrentAcitveDirectiveIndex() const
+{
+    return active_directive_;
+}

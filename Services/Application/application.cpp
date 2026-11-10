@@ -16,6 +16,9 @@ Application::Application(QObject* parent) : QObject(parent)
     prog_view_widget_ = gui_window_->getProgViewWgt();
 
     directive_executor_ = new DirectiveExecutor(app_cfg_);
+    dir_exec_thread_ = new QThread(this);
+    directive_executor_->moveToThread(dir_exec_thread_);
+    dir_exec_thread_->start();
     catalog_manager_ = new CatalogManager(app_cfg_);
     section_loader_ = new SectionsLoader(app_cfg_);
 
@@ -74,13 +77,16 @@ void Application::setupConnections()
     QObject::connect(gui_window_, &MainWindow::setNewTraf, this, [this](const QString& traf){
        app_cfg_.traf = traf;
     });
-    QObject::connect(gui_window_, &MainWindow::stopAutoBlockRequested, this, [this](){
-        directive_executor_->setExecuteMode(ExecuteMode::STEP, RequestIdGenerator::NO_REQUEST_ID);
-    });
+    QObject::connect(gui_window_, &MainWindow::stopAutoBlockRequested, directive_executor_, [this]() {
+        directive_executor_->setExecuteMode(
+            ExecuteMode::STEP,
+            RequestIdGenerator::NO_REQUEST_ID);
+        }, Qt::QueuedConnection);
 
     QObject::connect(prog_view_widget_, &ProgramViewWidget::directiveDoubleClicked, directive_executor_, &DirectiveExecutor::startFrom);
     QObject::connect(prog_view_widget_, &ProgramViewWidget::autoBlockUpdate, directive_executor_, &DirectiveExecutor::setAutoBlocks);
     QObject::connect(prog_view_widget_, &ProgramViewWidget::failed, gui_window_, &MainWindow::onShowCriticalRequested);
+    QObject::connect(prog_view_widget_, &ProgramViewWidget::autoModeSet, directive_executor_, &DirectiveExecutor::setExecuteMode);
 
     QObject::connect(section_loader_, &SectionsLoader::message, gui_window_, &MainWindow::onShowInfoRequested);
     QObject::connect(section_loader_, &SectionsLoader::failed, gui_window_, &MainWindow::onShowCriticalRequested);
@@ -107,7 +113,13 @@ void Application::setupConnections()
 
         PRISResultData result;
         result.status = true;
-        directive_executor_->onPRISResponse(result, request_id);
+        QMetaObject::invokeMethod(
+            directive_executor_,
+            [executor = directive_executor_, result, request_id]() {
+                executor->onPRISResponse(result, request_id);
+            },
+            Qt::QueuedConnection
+        );
     });
     //Пока так, а дальше надо бы request_id гасить по получению ответа
     QObject::connect(directive_executor_, &DirectiveExecutor::sendSectionForView, gui_window_, &MainWindow::onSectionChanged);
@@ -120,6 +132,7 @@ void Application::setupConnections()
 
 
     QObject::connect(gui_window_, &MainWindow::destroyed, this, &Application::deleteLater);
+    QObject::connect(dir_exec_thread_, &QThread::finished, directive_executor_, &QObject::deleteLater);
 }
 
 Application::~Application()
@@ -127,14 +140,12 @@ Application::~Application()
     if (gui_window_) {
         gui_window_->deleteLater();
     }
-    if (prog_view_widget_) {
-        prog_view_widget_->deleteLater();
-    }
     if (controller_) {
         controller_->deleteLater();
     }
-    if (directive_executor_) {
-        directive_executor_->deleteLater();
+    if (dir_exec_thread_) {
+        dir_exec_thread_->quit();
+        dir_exec_thread_->wait();
     }
     if (section_loader_) {
         section_loader_->deleteLater();

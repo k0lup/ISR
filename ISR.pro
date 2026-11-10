@@ -112,7 +112,8 @@ HEADERS += \
     Services/Programs/programlines.h \
     Services/Programs/programtypes.h \
     Services/RequestIDGenerator/requestIDGenerator.h \
-    logging_categories.h
+    logging_categories.h \
+    metatypes.h
 
 
 # =========================

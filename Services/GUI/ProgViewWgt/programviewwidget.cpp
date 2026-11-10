@@ -66,7 +66,9 @@ void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
 {
     int select_dir_index{-1};
     if (exec_snapshot.section_name == current_program_.section_name && exec_snapshot.active_chpater == current_program_.active_chpater) {
-         select_dir_index = model_->getCurrentSelectDirectiveIndex();
+        if (exec_snapshot.active_dir_index[exec_snapshot.active_chpater] == current_program_.active_dir_index[current_program_.active_chpater]) {
+            select_dir_index = model_->getCurrentSelectDirectiveIndex();
+        }
     }
     qCInfo(logGUI) << "Вызван метод setSection()";
     const QList<DirectiveStruct>& directives = exec_snapshot.section.get(exec_snapshot.active_chpater).directives;
@@ -164,7 +166,8 @@ void ProgramViewWidget::onStartOrEndAutoBlock()
 
     int current_select_dir_index = model_->getCurrentSelectDirectiveIndex();
     if (current_select_dir_index == -1) {
-        return;
+        current_select_dir_index = model_->getCurrentAcitveDirectiveIndex();
+        model_->setSelectedDirective(current_select_dir_index);
     }
 
     if (current_program_.auto_blocks[current_program_.active_chpater].start_index == -1) {
@@ -209,9 +212,9 @@ void ProgramViewWidget::onRunAutoBlock()
     }
 
     qCInfo(logGUI) << "Отправляем сигнал autoModeSet::AUTO";
-    emit autoModeSet(ExecuteMode::AUTO);
+    emit autoModeSet(ExecuteMode::AUTO, RequestIdGenerator::NO_REQUEST_ID);
     current_program_.active_dir_index[current_program_.active_chpater] = current_program_.auto_blocks[current_program_.active_chpater].start_index;
-    qCInfo(logGUI) << QString("Отправляем сигнал directiveDoubleClicked(№%1)").arg(current_program_.active_dir_index[current_program_.active_chpater]);
+    qCInfo(logGUI) << QString("Отправляем сигнал directiveDoubleClicked(№%1)").arg(current_program_.active_dir_index[current_program_.active_chpater] + 1);
     emit directiveDoubleClicked(current_program_, RequestIdGenerator::NO_REQUEST_ID);
     qCInfo(logGUI) << "Завершен метод onStartAutoBlock()";
 }

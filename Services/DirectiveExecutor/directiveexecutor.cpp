@@ -28,6 +28,7 @@ void DirectiveExecutor::setSection(const QString& section_name, SectionStruct se
         request_directives_.remove(request_id);
         if (!caller) {
             emit failed("ДИРЕКТИВА ДЛЯ КОТОРОЙ ПОЛУЧЕН ОТВЕТ УЖЕ УНИЧТОЖЕНА!");
+            return;
         }
     }
 
@@ -38,6 +39,7 @@ void DirectiveExecutor::setSection(const QString& section_name, SectionStruct se
         QString message = QString("Недопустима установка новой секции в состоянии {%1} - требуется Idle").arg(getStateName(state_));
         qCWarning(logCore) << message;
         emit requestFailed(request_id, message);
+        return;
     }
 
     ExecuteFrame frame;
@@ -188,6 +190,7 @@ void DirectiveExecutor::setAutoBlocks(const ExecutionSnapshot& snapshot, const R
         QString message = QString("Недопустима установка блока АВТО в состоянии {%1} - требуется Idle").arg(getStateName(state_));
         qCWarning(logCore) << message;
         emit requestFailed(request_id, message);
+        return;
     }
 
     if (sections_.isEmpty()) {
@@ -273,6 +276,7 @@ void DirectiveExecutor::startFrom(const ExecutionSnapshot& section_data, const R
         QString message = QString("Недопустим страт выполнения в состоянии {%1} - требуется Idle").arg(getStateName(state_));
         qCWarning(logCore) << message;
         emit requestFailed(request_id, message);
+        return;
     }
 
     if (sections_.isEmpty()) {
@@ -371,6 +375,7 @@ void DirectiveExecutor::setExecuteMode(const ExecuteMode& execute_mode, const Re
         QString message = QString("Недопустима установка новой секции в состоянии {%1} - требуется {Idle || Runned}").arg(getStateName(state_));
         qCWarning(logCore) << message;
         emit requestFailed(request_id, message);
+        return;
     }
     qCInfo(logCore) << "Вызван метод setExecuteMode";
 
@@ -391,11 +396,6 @@ void DirectiveExecutor::setExecuteMode(const ExecuteMode& execute_mode, const Re
 
 QVector<Direct*> DirectiveExecutor::createDirectiveFromChapter(const ChapterStruct& chapter, QStringList& error_messages)
 {
-    if (state_ != State::Idle) {
-        QString message = QString("Недопустима вызов метода createDirectiveFromChapter в состоянии {%1} - требуется Idle").arg(getStateName(state_));
-        qCCritical(logCore) << message;
-        emit failed(message);
-    }
     qCInfo(logCore) << "Вызван метод createDirectiveFromChapter";
     error_messages.clear();
     QVector<Direct*> result;
@@ -432,11 +432,6 @@ QVector<Direct*> DirectiveExecutor::createDirectiveFromChapter(const ChapterStru
 //СДЕЛАТЬ ТУТ DIRECT ЧЕРЕЗ QPOINTER
 Direct* DirectiveExecutor::createDirect(const DirectiveStruct& directive)
 {
-    if (state_ != State::Idle) {
-        QString message = QString("Недопустима вызов метода createDirectiveFromChapter в состоянии {%1} - требуется Idle").arg(getStateName(state_));
-        qCCritical(logCore) << message;
-        emit failed(message);
-    }
     qCInfo(logCore) << "Вызван метод createDirect";
     Direct* result = nullptr;
 
@@ -485,11 +480,6 @@ Direct* DirectiveExecutor::createDirect(const DirectiveStruct& directive)
 
 ExecuteParam DirectiveExecutor::getParamFromStartDirective(StartSectionDirective* directive)
 {
-    if (state_ != State::Idle && state_ != State::Runned) {
-        QString message = QString("Недопустима вызов метода getParamFromStartDirective в состоянии {%1} - требуется {Idle || Runned}").arg(getStateName(state_));
-        qCCritical(logCore) << message;
-        emit failed(message);
-    }
     Q_UNUSED(directive);
     qCInfo(logCore) << "Вызван метод getParamFromStartDirective";
     ExecuteParam exec_param;
@@ -511,6 +501,7 @@ void DirectiveExecutor::continueExecute()
         QString message = QString("Недопустима вызов метода continueExecute в состоянии {%1} - требуется {Idle || Runned}").arg(getStateName(state_));
         qCCritical(logCore) << message;
         emit failed(message);
+        return;
     }
     setState(State::Runned);
     qCInfo(logCore) << "Вызван метод continueExecute";
@@ -551,6 +542,7 @@ void DirectiveExecutor::onWindowResponse(const WindowResultData& result, const R
         QString message = QString("Недопустима вызов метода onWindowResponse в состоянии {%1} - требуется {Runned}").arg(getStateName(state_));
         qCCritical(logCore) << message;
         emit failed(message);
+        return;
     }
 
     if (!request_directives_.contains(source_request_id)) {
@@ -573,6 +565,7 @@ void DirectiveExecutor::onPRISResponse(const PRISResultData& result, const Reque
         QString message = QString("Недопустима вызов метода onPRISResponse в состоянии {%1} - требуется {Runned}").arg(getStateName(state_));
         qCCritical(logCore) << message;
         emit failed(message);
+        return;
     }
 
     if (!request_directives_.contains(source_request_id)) {
@@ -595,6 +588,7 @@ void DirectiveExecutor::onLoadSectionFailed(const QString& error_messages, Reque
         QString message = QString("Недопустима вызов метода onLoadSectionFailed в состоянии {%1} - требуется {Runned}").arg(getStateName(state_));
         qCCritical(logCore) << message;
         emit failed(message);
+        return;
     }
 
     if (!request_directives_.contains(source_request_id)) {
@@ -622,10 +616,12 @@ void DirectiveExecutor::onLoadSectionFailed(const QString& error_messages, Reque
 
 void DirectiveExecutor::onDirectiveFinished(const Direct::ResultDirective& result, Direct* direct)
 {
+    qCInfo(logCore) << "Вызван метод onDirectiveFinished()";
     if (state_ != State::Runned) {
         QString message = QString("Недопустима вызов метода onDirectiveFinished в состоянии {%1} - требуется {Runned}").arg(getStateName(state_));
         qCCritical(logCore) << message;
         emit failed(message);
+        return;
     }
 
     if (direct != getCurrentExecuteDirect().data()) {
@@ -655,6 +651,7 @@ void DirectiveExecutor::onDirectiveFinished(const Direct::ResultDirective& resul
             active_section.current_directive_index[active_section.active_chapter] += 1;
             if (execute_mode_ == ExecuteMode::AUTO && active_section.auto_blocks_directives[active_section.active_chapter].contains(active_section.current_directive_index[active_section.active_chapter])) {
                 continueExecute();
+                return;
             }
         }
     }
@@ -664,8 +661,10 @@ void DirectiveExecutor::onDirectiveFinished(const Direct::ResultDirective& resul
 
     }
 
+    qCInfo(logCore) << QString("Отправляем сигнал sectionChanged(%1)").arg(active_section.section_name);
     emit this->sectionChanged(active_section.toGUI());
     setState(State::Idle);
+    qCInfo(logCore) << "Завершен метод onDirectiveFinished()";
     return;
 }
 
@@ -675,6 +674,7 @@ void DirectiveExecutor::setCurrentDirective(QList<DirectiveStruct>& directives, 
         QString message = QString("Недопустима вызов метода setCurrentDirective в состоянии {%1} - требуется {Idle || Runned}").arg(getStateName(state_));
         qCCritical(logCore) << message;
         emit failed(message);
+        return;
     }
 
     for (auto& directive : directives) {
@@ -692,6 +692,7 @@ void DirectiveExecutor::onDirectiveFailed(const QString& message, Direct* direct
         QString message = QString("Недопустима вызов метода onDirectiveFailed в состоянии {%1} - требуется {Runned}").arg(getStateName(state_));
         qCCritical(logCore) << message;
         emit failed(message);
+        return;
     }
 
     if (direct != getCurrentExecuteDirect().data()) {
@@ -764,7 +765,7 @@ bool DirectiveExecutor::setState(DirectiveExecutor::State new_state)
     qCInfo(logCore) << "Вызван метод setState";
 
     qCInfo(logCore) << QString("Запрошено изменение состояние с %1 на %2").arg(getStateName(state_)).arg(getStateName(new_state));
-    if (state_ == State::Failed) {
+    if (state_ == State::Failed && new_state != State::Failed) {
         QString message("Невозможно изменить состояние с Failed на любое другое!");
         qCCritical(logCore) << message;
         qCInfo(logCore) << "Отправляем сигнал failed";

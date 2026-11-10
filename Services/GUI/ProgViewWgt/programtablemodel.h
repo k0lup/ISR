@@ -82,6 +82,7 @@ public:
     int directiveIndex(const QModelIndex& index) const;
 
     int getCurrentSelectDirectiveIndex() const;
+    int getCurrentAcitveDirectiveIndex() const;
 
 private:
     void updateDirective(int directive_index);

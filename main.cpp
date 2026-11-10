@@ -79,9 +79,25 @@ static void setupLogging()
     qCInfo(logCore) << "Логгер инициализирован. Директория =" << cfg.logDir;
 }
 
+void registerMetaTypes()
+{
+    qRegisterMetaType<SectionStruct>("SectionStruct");
+    qRegisterMetaType<ExecutionSnapshot>("ExecutionSnapshot");
+    qRegisterMetaType<ExecuteMode>("ExecuteMode");
+
+    qRegisterMetaType<WidgetTypes>("WidgetTypes");
+    qRegisterMetaType<WidgetInfo>("WidgetInfo");
+    qRegisterMetaType<WindowResultData>("WindowResultData");
+
+    qRegisterMetaType<PRISMessage>("PRISMessage");
+    qRegisterMetaType<PRISResultData>("PRISResultData");
+    qRegisterMetaType<RequestId>("RequestId");
+}
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    registerMetaTypes();
     app.setStyle(QStyleFactory::create("Fusion")); // 1) сначала стиль
     app.setPalette(makeLightPalette());            // 2) потом палитра
 
