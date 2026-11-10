@@ -54,6 +54,7 @@ signals:
     void sendStatusSection(bool is_load, const RequestId source_request_id);
 
     void sendSectionForView(const ExecutionSnapshot& section);          //отправляем секции по запросу GUI. Сделано так, чтобы в будущем поставить ограничение на выполнение директив в секциях, которые не лежат сверху стека
+    void executeModeChanged(ExecuteMode mode);
 private:
     struct ExecuteFrame
     {
@@ -81,6 +82,14 @@ private:
         }
     };
 
+    enum class State {
+        Initialization,
+        Idle,
+        Runned,
+        Failed
+    };
+private slots:
+    void onFailedDetected(const QString& message);
 private:
     QVector<Direct*> createDirectiveFromChapter(const ChapterStruct& chapter, QStringList& error_messages);
     Direct* createDirect(const DirectiveStruct& directive);
@@ -95,7 +104,10 @@ private:
     void setCurrentDirective(QList<DirectiveStruct>& directives, int directive_index);
 
     bool canSetAuto(const DirectiveStruct& directive) const;
+    bool setState(State new_state);
+    QString getStateName(State state) const;
 private:
+    State state_ = State::Idle;
     ExecuteMode execute_mode_ = ExecuteMode::STEP;
     QVector<ExecuteFrame> sections_;
 

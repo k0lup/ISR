@@ -27,6 +27,7 @@ signals:
 
     void setTitleDescriptions(const TitleOfSectionDescription& desc);
     void setNewTraf(const QString& traf);
+    void stopAutoBlockRequested();
 public slots:
     void onShowWarningRequested(const QString& warning_message);
     void onShowCriticalRequested(const QString& critical_message);
@@ -37,6 +38,9 @@ public slots:
     void onRequestShowWindow(const WidgetTypes& types, const WidgetInfo& info, const RequestId request_id);
 
     void onListSectionLoaded(const QSet<QString>& section_list);
+
+    void onAutoBlockSwitched(bool contains);                                                                    //Если есть блок авто в активном разделе - true. Нет - false;
+    void onExecuteModeChanged(ExecuteMode mode);
 private:
     QMenu* preparaion_menu_ = nullptr;                      //Подготовка
         QAction* list_of_sections_act_ = nullptr;               //->Список разделов...

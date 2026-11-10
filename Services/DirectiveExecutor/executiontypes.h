@@ -26,8 +26,8 @@ struct ExecuteParam
 
 struct AutoBlockIndexes
 {
-    int start_index;
-    int end_index;
+    int start_index = -1;
+    int end_index = -1;
 
     void setIndexes(int first_index, int second_index) {
         start_index = std::min(first_index, second_index);
@@ -37,6 +37,17 @@ struct AutoBlockIndexes
     void clear() {
         start_index = -1;
         end_index = -1;
+    }
+
+    bool contains(int index) {
+        if (start_index == -1 || end_index == -1) {
+            return false;
+        }
+        if (start_index <= index && index <= end_index) {
+            return true;
+        } else {
+            return false;
+        }
     }
 };
 

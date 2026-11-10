@@ -86,11 +86,11 @@ static QString getChapterName(const ChapterType chapter)
 MainWindow::MainWindow(const AppConfig& cfg, QWidget *parent) : QMainWindow(parent), cfg_(cfg)
 {
     qCInfo(logGUI) << "Вызван конструктор MainWindow";
+    exec_wgt_ = new ProgramViewWidget(this);
     createActions();
     createMenu();
     setupConnections();
 
-    exec_wgt_ = new ProgramViewWidget(this);
     state_ = State::Initializing;
     rebuildWindowForState();
     setCentralWidget(exec_wgt_);
@@ -381,6 +381,10 @@ void MainWindow::setupConnections()
     QObject::connect(exit_of_rep_section_act_,      &QAction::triggered, this, &MainWindow::onExitOfRepSectionActTriggered);
     QObject::connect(this,                          &MainWindow::failed, this, &MainWindow::onFailedDetected);
     QObject::connect(qApp, &QApplication::focusChanged, this, &MainWindow::returnFocusToMainWindow);
+    QObject::connect(start_or_end_auto_block_act_,  &QAction::triggered, exec_wgt_, &ProgramViewWidget::onStartOrEndAutoBlock);
+    QObject::connect(exec_wgt_,                     &ProgramViewWidget::autoBlockSwitched, this, &MainWindow::onAutoBlockSwitched);
+    QObject::connect(remove_auto_mark_act_,         &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRemoveAutoMark);
+    QObject::connect(run_auto_block_act_,           &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRunAutoBlock);
 
     qCInfo(logGUI) << "Завершен метод setupConnections()";
 }
@@ -629,6 +633,9 @@ void MainWindow::onRunAutoBlockActTriggered()
 void MainWindow::onStopAutoBlockActTriggered()
 {
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Авто'->'Остановить выполнение блока 'Авто''";
+
+    qCInfo(logGUI) << "Отправляем сигнал stopAutoBlockRequested()";
+    emit stopAutoBlockRequested();
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Авто'->'Остановить выполнение блока 'Авто''";
 }
@@ -1056,4 +1063,27 @@ void MainWindow::returnFocusToMainWindow(QWidget* old, QWidget* now)
     });
 
     qCDebug(logGUI) << "Вызван метод returnFocusToMainWindow()";
+}
+
+void MainWindow::onAutoBlockSwitched(bool contains)
+{
+    qCInfo(logGUI) << "Вызван метод onAutoBlockSwitched()";
+
+    remove_auto_mark_act_->setEnabled(contains);
+    run_auto_block_act_->setEnabled(contains);
+
+    qCInfo(logGUI) << "Завершен метод onAutoBlockSwitched()";
+}
+
+void MainWindow::onExecuteModeChanged(ExecuteMode mode)
+{
+    QString mode_str = mode == ExecuteMode::AUTO ? "АВТО" : "ШАГ";
+    qCInfo(logGUI) << QString("Вызван метод onExecuteModeChanged(%1)").arg(mode_str);
+
+    start_or_end_auto_block_act_->setEnabled(mode == ExecuteMode::STEP);
+    remove_auto_mark_act_->setEnabled(mode == ExecuteMode::STEP);
+    run_auto_block_act_->setEnabled(mode == ExecuteMode::STEP);
+    stop_auto_block_act_->setEnabled(mode == ExecuteMode::AUTO);
+
+    qCInfo(logGUI) << QString("Завершен метод onExecuteModeChanged(%1)").arg(mode_str);
 }

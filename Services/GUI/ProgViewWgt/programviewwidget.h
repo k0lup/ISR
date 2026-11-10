@@ -21,6 +21,15 @@ public:
     void onChapterChanged(const ChapterType& chapter);
 signals:
     void directiveDoubleClicked(const ExecutionSnapshot& snapshot, RequestId request_id);
+    void autoModeSet(ExecuteMode mode);
+    void autoBlockUpdate(const ExecutionSnapshot& snapshot, RequestId request_id);
+
+    void autoBlockSwitched(bool contains);                                                      //Если есть блок авто в активном разделе - true. Нет - false;
+    void failed(const QString message);
+public slots:
+    void onStartOrEndAutoBlock();
+    void onRemoveAutoMark();
+    void onRunAutoBlock();
 protected:
     void keyPressEvent(QKeyEvent *event) override;
 private slots:

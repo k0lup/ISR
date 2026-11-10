@@ -74,8 +74,13 @@ void Application::setupConnections()
     QObject::connect(gui_window_, &MainWindow::setNewTraf, this, [this](const QString& traf){
        app_cfg_.traf = traf;
     });
+    QObject::connect(gui_window_, &MainWindow::stopAutoBlockRequested, this, [this](){
+        directive_executor_->setExecuteMode(ExecuteMode::STEP, RequestIdGenerator::NO_REQUEST_ID);
+    });
 
     QObject::connect(prog_view_widget_, &ProgramViewWidget::directiveDoubleClicked, directive_executor_, &DirectiveExecutor::startFrom);
+    QObject::connect(prog_view_widget_, &ProgramViewWidget::autoBlockUpdate, directive_executor_, &DirectiveExecutor::setAutoBlocks);
+    QObject::connect(prog_view_widget_, &ProgramViewWidget::failed, gui_window_, &MainWindow::onShowCriticalRequested);
 
     QObject::connect(section_loader_, &SectionsLoader::message, gui_window_, &MainWindow::onShowInfoRequested);
     QObject::connect(section_loader_, &SectionsLoader::failed, gui_window_, &MainWindow::onShowCriticalRequested);
@@ -106,6 +111,7 @@ void Application::setupConnections()
     });
     //Пока так, а дальше надо бы request_id гасить по получению ответа
     QObject::connect(directive_executor_, &DirectiveExecutor::sendSectionForView, gui_window_, &MainWindow::onSectionChanged);
+    QObject::connect(directive_executor_, &DirectiveExecutor::executeModeChanged, gui_window_, &MainWindow::onExecuteModeChanged);
 
     QObject::connect(section_loader_, &SectionsLoader::finished, this, [this](){
         QSet<QString> section_names = section_loader_->getSectionsNames();

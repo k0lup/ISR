@@ -64,6 +64,10 @@ void ProgramViewWidget::onDoubleClicked(const QModelIndex& index)
 
 void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
 {
+    int select_dir_index{-1};
+    if (exec_snapshot.section_name == current_program_.section_name && exec_snapshot.active_chpater == current_program_.active_chpater) {
+         select_dir_index = model_->getCurrentSelectDirectiveIndex();
+    }
     qCInfo(logGUI) << "Вызван метод setSection()";
     const QList<DirectiveStruct>& directives = exec_snapshot.section.get(exec_snapshot.active_chpater).directives;
     QVector<ProgramTableModel::ProgramRow> table_rows;
@@ -106,9 +110,21 @@ void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
         }
     }
 
+    if (select_dir_index != -1) {
+        model_->setSelectedDirective(select_dir_index);
+    }
+
     repaint();
 
     current_program_ = exec_snapshot;
+
+    if (current_program_.auto_blocks[current_program_.active_chpater].start_index != -1) {
+        qCInfo(logGUI) << "Отправляем сигнал autoBlockSwitched(true)";
+        emit autoBlockSwitched(true);
+    } else {
+        qCInfo(logGUI) << "Отправляем сигнал autoBlockSwitched(false)";
+        emit autoBlockSwitched(false);
+    }
 
     qCInfo(logGUI) << "Завершен метод setSection()";
 }
@@ -140,4 +156,62 @@ void ProgramViewWidget::keyPressEvent(QKeyEvent *event)
     }
 
     QWidget::keyPressEvent(event);
+}
+
+void ProgramViewWidget::onStartOrEndAutoBlock()
+{
+    qCInfo(logGUI) << "Вызван метод onStartOrEndAutoBlock()";
+
+    int current_select_dir_index = model_->getCurrentSelectDirectiveIndex();
+    if (current_select_dir_index == -1) {
+        return;
+    }
+
+    if (current_program_.auto_blocks[current_program_.active_chpater].start_index == -1) {
+        qDebug() << QString("Start Index = -1! Set(%1;%2)").arg(current_select_dir_index).arg(current_select_dir_index);
+        current_program_.auto_blocks[current_program_.active_chpater].setIndexes(current_select_dir_index, current_select_dir_index);
+    } else if (current_program_.auto_blocks[current_program_.active_chpater].end_index == current_program_.auto_blocks[current_program_.active_chpater].start_index) {
+        int index = current_program_.auto_blocks[current_program_.active_chpater].start_index;
+        current_program_.auto_blocks[current_program_.active_chpater].setIndexes(index, current_select_dir_index);
+        qDebug() << QString("Start Index != -1 && End Index != -1! Set(%1;%2)").arg(index).arg(current_select_dir_index);
+    } else {
+        qDebug() << QString("Start Index != -1 && End Index != -1! Set(%1;%2)").arg(current_select_dir_index).arg(current_select_dir_index);
+        current_program_.auto_blocks[current_program_.active_chpater].setIndexes(current_select_dir_index, current_select_dir_index);
+    }
+
+    qCInfo(logCore) << "Отправляем сигнал autoBlockUpdate";
+    emit autoBlockUpdate(current_program_, RequestIdGenerator::NO_REQUEST_ID);
+
+    qCInfo(logGUI) << "Завершен метод onStartOrEndAutoBlock()";
+}
+
+
+void ProgramViewWidget::onRemoveAutoMark()
+{
+    qCInfo(logGUI) << "Вызван метод onRemoveAutoMark()";
+
+    current_program_.auto_blocks[current_program_.active_chpater].clear();
+    qCInfo(logGUI) << "Отправляем сигнал autoBlockUpdate";
+    emit autoBlockUpdate(current_program_, RequestIdGenerator::NO_REQUEST_ID);
+
+    qCInfo(logGUI) << "Завершен метод onRemoveAutoMark()";
+}
+
+void ProgramViewWidget::onRunAutoBlock()
+{
+    qCInfo(logGUI) << "Вызван метод onStartAutoBlock()";
+    if (current_program_.auto_blocks[current_program_.active_chpater].start_index == -1 || current_program_.auto_blocks[current_program_.active_chpater].end_index == -1) {
+        QString message = "Невозможно запустить БЛОК Авто, так как он не определен!";
+        qCCritical(logGUI) << message;
+        qCInfo(logGUI) << "Отпарвляем сигнал failed";
+        emit failed(message);
+        return;
+    }
+
+    qCInfo(logGUI) << "Отправляем сигнал autoModeSet::AUTO";
+    emit autoModeSet(ExecuteMode::AUTO);
+    current_program_.active_dir_index[current_program_.active_chpater] = current_program_.auto_blocks[current_program_.active_chpater].start_index;
+    qCInfo(logGUI) << QString("Отправляем сигнал directiveDoubleClicked(№%1)").arg(current_program_.active_dir_index[current_program_.active_chpater]);
+    emit directiveDoubleClicked(current_program_, RequestIdGenerator::NO_REQUEST_ID);
+    qCInfo(logGUI) << "Завершен метод onStartAutoBlock()";
 }

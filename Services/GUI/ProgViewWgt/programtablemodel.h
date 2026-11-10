@@ -74,11 +74,14 @@ public:
 
     void setActiveDirective(int directive_index);
     void setSelectedDirective(Direction direction);
+    void setSelectedDirective(int index);
     void setRunnedDirective(int directive_index);
     void setCompletedDirective(int directive_index);
     void setFailedDirective(int directive_index);
 
     int directiveIndex(const QModelIndex& index) const;
+
+    int getCurrentSelectDirectiveIndex() const;
 
 private:
     void updateDirective(int directive_index);

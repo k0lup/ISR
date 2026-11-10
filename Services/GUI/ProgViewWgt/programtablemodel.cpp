@@ -185,14 +185,20 @@ void ProgramTableModel::setSelectedDirective(Direction direction)
         new_index = 0;
     }
 
-    if (new_index < 0 || new_index > getLastDirectiveIndex()) {
+    setSelectedDirective(new_index);
+}
+
+void ProgramTableModel::setSelectedDirective(int index)
+{
+    if (index < 0 || index > getLastDirectiveIndex()) {
         return;
     }
 
     updateDirective(selected_directive_);
-    selected_directive_ = new_index;
+    selected_directive_ = index;
     updateDirective(selected_directive_);
 }
+
 
 void ProgramTableModel::setCompletedDirective(int directive_index)
 {
@@ -297,3 +303,9 @@ int ProgramTableModel::getLastDirectiveIndex() const
 
     return ProgramRow::NoDirectiveIndex;
 }
+
+int ProgramTableModel::getCurrentSelectDirectiveIndex() const
+{
+    return selected_directive_;
+}
+
