@@ -385,6 +385,7 @@ void MainWindow::setupConnections()
     QObject::connect(exec_wgt_,                     &ProgramViewWidget::autoBlockSwitched, this, &MainWindow::onAutoBlockSwitched);
     QObject::connect(remove_auto_mark_act_,         &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRemoveAutoMark);
     QObject::connect(run_auto_block_act_,           &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRunAutoBlock);
+    QObject::connect(run_operations_act_,           &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRunOperationRequest);
 
     qCInfo(logGUI) << "Завершен метод setupConnections()";
 }

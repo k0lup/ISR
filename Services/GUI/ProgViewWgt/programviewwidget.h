@@ -27,6 +27,7 @@ signals:
     void autoBlockSwitched(bool contains);                                                      //Если есть блок авто в активном разделе - true. Нет - false;
     void failed(const QString message);
 public slots:
+    void onRunOperationRequest();
     void onStartOrEndAutoBlock();
     void onRemoveAutoMark();
     void onRunAutoBlock();

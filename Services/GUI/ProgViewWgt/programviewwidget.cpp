@@ -218,3 +218,21 @@ void ProgramViewWidget::onRunAutoBlock()
     emit directiveDoubleClicked(current_program_, RequestIdGenerator::NO_REQUEST_ID);
     qCInfo(logGUI) << "Завершен метод onStartAutoBlock()";
 }
+
+void ProgramViewWidget::onRunOperationRequest()
+{
+    qCInfo(logGUI) << "Вызван метод onRunOperationRequest()";
+
+    int current_select_directive_ = model_->getCurrentSelectDirectiveIndex();
+    if (current_select_directive_ == ProgramTableModel::ProgramRow::NoDirectiveIndex) {
+        qCInfo(logGUI) << "Нет выделенной директивы, поэтому запустим активную";
+        current_select_directive_ = model_->getCurrentAcitveDirectiveIndex();
+    }
+
+    current_program_.active_dir_index[current_program_.active_chpater] = current_select_directive_;
+    qCInfo(logGUI) << QString("Отправляем сигнал на запуск директивы №%1").arg(current_select_directive_ + 1);
+    emit directiveDoubleClicked(current_program_, RequestIdGenerator::NO_REQUEST_ID);
+
+
+    qCInfo(logGUI) << "Завершен метод onRunOperationRequest()";
+}
