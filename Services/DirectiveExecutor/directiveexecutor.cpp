@@ -14,6 +14,7 @@ DirectiveExecutor::DirectiveExecutor(const AppConfig& cfg, QObject* parent) :
     QObject(parent), cfg_(cfg)
 {
     QObject::connect(this, &DirectiveExecutor::failed, this, &DirectiveExecutor::onFailedDetected);
+    QObject::connect(this, &DirectiveExecutor::requestFailed, this, &DirectiveExecutor::onRequestFailed);
     qCInfo(logCore) << "Вызван и выполнен коструктор DirectiveExecutor";
     setState(State::Idle);
 }
@@ -818,4 +819,12 @@ void DirectiveExecutor::onFailedDetected(const QString& message)
 {
     Q_UNUSED(message);
     setState(State::Failed);
+}
+
+void DirectiveExecutor::onRequestFailed()
+{
+    if (execute_mode_ == ExecuteMode::AUTO) {
+        qWarning(logGUI) << "В связи с невозможностью выполнения какого-либо из поступивших запросов на всякий случай сбрасываем режим выполнения в ШАГ";
+        setExecuteMode(ExecuteMode::STEP, RequestIdGenerator::NO_REQUEST_ID);
+    }
 }

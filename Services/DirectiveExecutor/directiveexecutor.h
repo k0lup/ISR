@@ -90,6 +90,7 @@ private:
     };
 private slots:
     void onFailedDetected(const QString& message);
+    void onRequestFailed();                                                  //Тут в случае любой проблемы сбрасываем режим АВТО на ШАГ
 private:
     QVector<Direct*> createDirectiveFromChapter(const ChapterStruct& chapter, QStringList& error_messages);
     Direct* createDirect(const DirectiveStruct& directive);
