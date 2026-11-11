@@ -92,6 +92,7 @@ void registerMetaTypes()
     qRegisterMetaType<PRISMessage>("PRISMessage");
     qRegisterMetaType<PRISResultData>("PRISResultData");
     qRegisterMetaType<RequestId>("RequestId");
+    qRegisterMetaType<ExecuteParam>("ExecuteParam");
 }
 
 int main(int argc, char *argv[])
