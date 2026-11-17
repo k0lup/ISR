@@ -87,6 +87,7 @@ void Application::setupConnections()
     QObject::connect(prog_view_widget_, &ProgramViewWidget::autoBlockUpdate, directive_executor_, &DirectiveExecutor::setAutoBlocks);
     QObject::connect(prog_view_widget_, &ProgramViewWidget::failed, gui_window_, &MainWindow::onShowCriticalRequested);
     QObject::connect(prog_view_widget_, &ProgramViewWidget::autoModeSet, directive_executor_, &DirectiveExecutor::setExecuteMode);
+    QObject::connect(prog_view_widget_, &ProgramViewWidget::varSelected, directive_executor_, &DirectiveExecutor::setVariant);
 
     QObject::connect(section_loader_, &SectionsLoader::message, gui_window_, &MainWindow::onShowInfoRequested);
     QObject::connect(section_loader_, &SectionsLoader::failed, gui_window_, &MainWindow::onShowCriticalRequested);

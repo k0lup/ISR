@@ -36,6 +36,8 @@ struct DirectiveStruct
 
     QList<DirectiveLine> lines;
 
+    QMap<int, DirectiveStruct> sub_directives;
+
     bool operator==(const DirectiveStruct& directive_struct_for_equal) const
     {
         if ((number == directive_struct_for_equal.number) &&

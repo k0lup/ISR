@@ -639,6 +639,13 @@ ChapterStruct DiiReader::getChapter(const dii_struct::Chapter chapter, QString& 
             DirectiveLine directive_line(line);
             directive.lines.append(directive_line);
         }
+        if (directive.type == DirectType::VARIANT) {
+            directive.sub_directives = getSubDirectives(directive);
+            if (directive.sub_directives.isEmpty()) {
+                errors.append("Не удалось получить поддирективы директивы ВАРИАНТ");
+                continue;
+            }
+        }
 
         result.directives.append(directive);
     }
@@ -653,4 +660,34 @@ ChapterStruct DiiReader::getChapter(const dii_struct::Chapter chapter, QString& 
     }
 
     return result;
+}
+
+QMap<int, DirectiveStruct> DiiReader::getSubDirectives(const DirectiveStruct& directive) const
+{
+    QMap<int, DirectiveStruct> sub_directives;
+    for (int num_line = 0; num_line < directive.lines.count(); ++num_line) {
+        DirectiveLine line = directive.lines[num_line];
+        if (line.type_col == "В" || line.type_col.isEmpty()) {
+            continue;
+        }
+        int var_id = line.type_col.toInt();
+        DirectiveStruct sub_directive;
+        sub_directive.type = DirectType::MAIN_OPERATION;
+        sub_directive.status = DirectStatus::LOAD;
+        sub_directive.number = num_line;
+        do {
+            LineStruct line_struct;
+            line_struct.type = LineType::DIRECTIVE;
+            line_struct.cols_data.append(QString::number(num_line));
+            line_struct.cols_data.append(line.type_col);
+            line_struct.cols_data.append(line.command_col);
+            line_struct.cols_data.append(line.operation_col);
+            sub_directive.lines.append(DirectiveLine(line_struct));
+            num_line++;
+            line = directive.lines[num_line];
+        } while (line.type_col.isEmpty() && num_line < directive.lines.count());
+        sub_directives.insert(var_id, sub_directive);
+    }
+
+    return sub_directives;
 }

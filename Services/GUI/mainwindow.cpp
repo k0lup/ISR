@@ -386,6 +386,7 @@ void MainWindow::setupConnections()
     QObject::connect(remove_auto_mark_act_,         &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRemoveAutoMark);
     QObject::connect(run_auto_block_act_,           &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRunAutoBlock);
     QObject::connect(run_operations_act_,           &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRunOperationRequest);
+    QObject::connect(this,                          &MainWindow::varSelected, exec_wgt_, &ProgramViewWidget::onVarSelected);
 
     qCInfo(logGUI) << "Завершен метод setupConnections()";
 }
@@ -786,7 +787,7 @@ void MainWindow::onRequestShowWindow(const WidgetTypes& wgt_type, const WidgetIn
     switch (wgt_type) {
     case WidgetTypes::WARNING : onShowWarningRequested(wgt_info.information.join("\n")); result_data.status = true; break;
     case WidgetTypes::INFO : result_data = showInfoWgt(wgt_info.title, wgt_info.information.join("\n")); break;
-    case WidgetTypes::VARIANT : result_data = showVarWgt(wgt_info.title, wgt_info.information); break;
+    case WidgetTypes::VARIANT : result_data = showVarWgt(wgt_info.title, wgt_info.information); emit varSelected(result_data.data.toInt()); return;
     }
 
     emit sendWindowResponse(result_data, source_request_id);
@@ -824,6 +825,7 @@ WindowResultData MainWindow::showVarWgt(const QString& window_title, const QStri
                 &ok
                 );
     WindowResultData result_data;
+    result_data.data = "-1";
     result_data.status = ok;
     if (!ok) {
         return result_data;

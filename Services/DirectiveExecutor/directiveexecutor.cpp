@@ -184,6 +184,60 @@ void DirectiveExecutor::setSection(const QString& section_name, SectionStruct se
     return;
 }
 
+void DirectiveExecutor::setVariant(const ExecutionSnapshot& section_data, const RequestId request_id)
+{
+    qCInfo(logCore) << "Вызван метод setAutoBlocks";
+    if (state_ != State::Runned) {
+        QString message = QString("Недопустима установка варианта {%1} - требуется Runned").arg(getStateName(state_));
+        qCWarning(logCore) << message;
+        emit requestFailed(request_id, message);
+        return;
+    }
+
+    if (sections_.isEmpty()) {
+        QString error_message = "Нет открытых разделов, установка варианта невозможна";
+        qCCritical(logCore) << error_message;
+
+        qCInfo(logCore) << "Отправлен сиганл requestFailed";
+        emit requestFailed(request_id, error_message);
+        qCInfo(logCore) << "Отправлен сиганл failed";
+        emit failed(error_message);
+        return;
+    }
+
+    if (sections_.last().section_name != section_data.section_name) {
+        QString error_message = QString("Текущий активный раздел '%1' не соотвествует запрошенному разделу '%2'").arg(sections_.last().section_name).arg(section_data.section_name);
+        qCCritical(logCore) << error_message;
+
+        qCInfo(logCore) << "Отправлен сиганл requestFailed";
+        emit requestFailed(request_id, error_message);
+        qCInfo(logCore) << "Отправлен сиганл failed";
+        emit failed(error_message);
+        return;
+    }
+
+    QPointer<Direct> active_directive = getCurrentExecuteDirect();
+    if (!active_directive || active_directive->getTypeDirect() != DirectType::VARIANT) {
+        QString error_message = "Нет запущенной директивы или текущая запущенная директива не является директивой ВАРИАНТ";
+
+        qCCritical(logCore) << error_message;
+
+        qCInfo(logCore) << "Отправлен сиганл requestFailed";
+        emit requestFailed(request_id, error_message);
+        qCInfo(logCore) << "Отправлен сиганл failed";
+        emit failed(error_message);
+        return;
+    }
+
+    sections_.last().active_chapter = section_data.active_chpater;
+    sections_.last().active_variant[section_data.active_chpater] = section_data.active_variant[section_data.active_chpater];
+    qCInfo(logCore) << "Отправляем сигнал requestCompleted";
+    emit requestCompleted(request_id);
+    qCInfo(logCore) << "Отправляем сигнал sectionChanged";
+    emit sectionChanged(sections_.last().toGUI());
+    return;
+}
+
 void DirectiveExecutor::setAutoBlocks(const ExecutionSnapshot& snapshot, const RequestId request_id)
 {
     qCInfo(logCore) << "Вызван метод setAutoBlocks";

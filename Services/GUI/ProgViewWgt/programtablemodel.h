@@ -76,6 +76,7 @@ public:
     void setSelectedDirective(Direction direction);
     void setSelectedDirective(int index);
     void setRunnedDirective(int directive_index);
+    void setRunnedDirective(int start_row_index, int end_row_index);
     void setCompletedDirective(int directive_index);
     void setFailedDirective(int directive_index);
 
@@ -101,13 +102,34 @@ private:
             exec_frame_id = -1;
         }
     };*/
+
+    struct RunnedDirective {
+        int start_row{ProgramRow::NoDirectiveIndex};
+        int end_row{ProgramRow::NoDirectiveIndex};
+        int index_directive{ProgramRow::NoDirectiveIndex};
+
+        void clear() {
+            start_row = ProgramRow::NoDirectiveIndex;
+            end_row = ProgramRow::NoDirectiveIndex;
+            index_directive = ProgramRow::NoDirectiveIndex;
+        }
+
+        bool isEmpty() const {
+            return start_row == ProgramRow::NoDirectiveIndex;
+        }
+
+        bool contains(const int index) const {
+            return start_row <= index && index <= end_row;
+        }
+    };
+
 private:
     QVector<ProgramRow> rows_;
     //ProgInfo prog_info_;
 
     int selected_directive_ = -1;
     int active_directive_ = -1;
-    int runned_directive_ = -1;
+    RunnedDirective runned_directive_;
     QSet<int> completed_directives_;
     QSet<int> failed_directives_;
 };

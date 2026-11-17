@@ -5,6 +5,7 @@
 #include <QString>
 #include <QList>
 #include <QStringList>
+#include <QMap>
 
 
 
@@ -119,6 +120,7 @@ struct DiiFile {
 struct SectionStruct;
 struct PassportStruct;
 struct ChapterStruct;
+struct DirectiveStruct;
 
 class DiiReader : public QObject
 {
@@ -141,6 +143,7 @@ private:
     dii_struct::Line parseLine(const QString& line, QString& error) const;
     QList<dii_struct::Line> readLines(const QStringList& lines, QString& error) const;
     dii_struct::DiiFile parseLines(const QList<dii_struct::Line>& lines, QStringList& error_messages) const;
+    QMap<int, DirectiveStruct> getSubDirectives(const DirectiveStruct& directive) const;
 
     bool isPassportLine(const QStringList& line) const;
     bool isSectionLine(const QStringList& line) const;

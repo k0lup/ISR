@@ -1,6 +1,7 @@
 #include "programtablemodel.h"
 #include <QBrush>
 #include <QColor>
+#include <QDebug>
 
 
 ProgramTableModel::ProgramTableModel(QObject* parent) : QAbstractTableModel(parent)
@@ -55,7 +56,7 @@ QVariant ProgramTableModel::data(const QModelIndex &index, int role) const
         if (completed_directives_.contains(row.directive_index)) {
             return QBrush(QColor(190, 220, 245));
         }
-        if (row.directive_index == runned_directive_) {
+        if (runned_directive_.contains(index.row())) {
             return QBrush(QColor(0, 0, 128));
         }
         if (row.directive_index == ProgramRow::NoDirectiveIndex) {
@@ -69,7 +70,7 @@ QVariant ProgramTableModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::ForegroundRole) {
-        if (row.directive_index == runned_directive_) {
+        if (runned_directive_.contains(index.row())) {
             return QBrush(QColor(255, 255, 0));
         }
         if (failed_directives_.contains(row.directive_index)) {
@@ -123,7 +124,7 @@ void ProgramTableModel::setRows(const QVector<ProgramRow>& rows)
     completed_directives_.clear();
     failed_directives_.clear();
     active_directive_ = ProgramRow::NoDirectiveIndex;
-    runned_directive_ = ProgramRow::NoDirectiveIndex;
+    runned_directive_.clear();
 
     endResetModel();
 }
@@ -190,7 +191,7 @@ void ProgramTableModel::setSelectedDirective(Direction direction)
 
 void ProgramTableModel::setSelectedDirective(int index)
 {
-    if (runned_directive_ != ProgramRow::NoDirectiveIndex) {
+    if (runned_directive_.isEmpty()) {
         selected_directive_ = ProgramRow::NoDirectiveIndex;
         return;
     }
@@ -220,18 +221,45 @@ void ProgramTableModel::setCompletedDirective(int directive_index)
 
 void ProgramTableModel::setRunnedDirective(int directive_index)
 {
-    if (runned_directive_ == directive_index) {
+    if (runned_directive_.index_directive == directive_index) {
         return;
     }
 
     resetStatusDirective(directive_index);
 
-    runned_directive_ = directive_index;
+    runned_directive_.index_directive = directive_index;
     const int old_active_directive =  active_directive_;
     active_directive_ = -1;
-
     updateDirective(old_active_directive);
-    updateDirective(runned_directive_);
+
+    int start_row{0}, count_row{0};
+    for (int i = 0; i < rows_.size(); ++i) {
+        if (rows_[i].directive_index != directive_index) {
+            continue;
+        }
+        count_row++;
+    }
+
+    setRunnedDirective(start_row, count_row - 1);
+}
+
+void ProgramTableModel::setRunnedDirective(int start_row_index, int end_row_index)
+{
+    int base_index = ProgramRow::NoDirectiveIndex;
+    for (int row_index = 0; row_index < rows_.count(); ++row_index) {
+        if (rows_[row_index].directive_index != runned_directive_.index_directive) {
+            continue;
+        }
+        base_index = row_index;
+        break;
+    }
+    if (base_index == ProgramRow::NoDirectiveIndex) {
+        return;
+    }
+    runned_directive_.start_row = start_row_index + base_index;
+    runned_directive_.end_row = end_row_index + base_index;
+
+    updateDirective(runned_directive_.index_directive);
 }
 
 void ProgramTableModel::setFailedDirective(int directive_index)
@@ -285,8 +313,8 @@ void ProgramTableModel::resetStatusDirective(int directive_index)
         selected_directive_ = ProgramRow::NoDirectiveIndex;
     }
 
-    if (runned_directive_ == directive_index) {
-        runned_directive_ = ProgramRow::NoDirectiveIndex;
+    if (runned_directive_.index_directive == directive_index) {
+        runned_directive_.clear();
     }
 
     if (completed_directives_.contains(directive_index)) {

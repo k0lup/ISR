@@ -51,12 +51,22 @@ struct AutoBlockIndexes
     }
 };
 
+struct DirectiveIndex {
+    int directive_index{-1};
+
+    DirectiveIndex() = default;
+    DirectiveIndex(int index) : directive_index(index) {}
+
+    operator int() const { return directive_index; }
+};
+
 struct ExecutionSnapshot
 {
     QString section_name;
     SectionStruct section;
 
     ChapterType active_chpater;
+    QMap<ChapterType, DirectiveIndex> active_variant;
     QMap<ChapterType, int> active_dir_index;
     QMap<ChapterType, AutoBlockIndexes> auto_blocks;
 

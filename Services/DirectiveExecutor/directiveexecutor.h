@@ -25,6 +25,7 @@ public slots:
     void startFrom(const ExecutionSnapshot& section_data, const RequestId request_id);
 
     void setAutoBlocks(const ExecutionSnapshot& section_data, const RequestId request_id);
+    void setVariant(const ExecutionSnapshot& section_data, const RequestId request_id);                                                    //Когда был изменен вариант
 
     void setExecuteMode(const ExecuteMode& execute_mode, const RequestId request_id);
 
@@ -63,6 +64,7 @@ private:
         QMap<ChapterType, QVector<Direct*>> directives_for_execute;
 
         ChapterType active_chapter;
+        QMap<ChapterType, DirectiveIndex> active_variant;
         QMap<ChapterType, int> current_directive_index;
         QMap<ChapterType, AutoBlockIndexes> auto_blocks_directives;
         StartSectionDirective* caller = nullptr;
@@ -75,6 +77,7 @@ private:
             result.active_chpater = active_chapter;
             result.active_dir_index = current_directive_index;
             result.section = section_struct;
+            result.active_variant = active_variant;
             result.auto_blocks = auto_blocks_directives;
             result.exec_frame_id = id_program;
 
