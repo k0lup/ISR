@@ -60,6 +60,7 @@ SOURCES += \
     Services/FilesReaders/diireader.cpp \
     Services/FilesReaders/sectionsloader.cpp \
     Services/FilesReaders/setfilesreader.cpp \
+    Services/GUI/ImageWidget/imagewidget.cpp \
     Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretdialog.cpp \
     Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretlineedit.cpp \
     Services/GUI/MenuDialogWindow/controlspodialog.cpp \
@@ -96,6 +97,7 @@ HEADERS += \
     Services/FilesReaders/diireader.h \
     Services/FilesReaders/sectionsloader.h \
     Services/FilesReaders/setfilesreader.h \
+    Services/GUI/ImageWidget/imagewidget.h \
     Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretdialog.h \
     Services/GUI/MenuDialogWindow/TrafaretDialog/trafaretlineedit.h \
     Services/GUI/MenuDialogWindow/controlspodialog.h \
@@ -128,3 +130,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
     Services/ConfigReader/readme.md
+
+RESOURCES += \
+    resources.qrc

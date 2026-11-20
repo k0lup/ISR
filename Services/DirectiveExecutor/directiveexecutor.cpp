@@ -186,7 +186,7 @@ void DirectiveExecutor::setSection(const QString& section_name, SectionStruct se
 
 void DirectiveExecutor::setVariant(const ExecutionSnapshot& section_data, const RequestId request_id)
 {
-    qCInfo(logCore) << "Вызван метод setAutoBlocks";
+    qCInfo(logCore) << "Вызван метод setVariant()";
     if (state_ != State::Runned) {
         QString message = QString("Недопустима установка варианта {%1} - требуется Runned").arg(getStateName(state_));
         qCWarning(logCore) << message;
@@ -229,12 +229,21 @@ void DirectiveExecutor::setVariant(const ExecutionSnapshot& section_data, const 
         return;
     }
 
+    const int var_id = section_data.active_variant[section_data.active_chpater];
     sections_.last().active_chapter = section_data.active_chpater;
-    sections_.last().active_variant[section_data.active_chpater] = section_data.active_variant[section_data.active_chpater];
+    sections_.last().active_variant[section_data.active_chpater] = var_id;
+    //ExecutionSnapshot snapshotToGui = sections_.last().toGUI();
+    //snapshotToGui.section.get(snapshotToGui.active_chpater).directives = extractSubdirectives(snapshotToGui.section.get(snapshotToGui.active_chpater).directives, snapshotToGui.active_variant[snapshotToGui.active_chpater]);
+    if (var_id == -1) {
+        sections_.last().section_struct.get(sections_.last().active_chapter).directives = mergeSubdirectives(sections_.last().section_struct.get(sections_.last().active_chapter).directives);
+    } else {
+        sections_.last().section_struct.get(sections_.last().active_chapter).directives =  extractSubdirectives(sections_.last().section_struct.get(sections_.last().active_chapter).directives, var_id);
+    }
     qCInfo(logCore) << "Отправляем сигнал requestCompleted";
     emit requestCompleted(request_id);
     qCInfo(logCore) << "Отправляем сигнал sectionChanged";
     emit sectionChanged(sections_.last().toGUI());
+    qCInfo(logCore) << "Завершен метод setVariant()";
     return;
 }
 
@@ -881,4 +890,89 @@ void DirectiveExecutor::onRequestFailed()
         qWarning(logGUI) << "В связи с невозможностью выполнения какого-либо из поступивших запросов на всякий случай сбрасываем режим выполнения в ШАГ";
         setExecuteMode(ExecuteMode::STEP, RequestIdGenerator::NO_REQUEST_ID);
     }
+}
+
+
+QList<DirectiveStruct> DirectiveExecutor::extractSubdirectives(const QList<DirectiveStruct> &intput_directives, const int selected_var) const
+{
+    qCInfo(logCore) << "Вызван метод extractSubdirectives()";
+    QList<DirectiveStruct> directives = intput_directives;
+    for (int index = 0; index < directives.count(); ++index) {
+        DirectiveStruct directive = directives[index];
+        if (directive.status == DirectStatus::RUNNING && directive.type == DirectType::VARIANT) {
+            qCInfo(logCore) << QString("Нашли запущенную директиву ВАРИАНТ - №%1").arg(index + 1);
+            //находим индекс с которого стартую варианты;
+            int begin_sub_directives_line_index = 0;
+            for (const auto& sub_directive : directive.sub_directives) {
+                if (0 == begin_sub_directives_line_index || sub_directive.lines.first().num_col.toInt() < begin_sub_directives_line_index) {
+                    begin_sub_directives_line_index = sub_directive.lines.first().num_col.toInt();
+                }
+            }
+            qCInfo(logCore) << QString("Поддирективы старуют с %1 строки директивы ВАРИАНТ. Удаляем строки, которые теперь не принадлежат директиве ВАРИАНТ").arg(begin_sub_directives_line_index + 1);
+            //удаляем из директивы вариант строки с поддирективами (они теперь самостоятельные варианты)
+            while (directive.lines.count() > begin_sub_directives_line_index) {
+                directive.lines.removeLast();
+            }
+            //делаем директиву ВАРИАНТ неактивной
+            directive.status = DirectStatus::LOAD;
+            directives[index] = directive;
+            int insert_index_shift{0};
+
+            for (const auto& sub_directive : directive.sub_directives) {
+                insert_index_shift++;
+                DirectiveStruct dir_for_append = sub_directive;
+                //очищаем столбец с номером - там хранилась техническая информация о смещении строк вариантов относительно начала директивы
+                for (int num_line = 0; num_line < dir_for_append.lines.count(); ++num_line) {
+                    dir_for_append.lines[num_line].num_col.clear();
+                }
+                //задаем статус поддирективы - активный вариант она или нет
+                if (dir_for_append.number == selected_var) {
+                    dir_for_append.status = DirectStatus::CURRENT;
+                    qCInfo(logCore) << QString("Создали очередную поддирективу №%1 со статусом CURRENT").arg(index + insert_index_shift + 1);
+                } else {
+                    dir_for_append.status = DirectStatus::LOAD;
+                    qCInfo(logCore) << QString("Создали очередную поддирективу №%1 со статусом LOAD").arg(index + insert_index_shift + 1);
+                }
+                directives.insert(index + insert_index_shift, dir_for_append);
+            }
+        }
+    }
+
+    qCInfo(logCore) << "Завершен метод extractSubdirectives()";
+    return directives;
+}
+
+QList<DirectiveStruct> DirectiveExecutor::mergeSubdirectives(const QList<DirectiveStruct>& intput_directives)
+{
+    qCInfo(logCore) << "Вызван метод mergeSubdirectives()";
+    QList<DirectiveStruct> directives = intput_directives;
+    QList<int> remove_indexes;
+    for (int index = 0; index < directives.count(); ++index) {
+        DirectiveStruct directive = directives[index];
+        if (directive.type == DirectType::SUB_DIRECTIVE) {
+            const int source_dir_index = directive.source_directive_index;
+            if (source_dir_index == -1 || source_dir_index >= directives.count()) {
+                QString error_message = QString("Критическая ошибка при сборе поддиректив - индекс источника '%1' вне допустимого диапазона [0;%2)").arg(source_dir_index).arg(directives.count());
+                qCCritical(logCore) << error_message;
+                qCInfo(logCore) << "Отправляем сигнал failed()";
+                emit failed(error_message);
+                directives.clear();
+                return directives;
+            }
+            DirectiveStruct& source_directive = directives[source_dir_index];
+            for (const auto& line : directive.lines) {
+                source_directive.lines.append(line);
+            }
+            remove_indexes.append(index);
+            qCInfo(logCore) << QString("Объединили поддирективу №%1 с исходной директивой №%2 и пометили поддирективу на удаление").arg(index + 1).arg(directive.source_directive_index + 1);
+        }
+    }
+
+    for (auto it = remove_indexes.rbegin(); it != remove_indexes.rend(); ++it) {
+        directives.removeAt(*it);
+        qCInfo(logCore) << QString("Удалили директиву №%1").arg(*it);
+    }
+
+    qCInfo(logCore) << "Завершен метод mergeSubdirectives()";
+    return directives;
 }

@@ -9,6 +9,7 @@ enum class DirectType {
     COMMAND,
     DOKLAD,
     INSTRUCTIONS,
+    SUB_DIRECTIVE,
     INVALID
 };
 
@@ -30,13 +31,15 @@ enum class ChapterType
 
 struct DirectiveStruct
 {
-    int number;
+    int number;                         //фактически индекс директивы в разделе (ШТАТ, НШС, ПРИ)
     DirectType type;
     DirectStatus status = DirectStatus::NOT_LOAD;
 
     QList<DirectiveLine> lines;
 
     QMap<int, DirectiveStruct> sub_directives;
+    int source_directive_index = -1;    //для поддиректив, чтобы можно было легко найти индекс реальной директивы
+                                        //(т.к. в исполнителе мы подменяем структуру при выполнении ВАРИАНТ и поддирективы на время становятся самостоятельными директивами)
 
     bool operator==(const DirectiveStruct& directive_struct_for_equal) const
     {

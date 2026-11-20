@@ -6,6 +6,7 @@
 #include "Services/DirectiveExecutor/executiontypes.h"
 #include "Services/GUI/guitypes.h"
 #include "Services/RequestIDGenerator/requestIDGenerator.h"
+#include "Services/GUI/ImageWidget/imagewidget.h"
 #include <QList>
 
 class QMenu;
@@ -94,6 +95,8 @@ private:
         QAction* third_section_rep_act_ = nullptr;              //->Третий раздел
         QAction* end_of_rep_section_act_ = nullptr;             //->Конец раздела
         QAction* exit_of_rep_section_act_ = nullptr;            //->Выход из разделов
+
+    ImageWidget* image_widget_ = nullptr;                       //Виджет который заменяе centralWidget, чтобы указать на состояние ошибки
 private slots:
     void onListOfSectionsActTriggered();
     void onTitleOfSecionActTriggered();

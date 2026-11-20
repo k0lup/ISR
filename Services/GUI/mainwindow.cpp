@@ -734,6 +734,7 @@ void MainWindow::onShowWarningRequested(const QString& warning_message)
 void MainWindow::onShowCriticalRequested(const QString& critical_message)
 {
     QMessageBox::critical(this, "Ошибка", critical_message);
+    setState(State::Failed);
 }
 
 void MainWindow::onShowInfoRequested(const QString& info_message)
@@ -1001,6 +1002,15 @@ void MainWindow::rebuildWindowForFailedState()
     qCInfo(logGUI) << "Вызван метод rebuildWindowForFailedState()";
 
     setWindowTitle("ИСР - [КРИТИЧЕСКАЯ ОШИБКА]");
+
+    if (!image_widget_) {
+        image_widget_ = new ImageWidget(this);
+    }
+    if (!image_widget_->setImage(":/images/images/critical_error.png")) {
+        qCWarning(logGUI) << "Не удалось установить изображение в ImageWidget";
+    } else {
+        setCentralWidget(image_widget_);
+    }
 
     qCInfo(logGUI) << "Завершен метод rebuildWindowForFailedState()";
 }

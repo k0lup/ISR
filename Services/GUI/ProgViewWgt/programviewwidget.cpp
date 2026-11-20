@@ -118,9 +118,9 @@ void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
 
 
     current_program_ = exec_snapshot;
-    if (current_program_.active_variant[current_program_.active_chpater] != -1) {
+    /*if (current_program_.active_variant[current_program_.active_chpater] != -1) {
         setVariantSelection();
-    }
+    }*/
     repaint();
 
     if (current_program_.auto_blocks[current_program_.active_chpater].start_index != -1) {
@@ -164,11 +164,18 @@ void ProgramViewWidget::onVarSelected(int var_id)
         case ChapterType::PRI : chapter_name = "ПРИ"; break;
         }
 
-        QString error_message = QString("Выбранного варианта (%4) не существует - директива №%1 (секция '%2' раздел '%3'")
+        QStringList variants;
+        variants.reserve(cur_directive.sub_directives.size());
+        for (const auto& key : cur_directive.sub_directives.keys()) {
+            variants.append("'" + QString::number(key) + "'");
+        }
+
+        QString error_message = QString("Выбранного варианта (%4) не существует - директива №%1 (секция '%2' раздел '%3')\nДоступные варианты: %5")
                 .arg(current_program_.active_dir_index[current_program_.active_chpater] + 1)
                 .arg(current_program_.section_name)
                 .arg(chapter_name)
-                .arg(var_id);
+                .arg(var_id)
+                .arg(variants.join(" "));
 
         qCCritical(logGUI) << error_message;
         qCInfo(logGUI) << "Отправляем сигнал failed()";

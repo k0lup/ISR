@@ -110,6 +110,9 @@ private:
     bool canSetAuto(const DirectiveStruct& directive) const;
     bool setState(State new_state);
     QString getStateName(State state) const;
+
+    QList<DirectiveStruct> extractSubdirectives(const QList<DirectiveStruct>& directives, const int selected_var) const;          //тут перестраиваем структуру выделяя поддирективы ВАРИАНТ в отдельные директивы
+    QList<DirectiveStruct> mergeSubdirectives(const QList<DirectiveStruct>& directives);                                    //тут перестраиваем структуру возвращая поддирективы в директиву ВАРИАНТ
 private:
     State state_ = State::Initialization;
     ExecuteMode execute_mode_ = ExecuteMode::STEP;

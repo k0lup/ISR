@@ -672,10 +672,12 @@ QMap<int, DirectiveStruct> DiiReader::getSubDirectives(const DirectiveStruct& di
         }
         int var_id = line.type_col.toInt();
         DirectiveStruct sub_directive;
-        sub_directive.type = DirectType::MAIN_OPERATION;
+        sub_directive.type = DirectType::SUB_DIRECTIVE;
         sub_directive.status = DirectStatus::LOAD;
-        sub_directive.number = num_line;
+        sub_directive.source_directive_index = directive.number;
+        sub_directive.number = var_id;
         do {
+            line = directive.lines[num_line];
             LineStruct line_struct;
             line_struct.type = LineType::DIRECTIVE;
             line_struct.cols_data.append(QString::number(num_line));
@@ -684,8 +686,8 @@ QMap<int, DirectiveStruct> DiiReader::getSubDirectives(const DirectiveStruct& di
             line_struct.cols_data.append(line.operation_col);
             sub_directive.lines.append(DirectiveLine(line_struct));
             num_line++;
-            line = directive.lines[num_line];
-        } while (line.type_col.isEmpty() && num_line < directive.lines.count());
+        } while (num_line < directive.lines.count() && directive.lines[num_line].type_col.isEmpty());
+        num_line--; //убираем последнее смещение, так как его сделает for
         sub_directives.insert(var_id, sub_directive);
     }
 
