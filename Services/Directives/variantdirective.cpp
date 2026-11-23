@@ -256,8 +256,11 @@ void VariantDirective::onWindowResult(const WindowResultData& result) {
     message.message = command;
     qCInfo(logCore) << "Устанавливаем состояние директивы в WaitingForPris";
     directive_state_ = DirectiveState::WaitingForPris;
-    qCInfo(logCore) << "Отправляем сигнал sendMessageToPris";
-    emit sendMessageToPris(message);
+    //qCInfo(logCore) << "Отправляем сигнал sendMessageToPris";
+    //emit sendMessageToPris(message);
+    result_directive.type = RESULT_DIRECTIVE_TYPES::OK;
+    result_directive.message = result.data;
+    emit finished(result_directive);
     qCInfo(logCore) << "Завершен метод onWindowResult()";
     return;
 }

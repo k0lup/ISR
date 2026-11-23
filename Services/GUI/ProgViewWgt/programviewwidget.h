@@ -26,19 +26,17 @@ signals:
 
     void autoBlockSwitched(bool contains);                                                      //Если есть блок авто в активном разделе - true. Нет - false;
     void failed(const QString message);
-    void varSelected(const ExecutionSnapshot& snapshot, RequestId request_id);
+    //void varSelected(const ExecutionSnapshot& snapshot, RequestId request_id);
 public slots:
     void onRunOperationRequest();
     void onStartOrEndAutoBlock();
     void onRemoveAutoMark();
     void onRunAutoBlock();
-    void onVarSelected(int var_id);
+    //void onVarSelected(int var_id);
 protected:
     void keyPressEvent(QKeyEvent *event) override;
 private slots:
     void onDoubleClicked(const QModelIndex& index);
-private:
-    void setVariantSelection();
 private:
     QTableView* table_ = nullptr;
     ProgramTableModel* model_ = nullptr;

@@ -29,6 +29,10 @@ enum class ChapterType
     PRI
 };
 
+QString directTypeToString(const DirectType direct_type);
+QString directStatusToString(const DirectStatus direct_status);
+QString ChapterTypeToString(const ChapterType chapter_type);
+
 struct DirectiveStruct
 {
     int number;                         //фактически индекс директивы в разделе (ШТАТ, НШС, ПРИ)

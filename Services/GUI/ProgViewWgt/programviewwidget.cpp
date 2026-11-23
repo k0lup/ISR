@@ -118,9 +118,6 @@ void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
 
 
     current_program_ = exec_snapshot;
-    /*if (current_program_.active_variant[current_program_.active_chpater] != -1) {
-        setVariantSelection();
-    }*/
     repaint();
 
     if (current_program_.auto_blocks[current_program_.active_chpater].start_index != -1) {
@@ -134,59 +131,6 @@ void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
     qCInfo(logGUI) << "Завершен метод setSection()";
 }
 
-void ProgramViewWidget::onVarSelected(int var_id)
-{
-    DirectiveStruct cur_directive = current_program_.section.get(current_program_.active_chpater).directives[current_program_.active_dir_index[current_program_.active_chpater]];
-    if (cur_directive.type != DirectType::VARIANT) {
-        QString chapter_name;
-        switch (current_program_.active_chpater) {
-        case ChapterType::STATE : chapter_name = "ШТАТ"; break;
-        case ChapterType::NOT_STATE : chapter_name = "НШС"; break;
-        case ChapterType::PRI : chapter_name = "ПРИ"; break;
-        }
-
-        QString error_message = QString("Выбран вариант, хотя текущая активная директива - %1 (секция '%2' раздел '%3'")
-                .arg(current_program_.active_dir_index[current_program_.active_chpater] + 1)
-                .arg(current_program_.section_name)
-                .arg(chapter_name);
-
-        qCCritical(logGUI) << error_message;
-        qCInfo(logGUI) << "Отправляем сигнал failed()";
-        emit failed(error_message);
-        return;
-    }
-
-    if (!cur_directive.sub_directives.contains(var_id) && var_id != -1) {
-        QString chapter_name;
-        switch (current_program_.active_chpater) {
-        case ChapterType::STATE : chapter_name = "ШТАТ"; break;
-        case ChapterType::NOT_STATE : chapter_name = "НШС"; break;
-        case ChapterType::PRI : chapter_name = "ПРИ"; break;
-        }
-
-        QStringList variants;
-        variants.reserve(cur_directive.sub_directives.size());
-        for (const auto& key : cur_directive.sub_directives.keys()) {
-            variants.append("'" + QString::number(key) + "'");
-        }
-
-        QString error_message = QString("Выбранного варианта (%4) не существует - директива №%1 (секция '%2' раздел '%3')\nДоступные варианты: %5")
-                .arg(current_program_.active_dir_index[current_program_.active_chpater] + 1)
-                .arg(current_program_.section_name)
-                .arg(chapter_name)
-                .arg(var_id)
-                .arg(variants.join(" "));
-
-        qCCritical(logGUI) << error_message;
-        qCInfo(logGUI) << "Отправляем сигнал failed()";
-        emit failed(error_message);
-        return;
-    }
-
-    current_program_.active_variant[current_program_.active_chpater] = var_id;
-    qCInfo(logGUI) << "Отправляем сигнал varSelected()";
-    emit varSelected(current_program_, RequestIdGenerator::NO_REQUEST_ID);
-}
 
 void ProgramViewWidget::onChapterChanged(const ChapterType &chapter)
 {
@@ -292,41 +236,4 @@ void ProgramViewWidget::onRunOperationRequest()
 
 
     qCInfo(logGUI) << "Завершен метод onRunOperationRequest()";
-}
-
-void ProgramViewWidget::setVariantSelection()
-{
-    qCInfo(logGUI) << "Вызван метод setVariantSelection()";
-
-    int start_select_index{-1};
-    int end_select_index{-1};
-    const int cur_dir_index = current_program_.active_dir_index[current_program_.active_chpater];
-    const DirectiveStruct& cur_dir_struct = current_program_.section.get(current_program_.active_chpater).directives[cur_dir_index];
-    const int var_id = current_program_.active_variant[current_program_.active_chpater];
-    if (!cur_dir_struct.sub_directives.contains(var_id)) {
-        QString error_message = "Запрошенного варианта не существует в текущей активной директиве!";
-        qCCritical(logGUI) << error_message;
-
-        qCInfo(logGUI) << "Отправляем сигнал failed()";
-        emit failed(error_message);
-        return;
-    }
-
-    bool convert_status1{false}, convert_status2{false};
-    start_select_index = cur_dir_struct.sub_directives[var_id].lines.first().num_col.toInt(&convert_status1);
-    end_select_index = cur_dir_struct.sub_directives[var_id].lines.last().num_col.toInt(&convert_status2);
-    if (!convert_status1 || !convert_status2) {
-        QString error_message = "Не удалось получить номер строки из структуры директивы!";
-        qCCritical(logGUI) << error_message;
-
-        qCInfo(logGUI) << "Отправляем сигнал failed()";
-        emit failed(error_message);
-        return;
-    }
-
-    qDebug() << "start: " << start_select_index;
-    qDebug() << "end: " << end_select_index;
-
-    model_->setRunnedDirective(start_select_index, end_select_index);
-    qCInfo(logGUI) << "Завершен метод setVariantSelection()";
 }

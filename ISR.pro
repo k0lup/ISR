@@ -71,6 +71,7 @@ SOURCES += \
     Services/GUI/ProgViewWgt/programviewwidget.cpp \
     Services/GUI/mainwindow.cpp \
     Services/NETManager/netmanager.cpp \
+    Services/Programs/programtypes.cpp \
     logging_categories.cpp \
     main.cpp
 
@@ -92,6 +93,7 @@ HEADERS += \
     Services/Directives/insructionsdirective.h \
     Services/Directives/mainoperdirecitve.h \
     Services/Directives/startsectiondirective.h \
+    Services/Directives/subdirective.h \
     Services/Directives/variantdirective.h \
     Services/FilesReaders/ErrorReadFileStruct.h \
     Services/FilesReaders/diireader.h \

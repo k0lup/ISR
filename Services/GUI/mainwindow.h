@@ -29,7 +29,7 @@ signals:
     void setTitleDescriptions(const TitleOfSectionDescription& desc);
     void setNewTraf(const QString& traf);
     void stopAutoBlockRequested();
-    void varSelected(int var_id);
+    //void varSelected(int var_id);
 public slots:
     void onShowWarningRequested(const QString& warning_message);
     void onShowCriticalRequested(const QString& critical_message);
