@@ -72,6 +72,7 @@ void Application::setupConnections()
     QObject::connect(gui_window_, &MainWindow::loadSectionRequested, section_loader_, &SectionsLoader::onLoadSectionRequested);
     QObject::connect(gui_window_, &MainWindow::sendWindowResponse, directive_executor_, &DirectiveExecutor::onWindowResponse);
     QObject::connect(gui_window_, &MainWindow::requestChangeSection, directive_executor_, &DirectiveExecutor::onSetLoadedSectionRequested);
+    QObject::connect(gui_window_, &MainWindow::variantCanceled, directive_executor_, &DirectiveExecutor::onVariantCancelled);
 
     QObject::connect(gui_window_, &MainWindow::stopAutoBlockRequested, directive_executor_, [this]() {
         directive_executor_->setExecuteMode(

@@ -56,6 +56,13 @@ void ProgramViewWidget::onDoubleClicked(const QModelIndex& index)
         return;
     }
 
+    const bool has_active_var_in_current_active_chapter = (current_program_.active_dir_index[current_program_.active_chpater] != -1);
+
+    //Если у нас выбран ВАРИАНТ, то не разрешаем запускать ничего, кроме выбранного варианта (выбранной поддирективы)
+    if (has_active_var_in_current_active_chapter && directive_index != current_program_.active_dir_index[current_program_.active_chpater]) {
+        return;
+    }
+
     current_program_.active_dir_index[current_program_.active_chpater] = directive_index;
     qCInfo(logGUI) << "Отправляем сигнал directiveDoubleClicked()";
     emit directiveDoubleClicked(current_program_, RequestIdGenerator::NO_REQUEST_ID);
@@ -126,6 +133,14 @@ void ProgramViewWidget::setSection(const ExecutionSnapshot& exec_snapshot)
     } else {
         qCInfo(logGUI) << "Отправляем сигнал autoBlockSwitched(false)";
         emit autoBlockSwitched(false);
+    }
+
+    if (current_program_.active_variant[current_program_.active_chpater] != -1) {
+        qCInfo(logGUI) << "Отправляем сигнал variantContainsSwitched(true)";
+        emit variantContainsSwitched(true);
+    } else {
+        qCInfo(logGUI) << "Отправляем сигнал variantContainsSwitched(false)";
+        emit variantContainsSwitched(false);
     }
 
     qCInfo(logGUI) << "Завершен метод setSection()";
@@ -230,9 +245,7 @@ void ProgramViewWidget::onRunOperationRequest()
         current_select_directive_ = model_->getCurrentAcitveDirectiveIndex();
     }
 
-    current_program_.active_dir_index[current_program_.active_chpater] = current_select_directive_;
-    qCInfo(logGUI) << QString("Отправляем сигнал на запуск директивы №%1").arg(current_select_directive_ + 1);
-    emit directiveDoubleClicked(current_program_, RequestIdGenerator::NO_REQUEST_ID);
+    onDoubleClicked(model_->getModelIndex(current_select_directive_));
 
 
     qCInfo(logGUI) << "Завершен метод onRunOperationRequest()";

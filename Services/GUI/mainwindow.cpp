@@ -383,6 +383,7 @@ void MainWindow::setupConnections()
     QObject::connect(qApp, &QApplication::focusChanged, this, &MainWindow::returnFocusToMainWindow);
     QObject::connect(start_or_end_auto_block_act_,  &QAction::triggered, exec_wgt_, &ProgramViewWidget::onStartOrEndAutoBlock);
     QObject::connect(exec_wgt_,                     &ProgramViewWidget::autoBlockSwitched, this, &MainWindow::onAutoBlockSwitched);
+    QObject::connect(exec_wgt_,                     &ProgramViewWidget::variantContainsSwitched, this, &MainWindow::onVariantContainsSwitched);
     QObject::connect(remove_auto_mark_act_,         &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRemoveAutoMark);
     QObject::connect(run_auto_block_act_,           &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRunAutoBlock);
     QObject::connect(run_operations_act_,           &QAction::triggered, exec_wgt_, &ProgramViewWidget::onRunOperationRequest);
@@ -547,6 +548,9 @@ void MainWindow::onRunOperationsActTriggered()
 void MainWindow::onCancelVariantActTriggered()
 {
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Работа'->'Отменить вариант'";
+
+    qCInfo(logGUI) << "Отправляем сигнал variantCanceled()";
+    emit variantCanceled();
 
     qCInfo(logGUI) << "Завершен обработчик пункта меню 'Работа'->'Отменить вариант'";
 }
@@ -1085,6 +1089,16 @@ void MainWindow::onAutoBlockSwitched(bool contains)
     run_auto_block_act_->setEnabled(contains);
 
     qCInfo(logGUI) << "Завершен метод onAutoBlockSwitched()";
+}
+
+void MainWindow::onVariantContainsSwitched(bool contains)
+{
+    qCInfo(logGUI) << QString("Вызван метод onvariantContainsSwitched(") + (contains ? "true" : "false") + ")";
+
+    cancel_variant_act_->setEnabled(contains);
+    run_auto_block_act_->setEnabled(!contains);
+
+    qCInfo(logGUI) << QString("Завершен метод onvariantContainsSwitched(") + (contains ? "true" : "false") + ")";
 }
 
 void MainWindow::onExecuteModeChanged(ExecuteMode mode)

@@ -69,6 +69,8 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
+    QModelIndex getModelIndex(const int directive_index) const;
+
     void setRows(const QVector<ProgramRow>& rows);
     void clear();
 

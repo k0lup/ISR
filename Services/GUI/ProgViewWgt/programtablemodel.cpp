@@ -346,3 +346,21 @@ int ProgramTableModel::getCurrentAcitveDirectiveIndex() const
 {
     return active_directive_;
 }
+
+QModelIndex ProgramTableModel::getModelIndex(const int directive_index) const
+{
+    int direct_row_index{ProgramRow::NoDirectiveIndex};
+
+    for (int i = 0; i < rows_.count(); ++i) {
+        if (rows_[i].directive_index == directive_index) {
+            direct_row_index = i;
+            break;
+        }
+    }
+
+    if (direct_row_index == ProgramRow::NoDirectiveIndex) {
+        return QModelIndex();
+    }
+
+    return index(direct_row_index, 0);
+}

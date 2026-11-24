@@ -412,15 +412,23 @@ void DirectiveExecutor::startFrom(const ExecutionSnapshot& section_data, const R
         return;
     }
 
+    if (sections_.last().current_directive_index[sections_.last().active_chapter] != section_data.active_dir_index[section_data.active_chpater]) {
+        if (!settings_.snapshot().manual_start_direct_mode) {
+            QString error_message = "Вызов директив не по порядку возможен только при задании соотвествующего режима в настройках!";
+            qCWarning(logCore) << error_message;
 
-    if (!settings_.snapshot().manual_start_direct_mode
-            && sections_.last().current_directive_index[sections_.last().active_chapter] != section_data.active_dir_index[section_data.active_chpater]) {
-        QString error_message = "Вызов директив не по порядку возможен только при задании соотвествующего режима в настройках!";
-        qCWarning(logCore) << error_message;
+            qCInfo(logCore) << "Отправлен сигнал requestFailed";
+            emit requestFailed(request_id, error_message);
+            return;
+        }
+        if (current_active_direct->getTypeDirect() == DirectType::SUB_DIRECTIVE) {
+            QString error_message = "Нельзя вызвать другую директиву на исполнение пока не завершено выполнение директивы ВАРИАНТ\n(На текущей момент активен выбор поддирективы ВАРИАНТ))";
+            qCCritical(logCore) << error_message;
 
-        qCInfo(logCore) << "Отправлен сигнал requestFailed";
-        emit requestFailed(request_id, error_message);
-        return;
+            qCInfo(logCore) << "Отправляем сигнал failed()";
+            emit failed(error_message);
+            return;
+        }
     }
 
     sections_.last().current_directive_index[sections_.last().active_chapter] = section_data.active_dir_index[section_data.active_chpater];
@@ -1050,4 +1058,14 @@ DirectiveExecutor::ExecuteFrame DirectiveExecutor::mergeSubdirectives(const Exec
 
     qCInfo(logCore) << "Завершен метод mergeSubdirectives()";
     return frame;
+}
+
+void DirectiveExecutor::onVariantCancelled() {
+    qCInfo(logCore) << "Вызван метод onVariantCancelled()";
+
+    ExecutionSnapshot snapshot = sections_.last().toGUI();
+    snapshot.active_variant[snapshot.active_chpater] = -1;
+    setVariant(snapshot, RequestIdGenerator::NO_REQUEST_ID);
+
+    qCInfo(logGUI) << "Завершен метод onVariantCancelled()";
 }

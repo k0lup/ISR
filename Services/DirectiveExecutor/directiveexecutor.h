@@ -26,6 +26,7 @@ public slots:
 
     void setAutoBlocks(const ExecutionSnapshot& section_data, const RequestId request_id);
     void setVariant(const ExecutionSnapshot& section_data, const RequestId request_id);                                                    //Когда был изменен вариант
+    void onVariantCancelled();                                                                                                             //Когда GUI просит снять вариант
 
     void setExecuteMode(const ExecuteMode& execute_mode, const RequestId request_id);
 

@@ -25,6 +25,7 @@ signals:
     void autoBlockUpdate(const ExecutionSnapshot& snapshot, RequestId request_id);
 
     void autoBlockSwitched(bool contains);                                                      //Если есть блок авто в активном разделе - true. Нет - false;
+    bool variantContainsSwitched(bool contains);                                                //Если есть запущенная директива ВАРИАНТ (с уже выбранным вариантом) в активном разделе - true. Нет - false;
     void failed(const QString message);
     //void varSelected(const ExecutionSnapshot& snapshot, RequestId request_id);
 public slots:

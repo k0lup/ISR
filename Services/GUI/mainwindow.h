@@ -29,6 +29,7 @@ signals:
     void setTitleDescriptions(const TitleOfSectionDescription& desc);
     void setNewTraf(const QString& traf);
     void stopAutoBlockRequested();
+    void variantCanceled();
     //void varSelected(int var_id);
 public slots:
     void onShowWarningRequested(const QString& warning_message);
@@ -42,6 +43,7 @@ public slots:
     void onListSectionLoaded(const QSet<QString>& section_list);
 
     void onAutoBlockSwitched(bool contains);                                                                    //Если есть блок авто в активном разделе - true. Нет - false;
+    void onVariantContainsSwitched(bool contains);                                                              //Если есть запущенная директива ВАРИАНТ (с уже выбранным вариантом) в активном разделе - true. Нет - false;
     void onExecuteModeChanged(ExecuteMode mode);
 private:
     QMenu* preparaion_menu_ = nullptr;                      //Подготовка
