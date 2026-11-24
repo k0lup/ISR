@@ -56,10 +56,11 @@ void ProgramViewWidget::onDoubleClicked(const QModelIndex& index)
         return;
     }
 
-    const bool has_active_var_in_current_active_chapter = (current_program_.active_dir_index[current_program_.active_chpater] != -1);
+    const bool has_active_var_in_current_active_chapter = (current_program_.active_variant[current_program_.active_chpater] != -1);
 
     //Если у нас выбран ВАРИАНТ, то не разрешаем запускать ничего, кроме выбранного варианта (выбранной поддирективы)
     if (has_active_var_in_current_active_chapter && directive_index != current_program_.active_dir_index[current_program_.active_chpater]) {
+        qCInfo(logGUI) << QString("Есть выбранный ВАРИАНТ (%1) - игнорируем попытку запуска другой директивы (%2)").arg(current_program_.active_variant[current_program_.active_chpater]).arg(directive_index);
         return;
     }
 

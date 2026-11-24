@@ -188,8 +188,15 @@ void DirectiveExecutor::setSection(const QString& section_name, SectionStruct se
 void DirectiveExecutor::setVariant(const ExecutionSnapshot& section_data, const RequestId request_id)
 {
     qCInfo(logCore) << "Вызван метод setVariant()";
-    if (state_ != State::Runned) {
+    const int requested_var_value = section_data.active_variant[section_data.active_chpater].directive_index;
+    if (requested_var_value != -1 && state_ != State::Runned) {
         QString message = QString("Недопустима установка варианта {%1} - требуется Runned").arg(getStateName(state_));
+        qCWarning(logCore) << message;
+        emit requestFailed(request_id, message);
+        return;
+    }
+    if (requested_var_value == -1 && state_ != State::Idle) {
+        QString message = QString("Недопустим сброс варианта {%1} - требуется Idle").arg(getStateName(state_));
         qCWarning(logCore) << message;
         emit requestFailed(request_id, message);
         return;
@@ -744,6 +751,8 @@ void DirectiveExecutor::onDirectiveFinished(const Direct::ResultDirective& resul
 
     }
 
+    setState(State::Idle);
+
     if (direct->getTypeDirect() == DirectType::SUB_DIRECTIVE) {
         qCInfo(logCore) << "После выполнения поддирективы выполняем сброс варианта";
         sections_.last().active_variant[sections_.last().active_chapter] = -1;
@@ -752,7 +761,6 @@ void DirectiveExecutor::onDirectiveFinished(const Direct::ResultDirective& resul
 
     qCInfo(logCore) << QString("Отправляем сигнал sectionChanged(%1)").arg(active_section.section_name);
     emit this->sectionChanged(active_section.toGUI());
-    setState(State::Idle);
     qCInfo(logCore) << "Завершен метод onDirectiveFinished()";
     return;
 }
