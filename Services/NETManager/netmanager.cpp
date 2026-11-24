@@ -4,17 +4,17 @@
 #include <Logger/logger.h>
 #include "logging_categories.h"
 
-NETManager::NETManager(const AppConfig& cfg, QObject *parent) : QObject(parent), cfg_(cfg)
+NETManager::NETManager(const SettingsStore& settings, QObject *parent) : QObject(parent), settings_(settings)
 {
     qCInfo(logNet) << "Вызван конструктор NETManager";
     pris_socket_ = new QTcpSocket(this);
     prot_socket_ = new QTcpSocket(this);
 
-    pris_connect_info.ip = cfg_.ip_server;
-    pris_connect_info.port = cfg_.pris_port;
+    pris_connect_info.ip = settings.snapshot().ip_server;
+    pris_connect_info.port = settings.snapshot().pris_port;
 
-    prot_connect_info.ip = cfg_.ip_server;
-    prot_connect_info.port = cfg_.prot_port;
+    prot_connect_info.ip = settings.snapshot().ip_server;
+    prot_connect_info.port = settings.snapshot().prot_port;
 
 
     setNetworkConnections();

@@ -49,7 +49,6 @@ SOURCES += \
     Services/ConfigReader/configparser.cpp \
     Services/ConfigReader/configreader.cpp \
     Services/ConfigReader/configschema.cpp \
-    Services/Controller/controller.cpp \
     Services/DirectiveExecutor/directiveexecutor.cpp \
     Services/Directives/commanddirective.cpp \
     Services/Directives/dokladdirective.cpp \
@@ -72,6 +71,7 @@ SOURCES += \
     Services/GUI/mainwindow.cpp \
     Services/NETManager/netmanager.cpp \
     Services/Programs/programtypes.cpp \
+    Services/Settings/settingsstore.cpp \
     logging_categories.cpp \
     main.cpp
 
@@ -82,8 +82,6 @@ HEADERS += \
     Services/ConfigReader/configreader.h \
     Services/ConfigReader/configschema.h \
     Services/ConfigReader/configtypes.h \
-    Services/Controller/appstate.h \
-    Services/Controller/controller.h \
     Services/DirectiveExecutor/directiveexecutor.h \
     Services/DirectiveExecutor/executiontypes.h \
     Services/Directives/commanddirective.h \
@@ -116,6 +114,7 @@ HEADERS += \
     Services/Programs/programlines.h \
     Services/Programs/programtypes.h \
     Services/RequestIDGenerator/requestIDGenerator.h \
+    Services/Settings/settingsstore.h \
     logging_categories.h \
     metatypes.h
 

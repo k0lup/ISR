@@ -11,8 +11,8 @@
 #include <Logger/logger.h>
 #include "logging_categories.h"
 
-DirectiveExecutor::DirectiveExecutor(const AppConfig& cfg, QObject* parent) :
-    QObject(parent), cfg_(cfg)
+DirectiveExecutor::DirectiveExecutor(const SettingsStore& settings, QObject* parent) :
+    QObject(parent), settings_(settings)
 {
     QObject::connect(this, &DirectiveExecutor::failed, this, &DirectiveExecutor::onFailedDetected);
     QObject::connect(this, &DirectiveExecutor::requestFailed, this, &DirectiveExecutor::onRequestFailed);
@@ -412,7 +412,9 @@ void DirectiveExecutor::startFrom(const ExecutionSnapshot& section_data, const R
         return;
     }
 
-    if (!cfg_.manual_start_direct_mode && sections_.last().current_directive_index[sections_.last().active_chapter] != section_data.active_dir_index[section_data.active_chpater]) {
+
+    if (!settings_.snapshot().manual_start_direct_mode
+            && sections_.last().current_directive_index[sections_.last().active_chapter] != section_data.active_dir_index[section_data.active_chpater]) {
         QString error_message = "Вызов директив не по порядку возможен только при задании соотвествующего режима в настройках!";
         qCWarning(logCore) << error_message;
 

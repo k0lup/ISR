@@ -19,9 +19,9 @@ static QString expandUserPath(const QString &path)
     return QDir::cleanPath(path);
 }
 
-SectionsLoader::SectionsLoader(const AppConfig& cfg, QObject *parent) :
+SectionsLoader::SectionsLoader(const SettingsStore& settings, QObject *parent) :
     QObject(parent),
-    cfg_(cfg)
+    settings_(settings)
 {
     qCDebug(logCore) << "Инициализирован SectionsLoader";
 
@@ -45,10 +45,10 @@ void SectionsLoader::start() {
     qCInfo(logCore) << "Читаем основные set файлы разделов (из файла настройки)";
     ErrorReadFile error;
 
-    QString folder = cfg_.sections_folder_path;
+    QString folder = settings_.snapshot().sections_folder_path;
     QDir dir(expandUserPath(folder));
 
-    QStringList sections = cfg_.sections_paths;
+    QStringList sections = settings_.snapshot().sections_paths;
     //QSet<QString> down_sections;
     for (auto& section : sections) {
         section = dir.filePath(section + QString(".SET"));
@@ -78,7 +78,7 @@ void SectionsLoader::start() {
         sections_names_.unite(new_sections);
     }
 
-    folder = cfg_.spo_path;
+    folder = settings_.snapshot().spo_path;
 
     dir = QDir(folder);
     for (const auto& section : sections_names_) {
@@ -158,7 +158,7 @@ void SectionsLoader::onStatusSectionReceived(bool is_load, RequestId source_requ
         return;
     }
 
-    QString folder = cfg_.spo_path;
+    QString folder = settings_.snapshot().spo_path;
     QDir dir(expandUserPath(folder));
     dir = dir.filePath(section_name);
 

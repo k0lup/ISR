@@ -83,7 +83,7 @@ static QString getChapterName(const ChapterType chapter)
     }
 }
 
-MainWindow::MainWindow(const AppConfig& cfg, QWidget *parent) : QMainWindow(parent), cfg_(cfg)
+MainWindow::MainWindow(SettingsStore& settings, QWidget *parent) : QMainWindow(parent), settings_(settings)
 {
     qCInfo(logGUI) << "Вызван конструктор MainWindow";
     exec_wgt_ = new ProgramViewWidget(this);
@@ -423,7 +423,7 @@ void MainWindow::onTitleOfSecionActTriggered()
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Подготовка'->'Заголовок раздела...'";
 
     TitleOfSectionDialog dialog;
-    if (dialog.exec(current_selected_section_, cfg_.traf) == QDialog::Accepted) {
+    if (dialog.exec(current_selected_section_, settings_.snapshot().traf) == QDialog::Accepted) {
         title_description_ = dialog.getDescription();
         emit setTitleDescriptions(title_description_);
         setState(State::TitleReady);
@@ -481,7 +481,7 @@ void MainWindow::onTrafActTriggered()
     qCInfo(logGUI) << "Вызван обработчик пункта меню 'Подготовка'->'Трафарет...'";
 
     TrafaretDialog dialog;
-    if (dialog.exec(cfg_.traf) == QDialog::Accepted) {
+    if (dialog.exec(settings_.snapshot().traf) == QDialog::Accepted) {
         QString traf = dialog.getTrafText();
         qCInfo(logGUI) << QString("Отправляем сигнал setNewTraf(%1)").arg(traf);
         emit setNewTraf(traf);

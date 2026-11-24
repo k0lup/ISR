@@ -1,8 +1,8 @@
 #include "catalogmanager.h"
 #include <QSet>
 
-CatalogManager::CatalogManager(const AppConfig& cfg, QObject *parent)
-    : QObject{parent}, cfg_(cfg)
+CatalogManager::CatalogManager(const SettingsStore& settings, QObject *parent)
+    : QObject{parent}, settings_(settings)
 {
 
 }

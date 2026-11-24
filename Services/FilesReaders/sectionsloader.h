@@ -8,7 +8,7 @@
 #include <QFile>
 #include <QList>
 #include <atomic>
-#include "Services/ConfigReader/configtypes.h"
+#include "Services/Settings/settingsstore.h"
 #include "setfilesreader.h"
 #include "diireader.h"
 #include "Services/Programs/programtypes.h"
@@ -20,7 +20,7 @@ class SectionsLoader : public QObject
 {
     Q_OBJECT
 public:
-    SectionsLoader(const AppConfig& cfg, QObject *parent = nullptr);
+    SectionsLoader(const SettingsStore& settings, QObject *parent = nullptr);
 
     QSet<QString> getSectionsNames();
 public slots:
@@ -51,7 +51,7 @@ private:
     QSet<QString> readMasterSectionsFile(const QString& file_path, ErrorReadFile& error);
 
     std::atomic_bool cancel_requested_{false};
-    const AppConfig& cfg_;
+    const SettingsStore& settings_;
     QSet<QString> sections_names_;
     SetFilesReader set_reader_;
     DiiReader dii_reader_;

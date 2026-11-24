@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "Services/ConfigReader/configtypes.h"
+#include "Services/Settings/settingsstore.h"
 #include "Services/DirectiveExecutor/executiontypes.h"
 #include "Services/GUI/guitypes.h"
 #include "Services/RequestIDGenerator/requestIDGenerator.h"
@@ -18,7 +18,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MainWindow(const AppConfig& cfg, QWidget *parent = nullptr);
+    explicit MainWindow(SettingsStore& cfg, QWidget *parent = nullptr);
     ProgramViewWidget* getProgViewWgt();
 signals:
     void loadSectionRequested(const QString& section_name, const RequestId request_id);
@@ -184,7 +184,7 @@ private:
 
     State state_ = State::Initializing;
 
-    const AppConfig& cfg_;
+    SettingsStore& settings_;
 };
 
 #endif // MAINWINDOW_H

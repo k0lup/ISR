@@ -11,22 +11,20 @@ Application::Application(QObject* parent) : QObject(parent)
         return;
     }
 
-    controller_ = new Controller(app_cfg_);
-    gui_window_ = new MainWindow(app_cfg_);
+    gui_window_ = new MainWindow(settings_);
     prog_view_widget_ = gui_window_->getProgViewWgt();
 
-    directive_executor_ = new DirectiveExecutor(app_cfg_);
+    directive_executor_ = new DirectiveExecutor(settings_);
     dir_exec_thread_ = new QThread(this);
     directive_executor_->moveToThread(dir_exec_thread_);
     dir_exec_thread_->start();
-    catalog_manager_ = new CatalogManager(app_cfg_);
-    section_loader_ = new SectionsLoader(app_cfg_);
+    catalog_manager_ = new CatalogManager(settings_);
+    section_loader_ = new SectionsLoader(settings_);
 
     setupConnections();
 
     gui_window_->show();
 
-    //QTimer::singleShot(0, controller_, &Controller::start);
     QTimer::singleShot(0, section_loader_, &SectionsLoader::start);
     is_inicialized_ = true;
 }
@@ -60,7 +58,7 @@ bool Application::readConfig()
         return false;
     }
 
-    app_cfg_ = config_reader.getConfig();
+    settings_.setAppCfg(config_reader.getConfig());
     return true;
 }
 
@@ -74,9 +72,7 @@ void Application::setupConnections()
     QObject::connect(gui_window_, &MainWindow::loadSectionRequested, section_loader_, &SectionsLoader::onLoadSectionRequested);
     QObject::connect(gui_window_, &MainWindow::sendWindowResponse, directive_executor_, &DirectiveExecutor::onWindowResponse);
     QObject::connect(gui_window_, &MainWindow::requestChangeSection, directive_executor_, &DirectiveExecutor::onSetLoadedSectionRequested);
-    QObject::connect(gui_window_, &MainWindow::setNewTraf, this, [this](const QString& traf){
-       app_cfg_.traf = traf;
-    });
+
     QObject::connect(gui_window_, &MainWindow::stopAutoBlockRequested, directive_executor_, [this]() {
         directive_executor_->setExecuteMode(
             ExecuteMode::STEP,
@@ -139,9 +135,6 @@ Application::~Application()
 {
     if (gui_window_) {
         gui_window_->deleteLater();
-    }
-    if (controller_) {
-        controller_->deleteLater();
     }
     if (dir_exec_thread_) {
         dir_exec_thread_->quit();

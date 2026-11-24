@@ -12,13 +12,13 @@
 #include "Services/RequestIDGenerator/requestIDGenerator.h"
 #include "Services/Directives/directive.h"
 #include "Services/Directives/startsectiondirective.h"
-#include "Services/ConfigReader/configtypes.h"
+#include "Services/Settings/settingsstore.h"
 
 class DirectiveExecutor : public QObject
 {
     Q_OBJECT
 public:
-    explicit DirectiveExecutor(const AppConfig& cfg, QObject* parent = nullptr);
+    explicit DirectiveExecutor(const SettingsStore& settings, QObject* parent = nullptr);
 
 public slots:
     void setSection(const QString& section_name, SectionStruct section_struct, const RequestId request_id);
@@ -122,7 +122,7 @@ private:
 
     int id_last_prog = 0;
 
-    const AppConfig& cfg_;
+    const SettingsStore& settings_;
 };
 
 #endif // DIRECTIVEEXECUTOR_H

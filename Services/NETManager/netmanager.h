@@ -5,13 +5,13 @@
 #include <QTcpSocket>
 
 #include "Services/NETManager/netStruct.h"
-#include "Services/ConfigReader/configtypes.h"
+#include "Services/Settings/settingsstore.h"
 
 class NETManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit NETManager(const AppConfig& cfg, QObject *parent = nullptr);
+    explicit NETManager(const SettingsStore& settings, QObject *parent = nullptr);
 public slots:
     void sendMessageToPris(const NETPrisMessage& message);
     void sendMessageToProt(const NETProtMessage& message);
@@ -50,7 +50,7 @@ private:
 
     State state_ = State::Initialization;
 
-    const AppConfig& cfg_;
+    const SettingsStore& settings_;
 };
 
 #endif // NETMANAGER_H

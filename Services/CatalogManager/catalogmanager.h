@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QMap>
 #include <QStringList>
-#include "Services/ConfigReader/configtypes.h"
+#include "Services/Settings/settingsstore.h"
 
 
 
@@ -12,7 +12,7 @@ class CatalogManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit CatalogManager(const AppConfig& cfg, QObject *parent = nullptr);
+    explicit CatalogManager(const SettingsStore& settings, QObject *parent = nullptr);
 
 public slots:
     //void addCatalog(const quint64 request_id, const QString& section, const QString& path, DirectType direct_type);
@@ -41,7 +41,7 @@ private:
     QMap<QString, QStringList> public_priority_sections_;
     QMap<QString, QStringList> private_sections_;
 
-    const AppConfig& cfg_;
+    const SettingsStore& settings_;
 };
 
 #endif // CATALOGMANAGER_H
