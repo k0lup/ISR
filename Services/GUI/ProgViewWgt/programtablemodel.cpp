@@ -191,7 +191,7 @@ void ProgramTableModel::setSelectedDirective(Direction direction)
 
 void ProgramTableModel::setSelectedDirective(int index)
 {
-    if (runned_directive_.isEmpty()) {
+    if (!runned_directive_.isEmpty()) {
         selected_directive_ = ProgramRow::NoDirectiveIndex;
         return;
     }

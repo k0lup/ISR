@@ -117,7 +117,11 @@ void DirectiveExecutor::setSection(const QString& section_name, SectionStruct se
             }
 
             if (!section_struct.get(ChapterType::NOT_STATE).hasLabel(execute_param.label)) {
-                QString error_message = QString("Заданной метки '%1' не существует").arg(execute_param.label);
+                QStringList labels;
+                for (const auto& block : section_struct.get(ChapterType::NOT_STATE).blocks) {
+                    labels.append("'" + block.name + "'");
+                }
+                QString error_message = QString("Заданной метки '%1' не существует. Допустимые метки: {%2}").arg(execute_param.label).arg(labels.join(" "));
                 qCWarning(logCore) << "Выявлена ошибка при подготовке раздела к исполнению:\n" + error_message;
 
                 qCInfo(logCore) << "Отправляем сигнал requestFailed";

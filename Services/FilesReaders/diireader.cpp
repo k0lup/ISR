@@ -327,6 +327,11 @@ dii_struct::DiiFile DiiReader::parseLines(const QList<dii_struct::Line>& lines, 
                     continue;
                 }
                 if (has_start_command) {
+                    if (chapter.commands.isEmpty()) {
+                        command.number = 0;
+                    } else {
+                        command.number = chapter.commands.last().number + 1;
+                    }
                     chapter.commands.append(command);
                     if (has_active_block) {
                         chapter.blocks.last().num_dirs_for_block.append(chapter.commands.count() - 1);
@@ -336,7 +341,7 @@ dii_struct::DiiFile DiiReader::parseLines(const QList<dii_struct::Line>& lines, 
                 }
                 QString block_name = lines[num_line].line[col(dii_struct::ColumnName::COMMAND)];
                 if (block_name.startsWith("К_")) {
-                    block_name = block_name.mid(2);
+                    block_name = block_name.mid(3);
                     if (block_name.isEmpty()) {
                         error_messages.append(QString("Строка %1: ПУСТОЕ ИМЯ БЛОКА НШС").arg(num_line + 1));
                         res = false;
@@ -354,6 +359,7 @@ dii_struct::DiiFile DiiReader::parseLines(const QList<dii_struct::Line>& lines, 
                     }
                     has_active_block = false;
                 } else {
+                    block_name = block_name.mid(1);
                     if (block_name.isEmpty()) {
                         error_messages.append(QString("Строка %1: ПУСТОЕ ИМЯ БЛОКА НШС").arg(num_line + 1));
                         res = false;
