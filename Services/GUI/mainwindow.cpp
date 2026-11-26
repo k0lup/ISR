@@ -19,7 +19,7 @@
 
 struct enabledMap {
                                                         /*Initializing*/    /*NoSection*/    /*SectionSelected*/    /*TitleReady*/    /*SectionLoaded*/    /*Failed*/
-    const QList<bool> window                            {false,                 true,               true,               true,               true,           false};
+    const QList<bool> window                            {false,                 true,               true,               true,               true,           true};
     const QList<bool> preparaion_menu                   {false,                 true,               true,               true,               true,           false};
     const QList<bool> list_of_sections_act              {false,                 true,               true,               true,               true,           false};
     const QList<bool> title_of_secion_act               {false,                 false,              true,               false,              false,          false};
