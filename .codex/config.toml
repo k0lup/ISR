@@ -1,0 +1,7 @@
+# Безопасный по умолчанию режим локальных команд; не гарантия конфиденциальности.
+sandbox_mode = "read-only"
+approval_policy = "never"
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
