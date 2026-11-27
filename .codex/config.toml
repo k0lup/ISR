@@ -1,7 +1,52 @@
-# Безопасный по умолчанию режим локальных команд; не гарантия конфиденциальности.
-sandbox_mode = "read-only"
+
+default_permissions = "team-docs"
 approval_policy = "never"
 
 [agents]
 enabled = true
 max_concurrent_threads_per_session = 3
+
+# Основная инженерная команда
+
+[permissions.team-docs]
+description = "Engineering team: documentation editing"
+
+[permissions.team-docs.filesystem]
+":root" = "read"
+
+[permissions.team-docs.filesystem.":workspace_roots"]
+"." = "read"
+".team" = "write"
+
+[permissions.team-docs.network]
+enabled = false
+
+# Тестировщик
+
+[permissions.team-qa]
+description = "QA: automated tests only"
+
+[permissions.team-qa.filesystem]
+":root" = "read"
+
+[permissions.team-qa.filesystem.":workspace_roots"]
+"." = "read"
+"tests" = "write"
+
+[permissions.team-qa.network]
+enabled = false
+
+# Локальная сборка
+
+[permissions.team-build]
+description = "Local compilation only"
+
+[permissions.team-build.filesystem]
+":root" = "read"
+
+[permissions.team-build.filesystem.":workspace_roots"]
+"." = "read"
+"build/codex-check" = "write"
+
+[permissions.team-build.network]
+enabled = false
